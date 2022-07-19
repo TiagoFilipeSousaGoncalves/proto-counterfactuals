@@ -130,7 +130,7 @@ dmypy.json
 
 
 # Directories
-code/ProtoPNet-master/
+# code/ProtoPNet-master/
 
 # macOS files
 *.DS_Store
