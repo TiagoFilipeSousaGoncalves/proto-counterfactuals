@@ -117,7 +117,7 @@ parser.add_argument('--num_warm_epochs', type=int, default=5, help="Number of wa
 parser.add_argument('--lr', type=float, default=1e-4, help="Learning rate")
 
 # Output directory
-parser.add_argument("--results_dir", type=str, default="results", help="Results directory")
+parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
 
 # Number of workers
 parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader")
@@ -167,7 +167,7 @@ DATA_DIR = args.data_dir
 DATASET = args.dataset
 
 # Results Directory
-RESULTS_DIR = args.results_dir
+OUTPUT_DIR = args.output_dir
 
 # Number of workers (threads)
 WORKERS = args.num_workers
@@ -207,7 +207,7 @@ MODEL_NAME = MODEL.lower()
 
 # Timestamp (to save results)
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-results_dir = os.path.join(results_dir, dataset.lower(), model_name, timestamp)
+results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), MODEL_NAME, timestamp)
 if not os.path.isdir(results_dir):
     os.makedirs(results_dir)
 
@@ -229,31 +229,65 @@ img_nr_channels = 3
 img_height = IMG_SIZE
 img_width = IMG_SIZE
 
-# Feature extractor (for Transformers)
-feature_extractor = None
 
 
 # Train Transforms
 train_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.Resize(IMG_SIZE if resize_opt == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
-    torchvision.transforms.RandomCrop(IMG_SIZE if resize_opt == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.Resize(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.RandomCrop(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.05, 0.1), scale=(0.95, 1.05), shear=0, resample=0, fillcolor=(0, 0, 0)),
     torchvision.transforms.RandomHorizontalFlip(p=0.5),
     torchvision.transforms.ToTensor(),
-    torchvision.transforms.Normalize(mean=feature_extractor.image_mean if feature_extractor else MEAN, std=feature_extractor.image_std if feature_extractor else STD)
+    torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
 
 
 # Validation Transforms
 val_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.Resize(IMG_SIZE if resize_opt == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
-    torchvision.transforms.RandomCrop(IMG_SIZE if resize_opt == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.Resize(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.RandomCrop(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.ToTensor(),
-    torchvision.transforms.Normalize(mean=feature_extractor.image_mean if feature_extractor else MEAN, std=feature_extractor.image_std if feature_extractor else STD)
+    torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
 
 
 # TODO: Dataset
+# train set
+train_set = datasets.ImageFolder(
+    train_dir,
+    transforms.Compose([
+        transforms.Resize(size=(img_size, img_size)),
+        transforms.ToTensor(),
+        normalize,
+    ]))
+
+train_push_set = datasets.ImageFolder(
+    train_push_dir,
+    transforms.Compose([
+        transforms.Resize(size=(img_size, img_size)),
+        transforms.ToTensor(),
+    ]))
+
+
+
+
+# test set
+test_dataset = datasets.ImageFolder(
+    test_dir,
+    transforms.Compose([
+        transforms.Resize(size=(img_size, img_size)),
+        transforms.ToTensor(),
+        normalize,
+    ]))
+
+
+
+
+# we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
+log('training set size: {0}'.format(len(train_loader.dataset)))
+log('push set size: {0}'.format(len(train_push_loader.dataset)))
+log('test set size: {0}'.format(len(test_loader.dataset)))
+log('batch size: {0}'.format(train_batch_size))
 
 
 
@@ -335,8 +369,14 @@ else:
 
 
 # Dataloaders
-train_loader = DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=workers)
+train_loader = DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=WORKERS)
+train_loader = DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=4, pin_memory=False)
+train_push_loader = DataLoader(train_push_set, batch_size=train_push_batch_size, shuffle=False, num_workers=WORKERS, pin_memory=False)
+
+
+
 val_loader = DataLoader(dataset=val_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=workers)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False, num_workers=4, pin_memory=False)
 
 
 
@@ -384,46 +424,7 @@ prototype_img_filename_prefix = 'prototype-img'
 prototype_self_act_filename_prefix = 'prototype-self-act'
 proto_bound_boxes_filename_prefix = 'bb'
 
-# load the data
-from settings import train_dir, test_dir, train_push_dir, \
-                     train_batch_size, test_batch_size, train_push_batch_size
 
-normalize = transforms.Normalize(mean=mean,
-                                 std=std)
-
-# all datasets
-# train set
-train_dataset = datasets.ImageFolder(
-    train_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
-train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=train_batch_size, shuffle=True,
-    num_workers=4, pin_memory=False)
-# push set
-train_push_dataset = datasets.ImageFolder(
-    train_push_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-    ]))
-train_push_loader = torch.utils.data.DataLoader(
-    train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
-    num_workers=4, pin_memory=False)
-# test set
-test_dataset = datasets.ImageFolder(
-    test_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
-test_loader = torch.utils.data.DataLoader(
-    test_dataset, batch_size=test_batch_size, shuffle=False,
-    num_workers=4, pin_memory=False)
 
 # we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
 log('training set size: {0}'.format(len(train_loader.dataset)))
