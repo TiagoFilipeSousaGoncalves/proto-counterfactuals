@@ -27,8 +27,8 @@ np.random.seed(random_seed)
 
 # Project Imports
 from train_and_test_utilities import train, test, last_only, warm_only, joint
+from model_utilities import construct_PPNet
 from helpers import makedir
-import model
 import push
 import prune
 import save
@@ -166,6 +166,9 @@ DATA_DIR = args.data_dir
 # Dataset
 DATASET = args.dataset
 
+# Base Architecture
+BASE_ARCHITECTURE = args.base_architecture
+
 # Results Directory
 OUTPUT_DIR = args.output_dir
 
@@ -173,20 +176,38 @@ OUTPUT_DIR = args.output_dir
 WORKERS = args.num_workers
 
 # Number of training epochs
-EPOCHS = args.num_train_epochs
+NUM_TRAIN_EPOCHS = args.num_train_epochs
 
 # Number of warm epochs
 NUM_WARM_EPOCHS = args.num_warm_epochs
 
 # Push epochs
 # push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
-PUSH_EPOCHS = [i for i in range(EPOCHS) if i % 10 == 0]
+PUSH_EPOCHS = [i for i in range(NUM_TRAIN_EPOCHS) if i % 10 == 0]
 
 # Learning rate
 LEARNING_RATE = args.lr
 
 # Prototype activation function
 PROTOTYPE_ACTIVATION_FUNCTION = args.prototype_activation_function
+
+# Joint optimizer learning rates
+JOINT_OPTIMIZER_LRS = args.joint_optimizer_lrs
+
+# JOINT_LR_STEP_SIZE
+JOINT_LR_STEP_SIZE = args.joint_lr_step_size
+
+# WARM_OPTIMIZER_LRS
+WARM_OPTIMIZER_LRS = args.warm_optimizer_lrs
+
+# LAST_LAYER_OPTIMIZER_LR
+LAST_LAYER_OPTIMIZER_LR = args.last_layer_optimizer_lr
+
+# COEFS (weighting of different training losses)
+COEFS = args.coefs
+
+# PUSH_START
+PUSH_START = args.push_start
 
 # Batch size
 BATCH_SIZE = args.batchsize
@@ -252,7 +273,7 @@ val_transforms = torchvision.transforms.Compose([
 
 
 # TODO: Dataset
-# train set
+# Train Dataset
 train_set = datasets.ImageFolder(
     train_dir,
     transforms.Compose([
@@ -271,8 +292,8 @@ train_push_set = datasets.ImageFolder(
 
 
 
-# test set
-test_dataset = datasets.ImageFolder(
+# Validation Dataset
+val_set = datasets.ImageFolder(
     test_dir,
     transforms.Compose([
         transforms.Resize(size=(img_size, img_size)),
@@ -316,20 +337,76 @@ print(f"Using device: {DEVICE}")
 nr_classes = train_set.nr_classes
 
 
-# TODO: Model
+# TODO: Base Architectures
+if BASE_ARCHITECTURE == "vgg19":
+    base_architecture = None
+
+
+# Construct the Model
+ppnet_model = construct_PPNet(
+    base_architecture=base_architecture,
+    pretrained=True,
+    img_size=IMG_SIZE,
+    prototype_shape=prototype_shape,
+    num_classes=num_classes,
+    prototype_activation_function=PROTOTYPE_ACTIVATION_FUNCTION,
+    add_on_layers_type=add_on_layers_type)
+
+# if prototype_activation_function == 'linear':
+#     ppnet.set_last_layer_incorrect_connection(incorrect_strength=0)
+
+
+
+class_specific = True
+
+
+
+# Define optimizers and learning rate schedulers
+# Joint Optimizer Specs
+joint_optimizer_specs = [
+
+    {'params': ppnet_model.features.parameters(), 'lr': JOINT_OPTIMIZER_LRS['features'], 'weight_decay': 1e-3}, # bias are now also being regularized
+    {'params': ppnet_model.add_on_layers.parameters(), 'lr': JOINT_OPTIMIZER_LRS['add_on_layers'], 'weight_decay': 1e-3},
+    {'params': ppnet_model.prototype_vectors, 'lr': JOINT_OPTIMIZER_LRS['prototype_vectors']},
+
+]
+joint_optimizer = torch.optim.Adam(joint_optimizer_specs)
+joint_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=JOINT_LR_STEP_SIZE, gamma=0.1)
+
+
+# Warm Optimizer Learning Rates
+warm_optimizer_specs = [
+
+    {'params': ppnet_model.add_on_layers.parameters(), 'lr': WARM_OPTIMIZER_LRS['add_on_layers'], 'weight_decay': 1e-3},
+    {'params': ppnet_model.prototype_vectors, 'lr': WARM_OPTIMIZER_LRS['prototype_vectors']},
+
+]
+warm_optimizer = torch.optim.Adam(warm_optimizer_specs)
+
+
+# Last Layer Optimizer
+last_layer_optimizer_specs = [
+
+    {'params': ppnet_model.last_layer.parameters(), 'lr': LAST_LAYER_OPTIMIZER_LR}
+    
+]
+last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
+
+
+
 
 
 
 # Put model into DEVICE (CPU or GPU)
-model = model.to(DEVICE)
+ppnet_model = ppnet_model.to(DEVICE)
 
 
 # Get model summary
 try:
-    model_summary = summary(model, (1, 3, IMG_SIZE, IMG_SIZE), device=DEVICE)
+    model_summary = summary(ppnet_model, (1, 3, IMG_SIZE, IMG_SIZE), device=DEVICE)
 
 except:
-    model_summary = str(model)
+    model_summary = str(ppnet_model)
 
 
 # Write into file
@@ -352,14 +429,14 @@ else:
 # Hyper-parameters
 LOSS = torch.nn.CrossEntropyLoss(reduction="sum", weight=cw)
 VAL_LOSS = torch.nn.CrossEntropyLoss(reduction="sum")
-OPTIMISER = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+OPTIMISER = torch.optim.Adam(ppnet_model.parameters(), lr=LEARNING_RATE)
 
 
 
 # Resume training from given checkpoint
 if RESUME:
     checkpoint = torch.load(CHECKPOINT)
-    model.load_state_dict(checkpoint['model_state_dict'], strict=True)
+    ppnet_model.load_state_dict(checkpoint['model_state_dict'], strict=True)
     OPTIMISER.load_state_dict(checkpoint['optimizer_state_dict'])
     init_epoch = checkpoint['epoch'] + 1
     print(f"Resuming from {CHECKPOINT} at epoch {init_epoch}")
@@ -369,14 +446,12 @@ else:
 
 
 # Dataloaders
+# Train
 train_loader = DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=WORKERS)
-train_loader = DataLoader(train_set, batch_size=train_batch_size, shuffle=True, num_workers=4, pin_memory=False)
-train_push_loader = DataLoader(train_push_set, batch_size=train_push_batch_size, shuffle=False, num_workers=WORKERS, pin_memory=False)
+train_push_loader = DataLoader(train_push_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 
-
-
-val_loader = DataLoader(dataset=val_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=workers)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False, num_workers=4, pin_memory=False)
+# Validation
+val_loader = DataLoader(dataset=val_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=WORKERS)
 
 
 
@@ -386,11 +461,11 @@ min_train_loss = np.inf
 min_val_loss = np.inf
 
 # Initialise losses arrays
-train_losses = np.zeros((EPOCHS, ))
+train_losses = np.zeros((NUM_TRAIN_EPOCHS, ))
 val_losses = np.zeros_like(train_losses)
 
 # Initialise metrics arrays
-train_metrics = np.zeros((EPOCHS, 5))
+train_metrics = np.zeros((NUM_TRAIN_EPOCHS, 5))
 val_metrics = np.zeros_like(train_metrics)
 
 
@@ -432,74 +507,10 @@ log('push set size: {0}'.format(len(train_push_loader.dataset)))
 log('test set size: {0}'.format(len(test_loader.dataset)))
 log('batch size: {0}'.format(train_batch_size))
 
-# construct the model
-ppnet = model.construct_PPNet(base_architecture=base_architecture,
-                              pretrained=True, img_size=img_size,
-                              prototype_shape=prototype_shape,
-                              num_classes=num_classes,
-                              prototype_activation_function=PROTOTYPE_ACTIVATION_FUNCTION,
-                              add_on_layers_type=add_on_layers_type)
-#if prototype_activation_function == 'linear':
-#    ppnet.set_last_layer_incorrect_connection(incorrect_strength=0)
-ppnet = ppnet.cuda()
-ppnet_multi = torch.nn.DataParallel(ppnet)
-class_specific = True
-
-# define optimizer
-from settings import joint_optimizer_lrs, joint_lr_step_size
-joint_optimizer_specs = \
-[{'params': ppnet.features.parameters(), 'lr': joint_optimizer_lrs['features'], 'weight_decay': 1e-3}, # bias are now also being regularized
- {'params': ppnet.add_on_layers.parameters(), 'lr': joint_optimizer_lrs['add_on_layers'], 'weight_decay': 1e-3},
- {'params': ppnet.prototype_vectors, 'lr': joint_optimizer_lrs['prototype_vectors']},
-]
-joint_optimizer = torch.optim.Adam(joint_optimizer_specs)
-joint_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=joint_lr_step_size, gamma=0.1)
-
-from settings import warm_optimizer_lrs
-warm_optimizer_specs = \
-[{'params': ppnet.add_on_layers.parameters(), 'lr': warm_optimizer_lrs['add_on_layers'], 'weight_decay': 1e-3},
- {'params': ppnet.prototype_vectors, 'lr': warm_optimizer_lrs['prototype_vectors']},
-]
-warm_optimizer = torch.optim.Adam(warm_optimizer_specs)
-
-from settings import last_layer_optimizer_lr
-last_layer_optimizer_specs = [{'params': ppnet.last_layer.parameters(), 'lr': last_layer_optimizer_lr}]
-last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
-
-# weighting of different training losses
-from settings import coefs
-
-# number of training epochs, number of warm epochs, push start epoch, push epochs
-from settings import num_train_epochs, num_warm_epochs, push_start, push_epochs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # Go through the number of Epochs
-for epoch in range(init_epoch, EPOCHS):
+for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # Epoch 
     print(f"Epoch: {epoch+1}")
     
@@ -517,27 +528,27 @@ for epoch in range(init_epoch, EPOCHS):
 
 
     # Put model in training mode
-    model.train()
+    ppnet_model.train()
 
     log('epoch: \t{0}'.format(epoch))
 
     if epoch < NUM_WARM_EPOCHS:
-        warm_only(model=ppnet_multi, log=log)
-        _ = train(model=ppnet_multi, dataloader=train_loader, optimizer=warm_optimizer, class_specific=class_specific, coefs=coefs, log=log)
+        warm_only(model=ppnet_model, log=log)
+        _ = train(model=ppnet_model, dataloader=train_loader, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS, log=log)
 
 
     else:
-        joint(model=ppnet_multi, log=log)
+        joint(model=ppnet_model, log=log)
         joint_lr_scheduler.step()
-        _ = train(model=ppnet_multi, dataloader=train_loader, optimizer=joint_optimizer, class_specific=class_specific, coefs=coefs, log=log)
+        _ = train(model=ppnet_model, dataloader=train_loader, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS, log=log)
 
-    accu = test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)
-    save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
+    accu = test(model=ppnet_model, dataloader=test_loader, class_specific=class_specific, log=log)
+    save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
 
-    if epoch >= push_start and epoch in push_epochs:
+    if epoch >= PUSH_START and epoch in PUSH_EPOCHS:
         push.push_prototypes(
             train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
-            prototype_network_parallel=ppnet_multi, # pytorch network with prototype_vectors
+            prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
             class_specific=class_specific,
             preprocess_input_function=preprocess_input_function, # normalize if needed
             prototype_layer_stride=1,
@@ -549,18 +560,18 @@ for epoch in range(init_epoch, EPOCHS):
             save_prototype_class_identity=True,
             log=log)
         
-        accu = test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)
-        save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70, log=log)
+        accu = test(model=ppnet_model, dataloader=test_loader, class_specific=class_specific, log=log)
+        save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70, log=log)
 
         if PROTOTYPE_ACTIVATION_FUNCTION != 'linear':
-            last_only(model=ppnet_multi, log=log)
+            last_only(model=ppnet_model, log=log)
             
             for i in range(20):
                 log('iteration: \t{0}'.format(i))
-                _ = train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=coefs, log=log)
+                _ = train(model=ppnet_model, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS, log=log)
                 
-                accu = test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)
-                save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70, log=log)
+                accu = test(model=ppnet_model, dataloader=test_loader, class_specific=class_specific, log=log)
+                save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70, log=log)
    
 logclose()
 
