@@ -156,7 +156,7 @@ RESUME = args.resume
 # Training checkpoint
 if RESUME:
     CHECKPOINT = args.checkpoint
-    
+
     assert CHECKPOINT is not None, "Please specify the model checkpoint when resume is True"
 
 
