@@ -2,7 +2,6 @@
 import os
 import argparse
 import numpy as np
-from tqdm import tqdm
 import datetime
 from torchinfo import summary
 
