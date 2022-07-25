@@ -1,9 +1,7 @@
 # Imports
 import os
-import shutil
 import argparse
 import numpy as np
-import re
 from tqdm import tqdm
 import datetime
 from torchinfo import summary
@@ -26,14 +24,10 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from train_and_test_utilities import train, test, last_only, warm_only, joint
+from data_utilities import preprocess_input_function
 from model_utilities import construct_PPNet
-from helpers import makedir
-import push
-import prune
-import save
-from log import create_logger
-from preprocess import mean, std, preprocess_input_function
+from prototypes_utilities import push_prototypes
+from train_and_test_utilities import train, test, last_only, warm_only, joint
 
 
 
@@ -215,6 +209,15 @@ BATCH_SIZE = args.batchsize
 # Image size (after transforms)
 IMG_SIZE = args.img_size
 
+# Prototype shape
+PROTOTYPE_SHAPE = args.prototype_shape
+
+# Number of classes
+NUM_CLASSES = args.num_classes
+
+# Add on layers type
+ADD_ON_LAYERS_TYPE = args.add_on_layers_type
+
 # Save frquency
 SAVE_FREQ = args.save_freq
 
@@ -304,13 +307,6 @@ val_set = datasets.ImageFolder(
 
 
 
-# we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
-log('training set size: {0}'.format(len(train_loader.dataset)))
-log('push set size: {0}'.format(len(train_push_loader.dataset)))
-log('test set size: {0}'.format(len(test_loader.dataset)))
-log('batch size: {0}'.format(train_batch_size))
-
-
 
 # Results and Weights
 weights_dir = os.path.join(results_dir, "weights")
@@ -337,20 +333,15 @@ print(f"Using device: {DEVICE}")
 nr_classes = train_set.nr_classes
 
 
-# TODO: Base Architectures
-if BASE_ARCHITECTURE == "vgg19":
-    base_architecture = None
-
-
 # Construct the Model
 ppnet_model = construct_PPNet(
-    base_architecture=base_architecture,
+    base_architecture=BASE_ARCHITECTURE,
     pretrained=True,
     img_size=IMG_SIZE,
-    prototype_shape=prototype_shape,
-    num_classes=num_classes,
+    prototype_shape=PROTOTYPE_SHAPE,
+    num_classes=NUM_CLASSES,
     prototype_activation_function=PROTOTYPE_ACTIVATION_FUNCTION,
-    add_on_layers_type=add_on_layers_type)
+    add_on_layers_type=ADD_ON_LAYERS_TYPE)
 
 # if prototype_activation_function == 'linear':
 #     ppnet.set_last_layer_incorrect_connection(incorrect_strength=0)
@@ -426,18 +417,13 @@ else:
 
 
 
-# Hyper-parameters
-LOSS = torch.nn.CrossEntropyLoss(reduction="sum", weight=cw)
-VAL_LOSS = torch.nn.CrossEntropyLoss(reduction="sum")
-OPTIMISER = torch.optim.Adam(ppnet_model.parameters(), lr=LEARNING_RATE)
-
-
 
 # Resume training from given checkpoint
 if RESUME:
     checkpoint = torch.load(CHECKPOINT)
     ppnet_model.load_state_dict(checkpoint['model_state_dict'], strict=True)
-    OPTIMISER.load_state_dict(checkpoint['optimizer_state_dict'])
+    warm_optimizer.load_state_dict(checkpoint['warm_optimizer_state_dict'])
+    joint_optimizer.load_state_dict(checkpoint['joint_optimizer_state_dict'])
     init_epoch = checkpoint['epoch'] + 1
     print(f"Resuming from {CHECKPOINT} at epoch {init_epoch}")
 
@@ -452,6 +438,36 @@ train_push_loader = DataLoader(train_push_set, batch_size=BATCH_SIZE, shuffle=Fa
 
 # Validation
 val_loader = DataLoader(dataset=val_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=WORKERS)
+
+
+
+# we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
+print(f'Size of training set: {len(train_loader.dataset)}')
+print(f'Size of training push set: {len(train_push_loader.dataset)}')
+print(f'Size of validation set:: {len(val_loader.dataset)}')
+print(f'Batch size: {BATCH_SIZE}')
+
+
+
+# Define some extra paths and directories
+# Directory for saved prototypes
+saved_prototypes_dir = os.path.join(weights_dir, 'prototypes')
+if not os.path.isdir(saved_prototypes_dir):
+    os.makedirs(saved_prototypes_dir)
+
+
+# Output weight matrix filename
+weight_matrix_filename = 'outputL_weights'
+
+# Prefix for prototype images
+prototype_img_filename_prefix = 'prototype-img'
+
+# Prefix for prototype self activation
+prototype_self_act_filename_prefix = 'prototype-self-act'
+
+# Prefix for prototype bouding boxes
+proto_bound_boxes_filename_prefix = 'bb'
+
 
 
 
@@ -470,51 +486,12 @@ val_metrics = np.zeros_like(train_metrics)
 
 
 
-
-
-
-
-os.environ['CUDA_VISIBLE_DEVICES'] = args.gpuid[0]
-print(os.environ['CUDA_VISIBLE_DEVICES'])
-
-# book keeping namings and code
-from settings import base_architecture, img_size, prototype_shape, num_classes, \
-                     prototype_activation_function, add_on_layers_type, experiment_run
-
-base_architecture_type = re.match('^[a-z]*', base_architecture).group(0)
-
-model_dir = './saved_models/' + base_architecture + '/' + experiment_run + '/'
-makedir(model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), 'settings.py'), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), base_architecture_type + '_features.py'), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), 'model.py'), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), 'train_and_test.py'), dst=model_dir)
-
-log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
-img_dir = os.path.join(model_dir, 'img')
-makedir(img_dir)
-weight_matrix_filename = 'outputL_weights'
-prototype_img_filename_prefix = 'prototype-img'
-prototype_self_act_filename_prefix = 'prototype-self-act'
-proto_bound_boxes_filename_prefix = 'bb'
-
-
-
-# we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
-log('training set size: {0}'.format(len(train_loader.dataset)))
-log('push set size: {0}'.format(len(train_push_loader.dataset)))
-log('test set size: {0}'.format(len(test_loader.dataset)))
-log('batch size: {0}'.format(train_batch_size))
-
-
-
 # Go through the number of Epochs
-for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
+for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
     # Epoch 
     print(f"Epoch: {epoch+1}")
     
-    # Training Loop
+    # Training Phase
     print("Training Phase")
     
     # Initialise lists to compute scores
@@ -530,50 +507,69 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # Put model in training mode
     ppnet_model.train()
 
-    log('epoch: \t{0}'.format(epoch))
 
     if epoch < NUM_WARM_EPOCHS:
-        warm_only(model=ppnet_model, log=log)
-        _ = train(model=ppnet_model, dataloader=train_loader, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS, log=log)
+        warm_only(model=ppnet_model)
+        _ = train(model=ppnet_model, dataloader=train_loader, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
 
 
     else:
-        joint(model=ppnet_model, log=log)
+        joint(model=ppnet_model)
         joint_lr_scheduler.step()
-        _ = train(model=ppnet_model, dataloader=train_loader, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS, log=log)
+        _ = train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS)
 
-    accu = test(model=ppnet_model, dataloader=test_loader, class_specific=class_specific, log=log)
-    save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
 
+
+    # Validation Phase 
+    print("Validation Phase")
+    accu = test(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+    # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
+    # Save checkpoint
+    # Model path
+    model_path = os.path.join(weights_dir, f"{MODEL_NAME.lower()}_{DATASET.lower()}_best.pt")
+    save_dict = {
+        'epoch':epoch,
+        'model_state_dict':ppnet_model.state_dict(),
+        'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+        'joint_optimizer_state_dict':joint_optimizer.state_dict(),
+        # 'loss': avg_train_loss,
+    }
+    torch.save(save_dict, model_path)
+    print(f"Successfully saved at: {model_path}")
+
+
+    # PUSH START and PUSH EPOCHS
     if epoch >= PUSH_START and epoch in PUSH_EPOCHS:
-        push.push_prototypes(
+        push_prototypes(
             train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
             prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
             class_specific=class_specific,
             preprocess_input_function=preprocess_input_function, # normalize if needed
             prototype_layer_stride=1,
-            root_dir_for_saving_prototypes=img_dir, # if not None, prototypes will be saved here
+            root_dir_for_saving_prototypes=saved_prototypes_dir, # if not None, prototypes will be saved here
             epoch_number=epoch, # if not provided, prototypes saved previously will be overwritten
             prototype_img_filename_prefix=prototype_img_filename_prefix,
             prototype_self_act_filename_prefix=prototype_self_act_filename_prefix,
             proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
-            save_prototype_class_identity=True,
-            log=log)
+            save_prototype_class_identity=True
+            )
         
-        accu = test(model=ppnet_model, dataloader=test_loader, class_specific=class_specific, log=log)
-        save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70, log=log)
+        accu = test(model=ppnet_model, dataloader=val_loader, class_specific=class_specific)
+        # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70)
 
+
+        # If the protoype activation function is not linear
         if PROTOTYPE_ACTIVATION_FUNCTION != 'linear':
-            last_only(model=ppnet_model, log=log)
+            last_only(model=ppnet_model)
             
             for i in range(20):
-                log('iteration: \t{0}'.format(i))
-                _ = train(model=ppnet_model, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS, log=log)
+                print('iteration: \t{0}'.format(i))
+                _ = train(model=ppnet_model, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
                 
-                accu = test(model=ppnet_model, dataloader=test_loader, class_specific=class_specific, log=log)
-                save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70, log=log)
+                accu = test(model=ppnet_model, dataloader=val_loader, class_specific=class_specific)
+                # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70)
    
-logclose()
+
 
 
 
@@ -807,5 +803,6 @@ logclose()
             torch.save(save_dict, model_path)
 
 """
+
 # Finish statement
 print("Finished.")

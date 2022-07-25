@@ -39,4 +39,51 @@ def resize_images(datapath, newpath, newheight=512):
 
 
 
+# Function: Preprocess base function 
+def preprocess(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+    assert x.size(1) == 3
+    
+    y = torch.zeros_like(x)
+    
+    for i in range(3):
+        y[:, i, :, :] = (x[:, i, :, :] - mean[i]) / std[i]
+    
+    
+    return y
+
+
+
+# Function: Function to process inputs
+def preprocess_input_function(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+    '''
+    allocate new tensor like x and apply the normalization used in the
+    pretrained model
+    '''
+    return preprocess(x=x, mean=mean, std=std)
+
+
+
+# Funtion: Revert processing function
+def undo_preprocess(x, mean, std):
+    assert x.size(1) == 3
+    y = torch.zeros_like(x)
+    
+    for i in range(3):
+        y[:, i, :, :] = x[:, i, :, :] * std[i] + mean[i]
+    
+    return y
+
+
+
+# Function: Apply revert processing function
+def undo_preprocess_input_function(x, mean, std):
+    '''
+    allocate new tensor like x and undo the normalization used in the
+    pretrained model
+    '''
+    
+    return undo_preprocess(x, mean=mean, std=std)
+
+
+
 # TODO: Dataset

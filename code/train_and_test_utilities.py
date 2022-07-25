@@ -15,7 +15,7 @@ def list_of_distances(X, Y):
 
 
 # Function: Train or Test Phase
-def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_specific=True, use_l1_mask=True, coefs=None, log=print):
+def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_specific=True, use_l1_mask=True, coefs=None):
 
 
     # Check if we are in training mode
@@ -141,17 +141,17 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
 
 
     # Some log prints
-    log('\ttime: \t{0}'.format(time.time() -  start))
-    log('\tcross ent: \t{0}'.format(total_cross_entropy / n_batches))
-    log('\tcluster: \t{0}'.format(total_cluster_cost / n_batches))
+    print('\ttime: \t{0}'.format(time.time() -  start))
+    print('\tcross ent: \t{0}'.format(total_cross_entropy / n_batches))
+    print('\tcluster: \t{0}'.format(total_cluster_cost / n_batches))
 
 
     if class_specific:
-        log('\tseparation:\t{0}'.format(total_separation_cost / n_batches))
-        log('\tavg separation:\t{0}'.format(total_avg_separation_cost / n_batches))
+        print('\tseparation:\t{0}'.format(total_separation_cost / n_batches))
+        print('\tavg separation:\t{0}'.format(total_avg_separation_cost / n_batches))
 
-    log('\taccu: \t\t{0}%'.format(n_correct / n_examples * 100))
-    log('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
+    print('\taccu: \t\t{0}%'.format(n_correct / n_examples * 100))
+    print('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
 
 
     # Get prototypes
@@ -161,7 +161,7 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
     # Compute prototype average pair distance
     with torch.no_grad():
         p_avg_pair_dist = torch.mean(list_of_distances(p, p))
-    log('\tp dist pair: \t{0}'.format(p_avg_pair_dist.item()))
+    print('\tp dist pair: \t{0}'.format(p_avg_pair_dist.item()))
 
 
 
@@ -170,36 +170,36 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
 
 
 # Function: Train
-def train(model, dataloader, device, optimizer, class_specific=False, coefs=None, log=print):
+def train(model, dataloader, device, optimizer, class_specific=False, coefs=None):
 
     # TODO: Erase uppon review
     # assert(optimizer is not None)
 
     # If model is not in training mode, change it to training mode
     if not model.training:
-        log('\ttrain')
+        print('\ttrain')
         model.train()
 
 
-    return _train_or_test(model=model, dataloader=dataloader, device=device, is_train=True, optimizer=optimizer, class_specific=class_specific, coefs=coefs, log=log)
+    return _train_or_test(model=model, dataloader=dataloader, device=device, is_train=True, optimizer=optimizer, class_specific=class_specific, coefs=coefs)
 
 
 
 # Function: Test
-def test(model, dataloader, device, class_specific=False, log=print):
+def test(model, dataloader, device, class_specific=False):
 
     # If model in train training mode, change it to evaluation mode
     if model.training:
-        log('\ttest')
+        print('\ttest')
         model.eval()
 
 
-    return _train_or_test(model=model, dataloader=dataloader, device=device, is_train=False, optimizer=None, class_specific=class_specific, log=log)
+    return _train_or_test(model=model, dataloader=dataloader, device=device, is_train=False, optimizer=None, class_specific=class_specific)
 
 
 
 # Function: 
-def last_only(model, log=print):
+def last_only(model):
     for p in model.module.features.parameters():
         p.requires_grad = False
     for p in model.module.add_on_layers.parameters():
@@ -208,12 +208,12 @@ def last_only(model, log=print):
     for p in model.module.last_layer.parameters():
         p.requires_grad = True
     
-    log('\tlast layer')
+    print('\tlast layer')
 
 
 
 # Function:
-def warm_only(model, log=print):
+def warm_only(model):
     for p in model.module.features.parameters():
         p.requires_grad = False
     for p in model.module.add_on_layers.parameters():
@@ -222,12 +222,12 @@ def warm_only(model, log=print):
     for p in model.module.last_layer.parameters():
         p.requires_grad = True
     
-    log('\twarm')
+    print('\twarm')
 
 
 
 # Function:
-def joint(model, log=print):
+def joint(model):
     for p in model.module.features.parameters():
         p.requires_grad = True
     for p in model.module.add_on_layers.parameters():
@@ -236,4 +236,4 @@ def joint(model, log=print):
     for p in model.module.last_layer.parameters():
         p.requires_grad = True
     
-    log('\tjoint')
+    print('\tjoint')
