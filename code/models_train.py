@@ -25,7 +25,7 @@ np.random.seed(random_seed)
 from data_utilities import preprocess_input_function, CUB2002011Dataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
-from train_and_test_utilities import model_train, model_validation, last_only, warm_only, joint
+from train_val_test_utilities import model_train, model_validation, last_only, warm_only, joint
 
 
 
@@ -480,7 +480,7 @@ best_acc = -np.inf
 
 
 # Go through the number of Epochs
-for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
+for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # Epoch 
     print(f"Epoch: {epoch+1}")
     
