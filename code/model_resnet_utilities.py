@@ -3,6 +3,9 @@ import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
+
+
+# Model URLs
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
     'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
@@ -10,8 +13,7 @@ model_urls = {
     'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
-
-model_dir = './pretrained_models'
+# model_dir = './pretrained_models'
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
@@ -232,7 +234,8 @@ def resnet18_features(pretrained=False, **kwargs):
     """
     model = ResNet_features(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
-        my_dict = model_zoo.load_url(model_urls['resnet18'], model_dir=model_dir)
+        # my_dict = model_zoo.load_url(model_urls['resnet18'], model_dir=model_dir)
+        my_dict = model_zoo.load_url(model_urls['resnet18'])
         my_dict.pop('fc.weight')
         my_dict.pop('fc.bias')
         model.load_state_dict(my_dict, strict=False)
@@ -246,7 +249,8 @@ def resnet34_features(pretrained=False, **kwargs):
     """
     model = ResNet_features(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        my_dict = model_zoo.load_url(model_urls['resnet34'], model_dir=model_dir)
+        # my_dict = model_zoo.load_url(model_urls['resnet34'], model_dir=model_dir)
+        my_dict = model_zoo.load_url(model_urls['resnet34'])
         my_dict.pop('fc.weight')
         my_dict.pop('fc.bias')
         model.load_state_dict(my_dict, strict=False)
@@ -260,7 +264,8 @@ def resnet50_features(pretrained=False, **kwargs):
     """
     model = ResNet_features(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        my_dict = model_zoo.load_url(model_urls['resnet50'], model_dir=model_dir)
+        # my_dict = model_zoo.load_url(model_urls['resnet50'], model_dir=model_dir)
+        my_dict = model_zoo.load_url(model_urls['resnet50'])
         my_dict.pop('fc.weight')
         my_dict.pop('fc.bias')
         model.load_state_dict(my_dict, strict=False)
@@ -274,7 +279,8 @@ def resnet101_features(pretrained=False, **kwargs):
     """
     model = ResNet_features(Bottleneck, [3, 4, 23, 3], **kwargs)
     if pretrained:
-        my_dict = model_zoo.load_url(model_urls['resnet101'], model_dir=model_dir)
+        # my_dict = model_zoo.load_url(model_urls['resnet101'], model_dir=model_dir)
+        my_dict = model_zoo.load_url(model_urls['resnet101'])
         my_dict.pop('fc.weight')
         my_dict.pop('fc.bias')
         model.load_state_dict(my_dict, strict=False)
@@ -288,7 +294,8 @@ def resnet152_features(pretrained=False, **kwargs):
     """
     model = ResNet_features(Bottleneck, [3, 8, 36, 3], **kwargs)
     if pretrained:
-        my_dict = model_zoo.load_url(model_urls['resnet152'], model_dir=model_dir)
+        # my_dict = model_zoo.load_url(model_urls['resnet152'], model_dir=model_dir)
+        my_dict = model_zoo.load_url(model_urls['resnet152'])
         my_dict.pop('fc.weight')
         my_dict.pop('fc.bias')
         model.load_state_dict(my_dict, strict=False)

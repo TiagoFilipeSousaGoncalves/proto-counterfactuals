@@ -281,7 +281,7 @@ val_transforms = torchvision.transforms.Compose([
 if DATASET == "CUB2002011":
     # Train Dataset
     train_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "train", "images"),
+        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "train", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
         transform=train_transforms
     )
@@ -295,7 +295,7 @@ if DATASET == "CUB2002011":
 
     # Validation Dataset
     val_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "test", "images"),
+        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "test", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
         transform=val_transforms
     )
