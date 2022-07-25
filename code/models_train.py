@@ -518,6 +518,9 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
     # Save checkpoint
     if acc > best_acc:
+
+        print(f"Accuracy increased from {best_acc} to {acc}. Saving new model..")
+
         # Model path
         model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
         save_dict = {
