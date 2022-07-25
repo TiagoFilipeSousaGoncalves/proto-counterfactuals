@@ -14,8 +14,6 @@ from sklearn.utils.class_weight import compute_class_weight
 import torch
 from torch.utils.data import DataLoader
 import torchvision
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
 # Fix Random Seeds
@@ -27,7 +25,7 @@ np.random.seed(random_seed)
 from data_utilities import preprocess_input_function, CUB2002011Dataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
-from train_and_test_utilities import train, test, last_only, warm_only, joint
+from train_and_test_utilities import model_train, model_validation, last_only, warm_only, joint
 
 
 
@@ -476,6 +474,9 @@ val_losses = np.zeros_like(train_losses)
 train_metrics = np.zeros((NUM_TRAIN_EPOCHS, 5))
 val_metrics = np.zeros_like(train_metrics)
 
+# Initialise best accuracy
+best_acc = -np.inf
+
 
 
 # Go through the number of Epochs
@@ -502,32 +503,36 @@ for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
 
     if epoch < NUM_WARM_EPOCHS:
         warm_only(model=ppnet_model)
-        _ = train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
+        _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
 
 
     else:
         joint(model=ppnet_model)
         joint_lr_scheduler.step()
-        _ = train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS)
+        _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS)
 
 
 
     # Validation Phase 
     print("Validation Phase")
-    accu = test(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+    acc = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
     # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
     # Save checkpoint
-    # Model path
-    model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
-    save_dict = {
-        'epoch':epoch,
-        'model_state_dict':ppnet_model.state_dict(),
-        'warm_optimizer_state_dict':warm_optimizer.state_dict(),
-        'joint_optimizer_state_dict':joint_optimizer.state_dict(),
-        # 'loss': avg_train_loss,
-    }
-    torch.save(save_dict, model_path)
-    print(f"Successfully saved at: {model_path}")
+    if acc > best_acc:
+        # Model path
+        model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+        save_dict = {
+            'epoch':epoch,
+            'model_state_dict':ppnet_model.state_dict(),
+            'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+            'joint_optimizer_state_dict':joint_optimizer.state_dict(),
+            # 'loss': avg_train_loss,
+        }
+        torch.save(save_dict, model_path)
+        print(f"Successfully saved at: {model_path}")
+
+        # Update best accuracy value
+        best_acc = acc
 
 
     # PUSH START and PUSH EPOCHS
@@ -546,7 +551,7 @@ for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
             save_prototype_class_identity=True
             )
         
-        accu = test(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+        acc = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
         # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70)
 
 
@@ -556,9 +561,9 @@ for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
             
             for i in range(20):
                 print('iteration: \t{0}'.format(i))
-                _ = train(model=ppnet_model, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
+                _ = model_train(model=ppnet_model, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
                 
-                accu = test(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+                acc = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
                 # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70)
    
 

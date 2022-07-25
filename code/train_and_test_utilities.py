@@ -15,11 +15,13 @@ def list_of_distances(X, Y):
 
 
 # Function: Train or Test Phase
-def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_specific=True, use_l1_mask=True, coefs=None):
+def run_model(model, dataloader, mode, device, optimizer=None, class_specific=True, use_l1_mask=True, coefs=None):
 
-
+    # Assert mode
+    assert mode in ("train", "validation", "test"), "Please provide a valid model mode (train, validation or test)."
+    
     # Check if we are in training mode
-    if is_train:
+    if mode == "train":
         assert optimizer is not None, "If the model is in training mode, you should provide an optimizer."
 
 
@@ -47,7 +49,11 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
 
 
         # Note: torch.enable_grad() has no effect outside of no_grad()
-        grad_req = torch.enable_grad() if is_train else torch.no_grad()
+        if mode == "train":
+            grad_req = torch.enable_grad()
+        
+        else:
+            grad_req = torch.no_grad()
         
 
         # Get model's outputs
@@ -112,8 +118,8 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
             total_avg_separation_cost += avg_separation_cost.item()
 
 
-        # Compute final loss value
-        if is_train:
+        # Compute final loss value for train or validation
+        if mode in ("train", "validation"):
             if class_specific:
                 if coefs is not None:
                     loss = (coefs['crs_ent'] * cross_entropy
@@ -132,6 +138,8 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
                     loss = cross_entropy + 0.8 * cluster_cost + 1e-4 * l1
 
 
+        # Perform backpropagation (if training)
+        if mode == "train":
             # Compute gradients and do backpropagation
             optimizer.zero_grad()
             loss.backward()
@@ -178,31 +186,44 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
 
 
 # Function: Train
-def train(model, dataloader, device, optimizer, class_specific=False, coefs=None):
+def model_train(model, dataloader, device, optimizer, class_specific=False, coefs=None):
 
     # TODO: Erase uppon review
     # assert(optimizer is not None)
 
     # If model is not in training mode, change it to training mode
     if not model.training:
-        print('\ttrain')
+        print('Model: Training')
         model.train()
 
 
-    return _train_or_test(model=model, dataloader=dataloader, device=device, is_train=True, optimizer=optimizer, class_specific=class_specific, coefs=coefs)
+    return run_model(model=model, dataloader=dataloader, mode="train", device=device, optimizer=optimizer, class_specific=class_specific, coefs=coefs)
+
+
+
+# Function: Validation
+def model_validation(model, dataloader, device, class_specific=False):
+
+    # If model in train training mode, change it to evaluation mode
+    if model.training:
+        print('Model: Validation')
+        model.eval()
+    
+
+    return run_model(model=model, dataloader=dataloader, mode="validation", device=device, optimizer=None, class_specific=class_specific)
 
 
 
 # Function: Test
-def test(model, dataloader, device, class_specific=False):
+def model_test(model, dataloader, device, class_specific=False):
 
     # If model in train training mode, change it to evaluation mode
     if model.training:
-        print('\ttest')
+        print('Model: Test')
         model.eval()
 
 
-    return _train_or_test(model=model, dataloader=dataloader, device=device, is_train=False, optimizer=None, class_specific=class_specific)
+    return run_model(model=model, dataloader=dataloader, mode="test", device=device, optimizer=None, class_specific=class_specific)
 
 
 
