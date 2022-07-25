@@ -329,10 +329,6 @@ DEVICE = f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {DEVICE}")
 
 
-# Number of classes for models
-nr_classes = train_set.nr_classes
-
-
 # Construct the Model
 ppnet_model = construct_PPNet(
     base_architecture=BASE_ARCHITECTURE,
@@ -408,7 +404,7 @@ with open(os.path.join(results_dir, "model_summary.txt"), 'w') as f:
 
 # Class weights for loss
 if args.classweights:
-    classes = np.array(range(nr_classes))
+    classes = np.array(range(NUM_CLASSES))
     cw = compute_class_weight('balanced', classes=classes, y=np.array(train_set.images_labels))
     cw = torch.from_numpy(cw).float().to(DEVICE)
     print(f"Using class weights {cw}")
@@ -554,7 +550,7 @@ for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
             save_prototype_class_identity=True
             )
         
-        accu = test(model=ppnet_model, dataloader=val_loader, class_specific=class_specific)
+        accu = test(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
         # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70)
 
 
@@ -566,7 +562,7 @@ for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
                 print('iteration: \t{0}'.format(i))
                 _ = train(model=ppnet_model, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
                 
-                accu = test(model=ppnet_model, dataloader=val_loader, class_specific=class_specific)
+                accu = test(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
                 # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70)
    
 
