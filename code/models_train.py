@@ -436,7 +436,7 @@ val_loader = DataLoader(dataset=val_set, batch_size=BATCH_SIZE, shuffle=True, pi
 # we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
 print(f'Size of training set: {len(train_loader.dataset)}')
 print(f'Size of training push set: {len(train_push_loader.dataset)}')
-print(f'Size of validation set:: {len(val_loader.dataset)}')
+print(f'Size of validation set: {len(val_loader.dataset)}')
 print(f'Batch size: {BATCH_SIZE}')
 
 
