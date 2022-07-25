@@ -86,4 +86,94 @@ def undo_preprocess_input_function(x, mean, std):
 
 
 
-# TODO: Dataset
+# CUB2002011Dataset: Dataset Class
+class CUB2002011Dataset(Dataset):
+    def __init__(self, data_path, classes_txt, transform=None):
+        """
+        Args:
+            base_data_path (string): Data directory.
+            transform (callable, optional): Optional transform to be applied on a sample.
+        """
+        
+
+        # Data path (get images folders)
+        images_folders = [f for f in os.listdir(data_path) if not f.startswith('.')]
+
+        # Enter each folder and add the image path to our images_fpaths variable
+        images_fpaths = list()
+        for folder in images_folders:
+
+            # Get images
+            img_fnames = [i for i in os.listdir(os.path.join(data_path, folder)) if not i.startswith('.')]
+
+            # Get each image
+            for img_name in img_fnames:
+
+                # Build the complete path
+                img_path = os.path.join(folder, img_name)
+
+                # Append this path to our variable of images_fpaths
+                images_fpaths.append(img_path)
+        
+
+        # Add this to our variables
+        self.data_path = data_path
+        self.images_fpaths = images_fpaths
+
+        
+        # Extract labels from data path
+        labels = np.genfromtxt(classes_txt, dtype=str)
+        labels_dict = dict()
+        for label_info in labels:
+            labels_dict[label_info[1]] = int(label_info[0]) -1
+        
+        # print(f"Number of Labels: {len(labels_dict)}")
+        # print(f"Labels dict: {labels_dict}")
+
+        self.labels_dict = labels_dict
+        
+
+        # Transforms
+        self.transform = transform
+
+
+        return
+
+
+
+    # Method: __len__
+    def __len__(self):
+        
+        return len(self.images_fpaths)
+
+
+
+    # Method: __getitem__
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        
+
+        # Get images
+        img_path = self.images_fpaths[idx]
+        image = Image.open(os.path.join(self.data_path, img_path)).convert('RGB')
+
+        # Get labels
+        folder = img_path.split("/")[0]
+        label = self.labels_dict[folder]
+
+        # Apply transformation
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label
+
+
+
+# Run this file to test its functions
+if __name__ == "__main__":
+
+    data_path = os.path.join("data", "cub_200_2011", "processed_data", "train", "images")
+    classes_txt = os.path.join("data", "cub_200_2011", "source_data", "classes.txt")
+    dataset = CUB2002011Dataset(data_path=data_path, classes_txt=classes_txt)
+    print(f"Length of the dataset: {len(dataset)}")

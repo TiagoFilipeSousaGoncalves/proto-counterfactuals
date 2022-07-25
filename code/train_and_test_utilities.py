@@ -61,13 +61,15 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
 
             # Check this condition
             if class_specific:
-                max_dist = (model.module.prototype_shape[1] * model.module.prototype_shape[2] * model.module.prototype_shape[3])
+                # max_dist = (model.module.prototype_shape[1] * model.module.prototype_shape[2] * model.module.prototype_shape[3])
+                max_dist = (model.prototype_shape[1] * model.prototype_shape[2] * model.prototype_shape[3])
 
 
                 # Note: prototypes_of_correct_class is a tensor of shape batch_size * num_prototypes
                 # Calculate cluster cost
                 # prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).cuda()
-                prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).to(device)
+                # prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).to(device)
+                prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,label]).to(device)
                 inverted_distances, _ = torch.max((max_dist - min_distances) * prototypes_of_correct_class, dim=1)
                 cluster_cost = torch.mean(max_dist - inverted_distances)
 
@@ -83,15 +85,19 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
                 # Check this condition
                 if use_l1_mask:
                     # l1_mask = 1 - torch.t(model.module.prototype_class_identity).cuda()
-                    l1_mask = 1 - torch.t(model.module.prototype_class_identity).to(device)
-                    l1 = (model.module.last_layer.weight * l1_mask).norm(p=1)
+                    # l1_mask = 1 - torch.t(model.module.prototype_class_identity).to(device)
+                    l1_mask = 1 - torch.t(model.prototype_class_identity).to(device)
+                    # l1 = (model.module.last_layer.weight * l1_mask).norm(p=1)
+                    l1 = (model.last_layer.weight * l1_mask).norm(p=1)
                 else:
-                    l1 = model.module.last_layer.weight.norm(p=1) 
+                    # l1 = model.module.last_layer.weight.norm(p=1)
+                    l1 = model.last_layer.weight.norm(p=1)
 
             else:
                 min_distance, _ = torch.min(min_distances, dim=1)
                 cluster_cost = torch.mean(min_distance)
-                l1 = model.module.last_layer.weight.norm(p=1)
+                # l1 = model.module.last_layer.weight.norm(p=1)
+                l1 = model.last_layer.weight.norm(p=1)
 
 
             # Evaluation statistics
@@ -151,11 +157,13 @@ def _train_or_test(model, dataloader, is_train, device, optimizer=None, class_sp
         print('\tavg separation:\t{0}'.format(total_avg_separation_cost / n_batches))
 
     print('\taccu: \t\t{0}%'.format(n_correct / n_examples * 100))
-    print('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
+    # print('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
+    print('\tl1: \t\t{0}'.format(model.last_layer.weight.norm(p=1).item()))
 
 
     # Get prototypes
-    p = model.module.prototype_vectors.view(model.module.num_prototypes, -1).cpu()
+    # p = model.module.prototype_vectors.view(model.module.num_prototypes, -1).cpu()
+    p = model.prototype_vectors.view(model.num_prototypes, -1).cpu()
 
 
     # Compute prototype average pair distance
@@ -200,12 +208,18 @@ def test(model, dataloader, device, class_specific=False):
 
 # Function: 
 def last_only(model):
-    for p in model.module.features.parameters():
+    # for p in model.module.features.parameters():
+    for p in model.features.parameters():
         p.requires_grad = False
-    for p in model.module.add_on_layers.parameters():
+    
+    # for p in model.module.add_on_layers.parameters():
+    for p in model.add_on_layers.parameters():
         p.requires_grad = False
-    model.module.prototype_vectors.requires_grad = False
-    for p in model.module.last_layer.parameters():
+    
+    # model.module.prototype_vectors.requires_grad = False
+    model.prototype_vectors.requires_grad = False
+    # for p in model.module.last_layer.parameters():
+    for p in model.last_layer.parameters():
         p.requires_grad = True
     
     print('\tlast layer')
@@ -214,12 +228,19 @@ def last_only(model):
 
 # Function:
 def warm_only(model):
-    for p in model.module.features.parameters():
+    # for p in model.module.features.parameters():
+    for p in model.features.parameters():
         p.requires_grad = False
-    for p in model.module.add_on_layers.parameters():
+    
+    # for p in model.module.add_on_layers.parameters():
+    for p in model.add_on_layers.parameters():
         p.requires_grad = True
-    model.module.prototype_vectors.requires_grad = True
-    for p in model.module.last_layer.parameters():
+    
+    # model.module.prototype_vectors.requires_grad = True
+    model.prototype_vectors.requires_grad = True
+    
+    # for p in model.module.last_layer.parameters():
+    for p in model.last_layer.parameters():
         p.requires_grad = True
     
     print('\twarm')
@@ -228,12 +249,19 @@ def warm_only(model):
 
 # Function:
 def joint(model):
-    for p in model.module.features.parameters():
+    # for p in model.module.features.parameters():
+    for p in model.features.parameters():
         p.requires_grad = True
-    for p in model.module.add_on_layers.parameters():
+    
+    # for p in model.module.add_on_layers.parameters():
+    for p in model.add_on_layers.parameters():
         p.requires_grad = True
-    model.module.prototype_vectors.requires_grad = True
-    for p in model.module.last_layer.parameters():
+    
+    # model.module.prototype_vectors.requires_grad = True
+    model.prototype_vectors.requires_grad = True
+    
+    # for p in model.module.last_layer.parameters():
+    for p in model.last_layer.parameters():
         p.requires_grad = True
     
     print('\tjoint')

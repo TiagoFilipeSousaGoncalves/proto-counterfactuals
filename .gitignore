@@ -131,6 +131,7 @@ dmypy.json
 
 # Directories
 # code/ProtoPNet-master/
+data/cub_200_2011
 
 # macOS files
 *.DS_Store

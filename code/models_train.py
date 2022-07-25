@@ -24,7 +24,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import preprocess_input_function
+from data_utilities import preprocess_input_function, CUB2002011Dataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
 from train_and_test_utilities import train, test, last_only, warm_only, joint
@@ -40,7 +40,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=[""], help="Data set: ")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011"], help="Data set: CUB2002011")
 
 # Model
 # base_architecture = 'vgg19'
@@ -224,14 +224,10 @@ SAVE_FREQ = args.save_freq
 # Resize (data transforms)
 RESIZE_OPT = args.resize
 
-# Model
-MODEL = args.model
-MODEL_NAME = MODEL.lower()
-
 
 # Timestamp (to save results)
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), MODEL_NAME, timestamp)
+results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), BASE_ARCHITECTURE.lower(), timestamp)
 if not os.path.isdir(results_dir):
     os.makedirs(results_dir)
 
@@ -265,6 +261,12 @@ train_transforms = torchvision.transforms.Compose([
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
 
+# Train Push Transforms
+train_push_transforms = torchvision.transforms.Compose([
+    torchvision.transforms.Resize(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.ToTensor(),
+    torchvision.transforms.Normalize(mean=MEAN, std=STD)
+])
 
 # Validation Transforms
 val_transforms = torchvision.transforms.Compose([
@@ -275,34 +277,28 @@ val_transforms = torchvision.transforms.Compose([
 ])
 
 
-# TODO: Dataset
-# Train Dataset
-train_set = datasets.ImageFolder(
-    train_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
+# Dataset
+if DATASET == "CUB2002011":
+    # Train Dataset
+    train_set = CUB2002011Dataset(
+        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "train", "images"),
+        classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
+        transform=train_transforms
+    )
 
-train_push_set = datasets.ImageFolder(
-    train_push_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-    ]))
+    # Train Push Dataset (Prototypes)
+    train_push_set = CUB2002011Dataset(
+        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "train", "cropped"),
+        classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
+         transform=train_push_transforms
+    )
 
-
-
-
-# Validation Dataset
-val_set = datasets.ImageFolder(
-    test_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
+    # Validation Dataset
+    val_set = CUB2002011Dataset(
+        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "test", "images"),
+        classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
+        transform=val_transforms
+    )
 
 
 
@@ -506,7 +502,7 @@ for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
 
     if epoch < NUM_WARM_EPOCHS:
         warm_only(model=ppnet_model)
-        _ = train(model=ppnet_model, dataloader=train_loader, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
+        _ = train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
 
 
     else:
@@ -522,7 +518,7 @@ for epoch in tqdm(range(init_epoch, NUM_TRAIN_EPOCHS)):
     # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
     # Save checkpoint
     # Model path
-    model_path = os.path.join(weights_dir, f"{MODEL_NAME.lower()}_{DATASET.lower()}_best.pt")
+    model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
     save_dict = {
         'epoch':epoch,
         'model_state_dict':ppnet_model.state_dict(),
