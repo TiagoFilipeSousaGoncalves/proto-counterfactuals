@@ -453,7 +453,8 @@ def update_prototypes_on_batch(search_batch_input,
                     # Save the whole image containing the prototype as png
                     # TODO: Erase uppon review
                     # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-original' + str(j) + '.png'), original_img_j, vmin=0.0, vmax=1.0)
-                    pil_original_img_j = Image.fromarray(original_img_j.copy()).convert('RGB')
+                    pil_original_img_j = (original_img_j.copy() * 255).astype(np.uint8)
+                    pil_original_img_j = Image.fromarray(pil_original_img_j.copy()).convert('RGB')
                     pil_original_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-original' + str(j) + '.png'))
                     
                     # Overlay (upsampled) self activation on original image and save the result
@@ -465,20 +466,23 @@ def update_prototypes_on_batch(search_batch_input,
                     overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
                     # TODO: Erase uppon review
                     # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'), overlayed_original_img_j, vmin=0.0, vmax=1.0)
-                    pil_overlayed_original_img_j = Image.fromarray(overlayed_original_img_j.copy()).convert('RGB')
+                    pil_overlayed_original_img_j = (overlayed_original_img_j.copy() * 255).astype(np.uint8)
+                    pil_overlayed_original_img_j = Image.fromarray(pil_overlayed_original_img_j.copy()).convert('RGB')
                     pil_overlayed_original_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'))
                     
                     # If different from the original (whole) image, save the prototype receptive field as png
                     if rf_img_j.shape[0] != original_img_size or rf_img_j.shape[1] != original_img_size:
                         # TODO: Erase uppon review
                         # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'), rf_img_j, vmin=0.0, vmax=1.0)
-                        pil_rf_img_j = Image.fromarray(rf_img_j.copy()).convert('RGB')
+                        pil_rf_img_j = (rf_img_j.copy() * 255).astype(np.uint8)
+                        pil_rf_img_j = Image.fromarray(pil_rf_img_j.copy()).convert('RGB')
                         pil_rf_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'))
                         
 
                         # TODO: Erase uppon review
                         overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2], rf_prototype_j[3]:rf_prototype_j[4]]
                         # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'), overlayed_rf_img_j, vmin=0.0, vmax=1.0)
+                        pil_overlayed_rf_img_j = (overlayed_rf_img_j.copy() * 255).astype(np.uint8)
                         pil_overlayed_rf_img_j = Image.fromarray(overlayed_rf_img_j.copy()).convert('RGB')
                         pil_overlayed_rf_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'))
                     
@@ -486,6 +490,7 @@ def update_prototypes_on_batch(search_batch_input,
                     # Save the prototype image (highly activated region of the whole image)
                     # TODO: Erase uppon review
                     # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.png'), proto_img_j, vmin=0.0, vmax=1.0)
+                    pil_proto_img_j = (proto_img_j.copy() * 255).astype(np.uint8)
                     pil_proto_img_j = Image.fromarray(proto_img_j.copy()).convert('RGB')
                     pil_proto_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.png'))
                 
