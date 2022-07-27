@@ -550,7 +550,8 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             prototype_img_filename_prefix=prototype_img_filename_prefix,
             prototype_self_act_filename_prefix=prototype_self_act_filename_prefix,
             proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
-            save_prototype_class_identity=True
+            save_prototype_class_identity=True,
+            device=DEVICE
             )
         
         acc = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)

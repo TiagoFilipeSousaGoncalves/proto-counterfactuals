@@ -45,8 +45,7 @@ def find_high_activation_crop(activation_map, percentile=95):
 
 
 # Function: Compute layer RF info
-def compute_layer_rf_info(layer_filter_size, layer_stride, layer_padding,
-                          previous_layer_rf_info):
+def compute_layer_rf_info(layer_filter_size, layer_stride, layer_padding, previous_layer_rf_info):
     n_in = previous_layer_rf_info[0] # input size
     j_in = previous_layer_rf_info[1] # receptive field jump of input layer
     r_in = previous_layer_rf_info[2] # receptive field size of input layer
@@ -198,14 +197,17 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
                     proto_bound_boxes_filename_prefix=None,
                     save_prototype_class_identity=True, # which class the prototype image comes from
                     log=print,
-                    prototype_activation_function_in_numpy=None):
+                    prototype_activation_function_in_numpy=None,
+                    device='cpu'):
 
     prototype_network_parallel.eval()
     log('\tpush')
 
     start = time.time()
-    prototype_shape = prototype_network_parallel.module.prototype_shape
-    n_prototypes = prototype_network_parallel.module.num_prototypes
+    # prototype_shape = prototype_network_parallel.module.prototype_shape
+    prototype_shape = prototype_network_parallel.prototype_shape
+    # n_prototypes = prototype_network_parallel.module.num_prototypes
+    n_prototypes = prototype_network_parallel.num_prototypes
     # saves the closest distance seen so far
     global_min_proto_dist = np.full(n_prototypes, np.inf)
     # saves the patch representation that gives the current smallest distance
@@ -237,8 +239,7 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
 
     if root_dir_for_saving_prototypes != None:
         if epoch_number != None:
-            proto_epoch_dir = os.path.join(root_dir_for_saving_prototypes,
-                                           'epoch-'+str(epoch_number))
+            proto_epoch_dir = os.path.join(root_dir_for_saving_prototypes, 'epoch-'+str(epoch_number))
             
             # TODO: Erase uppon review
             # makedir(proto_epoch_dir)
@@ -252,7 +253,8 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
 
     search_batch_size = dataloader.batch_size
 
-    num_classes = prototype_network_parallel.module.num_classes
+    # num_classes = prototype_network_parallel.module.num_classes
+    num_classes = prototype_network_parallel.num_classes
 
     for push_iter, (search_batch_input, search_y) in enumerate(dataloader):
         '''
@@ -276,7 +278,8 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
                                    dir_for_saving_prototypes=proto_epoch_dir,
                                    prototype_img_filename_prefix=prototype_img_filename_prefix,
                                    prototype_self_act_filename_prefix=prototype_self_act_filename_prefix,
-                                   prototype_activation_function_in_numpy=prototype_activation_function_in_numpy)
+                                   prototype_activation_function_in_numpy=prototype_activation_function_in_numpy,
+                                   device=device)
 
     if proto_epoch_dir != None and proto_bound_boxes_filename_prefix != None:
         np.save(os.path.join(proto_epoch_dir, proto_bound_boxes_filename_prefix + '-receptive_field' + str(epoch_number) + '.npy'),
@@ -285,9 +288,10 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
                 proto_bound_boxes)
 
     log('\tExecuting push ...')
-    prototype_update = np.reshape(global_min_fmap_patches,
-                                  tuple(prototype_shape))
-    prototype_network_parallel.module.prototype_vectors.data.copy_(torch.tensor(prototype_update, dtype=torch.float32).cuda())
+    prototype_update = np.reshape(global_min_fmap_patches, tuple(prototype_shape))
+    # prototype_network_parallel.module.prototype_vectors.data.copy_(torch.tensor(prototype_update, dtype=torch.float32).cuda())
+    # prototype_network_parallel.prototype_vectors.data.copy_(torch.tensor(prototype_update, dtype=torch.float32).cuda())
+    prototype_network_parallel.prototype_vectors.data.copy_(torch.tensor(prototype_update, dtype=torch.float32).to(device))
     # prototype_network_parallel.cuda()
     end = time.time()
     log('\tpush time: \t{0}'.format(end -  start))
@@ -310,7 +314,8 @@ def update_prototypes_on_batch(search_batch_input,
                                dir_for_saving_prototypes=None,
                                prototype_img_filename_prefix=None,
                                prototype_self_act_filename_prefix=None,
-                               prototype_activation_function_in_numpy=None):
+                               prototype_activation_function_in_numpy=None,
+                               device='cpu'):
 
     prototype_network_parallel.eval()
 
@@ -323,9 +328,11 @@ def update_prototypes_on_batch(search_batch_input,
         search_batch = search_batch_input
 
     with torch.no_grad():
-        search_batch = search_batch.cuda()
+        # search_batch = search_batch.cuda()
+        search_batch = search_batch.to(device)
         # this computation currently is not parallelized
-        protoL_input_torch, proto_dist_torch = prototype_network_parallel.module.push_forward(search_batch)
+        # protoL_input_torch, proto_dist_torch = prototype_network_parallel.module.push_forward(search_batch)
+        protoL_input_torch, proto_dist_torch = prototype_network_parallel.push_forward(search_batch)
 
     protoL_input_ = np.copy(protoL_input_torch.detach().cpu().numpy())
     proto_dist_ = np.copy(proto_dist_torch.detach().cpu().numpy())
@@ -339,7 +346,8 @@ def update_prototypes_on_batch(search_batch_input,
             img_label = img_y.item()
             class_to_img_index_dict[img_label].append(img_index)
 
-    prototype_shape = prototype_network_parallel.module.prototype_shape
+    # prototype_shape = prototype_network_parallel.module.prototype_shape
+    prototype_shape = prototype_network_parallel.prototype_shape
     n_prototypes = prototype_shape[0]
     proto_h = prototype_shape[2]
     proto_w = prototype_shape[3]
@@ -349,7 +357,8 @@ def update_prototypes_on_batch(search_batch_input,
         #if n_prototypes_per_class != None:
         if class_specific:
             # target_class is the class of the class_specific prototype
-            target_class = torch.argmax(prototype_network_parallel.module.prototype_class_identity[j]).item()
+            # target_class = torch.argmax(prototype_network_parallel.module.prototype_class_identity[j]).item()
+            target_class = torch.argmax(prototype_network_parallel.prototype_class_identity[j]).item()
             # if there is not images of the target_class from this batch
             # we go on to the next prototype
             if len(class_to_img_index_dict[target_class]) == 0:
@@ -390,7 +399,8 @@ def update_prototypes_on_batch(search_batch_input,
             
             # get the receptive field boundary of the image patch
             # that generates the representation
-            protoL_rf_info = prototype_network_parallel.module.proto_layer_rf_info
+            # protoL_rf_info = prototype_network_parallel.module.proto_layer_rf_info
+            protoL_rf_info = prototype_network_parallel.proto_layer_rf_info
             rf_prototype_j = compute_rf_prototype(search_batch.size(2), batch_argmin_proto_dist_j, protoL_rf_info)
             
             # get the whole image
@@ -400,8 +410,7 @@ def update_prototypes_on_batch(search_batch_input,
             original_img_size = original_img_j.shape[0]
             
             # crop out the receptive field
-            rf_img_j = original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
-                                      rf_prototype_j[3]:rf_prototype_j[4], :]
+            rf_img_j = original_img_j[rf_prototype_j[1]:rf_prototype_j[2], rf_prototype_j[3]:rf_prototype_j[4], :]
             
             # save the prototype receptive field information
             proto_rf_boxes[j, 0] = rf_prototype_j[0] + start_index_of_search_batch
@@ -414,18 +423,21 @@ def update_prototypes_on_batch(search_batch_input,
 
             # find the highly activated region of the original image
             proto_dist_img_j = proto_dist_[img_index_in_batch, j, :, :]
-            if prototype_network_parallel.module.prototype_activation_function == 'log':
-                proto_act_img_j = np.log((proto_dist_img_j + 1) / (proto_dist_img_j + prototype_network_parallel.module.epsilon))
-            elif prototype_network_parallel.module.prototype_activation_function == 'linear':
+            # if prototype_network_parallel.module.prototype_activation_function == 'log':
+            if prototype_network_parallel.prototype_activation_function == 'log':
+                # proto_act_img_j = np.log((proto_dist_img_j + 1) / (proto_dist_img_j + prototype_network_parallel.module.epsilon))
+                proto_act_img_j = np.log((proto_dist_img_j + 1) / (proto_dist_img_j + prototype_network_parallel.epsilon))
+            
+            # elif prototype_network_parallel.module.prototype_activation_function == 'linear':
+            elif prototype_network_parallel.prototype_activation_function == 'linear':
                 proto_act_img_j = max_dist - proto_dist_img_j
+            
             else:
                 proto_act_img_j = prototype_activation_function_in_numpy(proto_dist_img_j)
-            upsampled_act_img_j = cv2.resize(proto_act_img_j, dsize=(original_img_size, original_img_size),
-                                             interpolation=cv2.INTER_CUBIC)
+            upsampled_act_img_j = cv2.resize(proto_act_img_j, dsize=(original_img_size, original_img_size), interpolation=cv2.INTER_CUBIC)
             proto_bound_j = find_high_activation_crop(upsampled_act_img_j)
             # crop out the image patch with high activation as prototype image
-            proto_img_j = original_img_j[proto_bound_j[0]:proto_bound_j[1],
-                                         proto_bound_j[2]:proto_bound_j[3], :]
+            proto_img_j = original_img_j[proto_bound_j[0]:proto_bound_j[1], proto_bound_j[2]:proto_bound_j[3], :]
 
             # save the prototype boundary (rectangular boundary of highly activated region)
             proto_bound_boxes[j, 0] = proto_rf_boxes[j, 0]
