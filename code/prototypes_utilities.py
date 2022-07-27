@@ -6,6 +6,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+from PIL import Image
 
 # PyTorch Imports
 import torch
@@ -371,9 +372,7 @@ def update_prototypes_on_batch(search_batch_input,
 
         batch_min_proto_dist_j = np.amin(proto_dist_j)
         if batch_min_proto_dist_j < global_min_proto_dist[j]:
-            batch_argmin_proto_dist_j = \
-                list(np.unravel_index(np.argmin(proto_dist_j, axis=None),
-                                      proto_dist_j.shape))
+            batch_argmin_proto_dist_j = list(np.unravel_index(np.argmin(proto_dist_j, axis=None), proto_dist_j.shape))
             if class_specific:
                 '''
                 change the argmin index from the index among
@@ -389,10 +388,7 @@ def update_prototypes_on_batch(search_batch_input,
             fmap_width_start_index = batch_argmin_proto_dist_j[2] * prototype_layer_stride
             fmap_width_end_index = fmap_width_start_index + proto_w
 
-            batch_min_fmap_patch_j = protoL_input_[img_index_in_batch,
-                                                   :,
-                                                   fmap_height_start_index:fmap_height_end_index,
-                                                   fmap_width_start_index:fmap_width_end_index]
+            batch_min_fmap_patch_j = protoL_input_[img_index_in_batch, :, fmap_height_start_index:fmap_height_end_index, fmap_width_start_index:fmap_width_end_index]
 
             global_min_proto_dist[j] = batch_min_proto_dist_j
             global_min_fmap_patches[j] = batch_min_fmap_patch_j
@@ -451,50 +447,47 @@ def update_prototypes_on_batch(search_batch_input,
             if dir_for_saving_prototypes is not None:
                 if prototype_self_act_filename_prefix is not None:
                     # save the numpy array of the prototype self activation
-                    np.save(os.path.join(dir_for_saving_prototypes,
-                                         prototype_self_act_filename_prefix + str(j) + '.npy'),
-                            proto_act_img_j)
+                    np.save(os.path.join(dir_for_saving_prototypes, prototype_self_act_filename_prefix + str(j) + '.npy'), proto_act_img_j)
                 if prototype_img_filename_prefix is not None:
-                    # save the whole image containing the prototype as png
-                    plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + '-original' + str(j) + '.png'),
-                               original_img_j,
-                               vmin=0.0,
-                               vmax=1.0)
-                    # overlay (upsampled) self activation on original image and save the result
+                    
+                    # Save the whole image containing the prototype as png
+                    # TODO: Erase uppon review
+                    # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-original' + str(j) + '.png'), original_img_j, vmin=0.0, vmax=1.0)
+                    pil_original_img_j = Image.fromarray(original_img_j.copy()).convert('RGB')
+                    pil_original_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-original' + str(j) + '.png'))
+                    
+                    # Overlay (upsampled) self activation on original image and save the result
                     rescaled_act_img_j = upsampled_act_img_j - np.amin(upsampled_act_img_j)
                     rescaled_act_img_j = rescaled_act_img_j / np.amax(rescaled_act_img_j)
                     heatmap = cv2.applyColorMap(np.uint8(255*rescaled_act_img_j), cv2.COLORMAP_JET)
                     heatmap = np.float32(heatmap) / 255
                     heatmap = heatmap[...,::-1]
                     overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
-                    plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'),
-                               overlayed_original_img_j,
-                               vmin=0.0,
-                               vmax=1.0)
+                    # TODO: Erase uppon review
+                    # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'), overlayed_original_img_j, vmin=0.0, vmax=1.0)
+                    pil_overlayed_original_img_j = Image.fromarray(overlayed_original_img_j.copy()).convert('RGB')
+                    pil_overlayed_original_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'))
                     
-                    # if different from the original (whole) image, save the prototype receptive field as png
+                    # If different from the original (whole) image, save the prototype receptive field as png
                     if rf_img_j.shape[0] != original_img_size or rf_img_j.shape[1] != original_img_size:
-                        plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                                prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'),
-                                   rf_img_j,
-                                   vmin=0.0,
-                                   vmax=1.0)
-                        overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
-                                                                      rf_prototype_j[3]:rf_prototype_j[4]]
-                        plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                                prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'),
-                                   overlayed_rf_img_j,
-                                   vmin=0.0,
-                                   vmax=1.0)
+                        # TODO: Erase uppon review
+                        # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'), rf_img_j, vmin=0.0, vmax=1.0)
+                        pil_rf_img_j = Image.fromarray(rf_img_j.copy()).convert('RGB')
+                        pil_rf_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'))
+                        
+
+                        # TODO: Erase uppon review
+                        overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2], rf_prototype_j[3]:rf_prototype_j[4]]
+                        # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'), overlayed_rf_img_j, vmin=0.0, vmax=1.0)
+                        pil_overlayed_rf_img_j = Image.fromarray(overlayed_rf_img_j.copy()).convert('RGB')
+                        pil_overlayed_rf_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'))
                     
-                    # save the prototype image (highly activated region of the whole image)
-                    plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + str(j) + '.png'),
-                               proto_img_j,
-                               vmin=0.0,
-                               vmax=1.0)
+
+                    # Save the prototype image (highly activated region of the whole image)
+                    # TODO: Erase uppon review
+                    # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.png'), proto_img_j, vmin=0.0, vmax=1.0)
+                    pil_proto_img_j = Image.fromarray(proto_img_j.copy()).convert('RGB')
+                    pil_proto_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.png'))
                 
     if class_specific:
         del class_to_img_index_dict
