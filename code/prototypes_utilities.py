@@ -483,7 +483,7 @@ def update_prototypes_on_batch(search_batch_input,
                         overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2], rf_prototype_j[3]:rf_prototype_j[4]]
                         # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'), overlayed_rf_img_j, vmin=0.0, vmax=1.0)
                         pil_overlayed_rf_img_j = (overlayed_rf_img_j.copy() * 255).astype(np.uint8)
-                        pil_overlayed_rf_img_j = Image.fromarray(overlayed_rf_img_j.copy()).convert('RGB')
+                        pil_overlayed_rf_img_j = Image.fromarray(pil_overlayed_rf_img_j.copy()).convert('RGB')
                         pil_overlayed_rf_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'))
                     
 
@@ -491,7 +491,7 @@ def update_prototypes_on_batch(search_batch_input,
                     # TODO: Erase uppon review
                     # plt.imsave(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.png'), proto_img_j, vmin=0.0, vmax=1.0)
                     pil_proto_img_j = (proto_img_j.copy() * 255).astype(np.uint8)
-                    pil_proto_img_j = Image.fromarray(proto_img_j.copy()).convert('RGB')
+                    pil_proto_img_j = Image.fromarray(pil_proto_img_j.copy()).convert('RGB')
                     pil_proto_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.png'))
                 
     if class_specific:
