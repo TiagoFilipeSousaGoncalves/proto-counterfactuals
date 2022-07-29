@@ -564,7 +564,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             
             for i in range(20):
                 print('iteration: \t{0}'.format(i))
-                _ = model_train(model=ppnet_model, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
+                _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
                 
                 acc = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
                 # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70)
