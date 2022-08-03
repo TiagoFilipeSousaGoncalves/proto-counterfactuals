@@ -197,7 +197,7 @@ ppnet_model = ppnet_model.to(DEVICE)
 # Load model weights
 model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
 model_weights = torch.load(model_path, map_location=DEVICE)
-ppnet_model.load_state_dict(model_weights, strict=True)
+ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
 print("Model weights loaded with success.")
 
 
