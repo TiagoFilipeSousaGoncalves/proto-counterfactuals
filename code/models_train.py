@@ -41,7 +41,7 @@ parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011"]
 
 # Model
 # base_architecture = 'vgg19'
-parser.add_argument('--base_architecture', type=str, required=True, choices=["vgg19"], help='Base architecture: vgg19, ')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "resnet18", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
