@@ -1,4 +1,5 @@
 # Imports
+from cProfile import run
 import os
 import argparse
 import numpy as np
@@ -6,7 +7,6 @@ import datetime
 from torchinfo import summary
 
 # Sklearn Imports
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.utils.class_weight import compute_class_weight
 
 # PyTorch Imports
@@ -474,7 +474,7 @@ train_metrics = np.zeros((NUM_TRAIN_EPOCHS, 5))
 val_metrics = np.zeros_like(train_metrics)
 
 # Initialise best accuracy
-best_acc = -np.inf
+best_accuracy = -np.inf
 
 
 
@@ -485,15 +485,6 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     
     # Training Phase
     print("Training Phase")
-    
-    # Initialise lists to compute scores
-    y_train_true = np.empty((0), int)
-    y_train_pred = torch.empty(0, dtype=torch.int32, device=DEVICE)
-    y_train_scores = torch.empty(0, dtype=torch.float, device=DEVICE) # save scores after softmax for roc auc
-
-
-    # Running train loss
-    run_train_loss = torch.tensor(0, dtype=torch.float64, device=DEVICE)
 
 
     # Put model in training mode
@@ -502,24 +493,93 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
     if epoch < NUM_WARM_EPOCHS:
         warm_only(model=ppnet_model)
-        _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
+        metrics_dict, run_avg_loss = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
 
 
     else:
         joint(model=ppnet_model)
         joint_lr_scheduler.step()
-        _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS)
+        metrics_dict, run_avg_loss = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS)
+    
+
+    # Append values to the arrays
+    # Train Loss
+    train_losses[epoch] = run_avg_loss
+    # Save it to directory
+    # fname = os.path.join(history_dir, f"{model_name}_tr_losses.npy")
+    # np.save(file=fname, arr=train_losses, allow_pickle=True)
+
+
+    # Train Metrics
+    # Acc
+    train_metrics[epoch, 0] = metrics_dict['accuracy']
+    # Recall
+    train_metrics[epoch, 1] = metrics_dict['recall']
+    # Precision
+    train_metrics[epoch, 2] = metrics_dict['precision']
+    # F1-Score
+    train_metrics[epoch, 3] = metrics_dict['f1']
+    # ROC AUC
+    train_metrics[epoch, 4] = metrics_dict['auc']
+
+    # Save it to directory
+    # fname = os.path.join(history_dir, f"{model_name}_tr_metrics.npy")
+    # np.save(file=fname, arr=train_metrics, allow_pickle=True)
+
+    # Plot to Tensorboard
+    tbwritter.add_scalar("loss/train", run_avg_loss, global_step=epoch)
+    tbwritter.add_scalar("acc/train", metrics_dict['accuracy'], global_step=epoch)
+    tbwritter.add_scalar("rec/train", metrics_dict['recall'], global_step=epoch)
+    tbwritter.add_scalar("prec/train", metrics_dict['precision'], global_step=epoch)
+    tbwritter.add_scalar("f1/train", metrics_dict['f1'], global_step=epoch)
+    tbwritter.add_scalar("auc/train", metrics_dict['auc'], global_step=epoch)
 
 
 
     # Validation Phase 
     print("Validation Phase")
-    acc = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+    metrics_dict, run_avg_loss = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+    
+
+    # Append values to the arrays
+    # Validation Loss
+    val_losses[epoch] = run_avg_loss
+    # Save it to directory
+    # fname = os.path.join(history_dir, f"{model_name}_val_losses.npy")
+    # np.save(file=fname, arr=val_losses, allow_pickle=True)
+
+
+    # Train Metrics
+    # Acc
+    val_metrics[epoch, 0] = metrics_dict['accuracy']
+    # Recall
+    val_metrics[epoch, 1] = metrics_dict['recall']
+    # Precision
+    val_metrics[epoch, 2] = metrics_dict['precision']
+    # F1-Score
+    val_metrics[epoch, 3] = metrics_dict['f1']
+    # ROC AUC
+    val_metrics[epoch, 4] = metrics_dict['auc']
+
+    # Save it to directory
+    # fname = os.path.join(history_dir, f"{model_name}_val_metrics.npy")
+    # np.save(file=fname, arr=val_metrics, allow_pickle=True)
+
+    # Plot to Tensorboard
+    tbwritter.add_scalar("loss/val", run_avg_loss, global_step=epoch)
+    tbwritter.add_scalar("acc/val", metrics_dict['accuracy'], global_step=epoch)
+    tbwritter.add_scalar("rec/val", metrics_dict['recall'], global_step=epoch)
+    tbwritter.add_scalar("prec/val", metrics_dict['precision'], global_step=epoch)
+    tbwritter.add_scalar("f1/val", metrics_dict['f1'], global_step=epoch)
+    tbwritter.add_scalar("auc/val", metrics_dict['auc'], global_step=epoch)
+
+
+
     # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
     # Save checkpoint
-    if acc > best_acc:
+    if metrics_dict['accuracy'] > best_acc:
 
-        print(f"Accuracy increased from {best_acc} to {acc}. Saving new model..")
+        print(f"Accuracy increased from {best_acc} to {metrics_dict['accuracy']}. Saving new model...")
 
         # Model path
         model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
@@ -528,13 +588,14 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             'model_state_dict':ppnet_model.state_dict(),
             'warm_optimizer_state_dict':warm_optimizer.state_dict(),
             'joint_optimizer_state_dict':joint_optimizer.state_dict(),
-            # 'loss': avg_train_loss,
+            'run_avg_loss': run_avg_loss,
         }
         torch.save(save_dict, model_path)
         print(f"Successfully saved at: {model_path}")
 
         # Update best accuracy value
-        best_acc = acc
+        best_acc = metrics_dict['accuracy']
+
 
 
     # PUSH START and PUSH EPOCHS
@@ -546,7 +607,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             preprocess_input_function=preprocess_input_function, # normalize if needed
             prototype_layer_stride=1,
             root_dir_for_saving_prototypes=saved_prototypes_dir, # if not None, prototypes will be saved here
-            epoch_number=epoch, # if not provided, prototypes saved previously will be overwritten
+            epoch_number=None, # if not provided, prototypes saved previously will be overwritten
             prototype_img_filename_prefix=prototype_img_filename_prefix,
             prototype_self_act_filename_prefix=prototype_self_act_filename_prefix,
             proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
@@ -554,7 +615,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             device=DEVICE
             )
         
-        acc = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+        _, _ = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
         # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70)
 
 
@@ -564,9 +625,9 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             
             for i in range(20):
                 print('iteration: \t{0}'.format(i))
-                _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
+                _, _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
                 
-                acc = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+                _, _ = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
                 # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70)
    
 

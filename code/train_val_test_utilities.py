@@ -1,7 +1,10 @@
 # Source: https://github.com/cfchen-duke/ProtoPNet/blob/master/train_and_test.py
 # Imports
-import time
+import numpy as np
 from tqdm import tqdm
+
+# Sklearn Imports
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 
 # PyTorch Imports
 import torch
@@ -26,10 +29,19 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
 
     # Some control variables
-    start = time.time()
-    n_examples = 0
-    n_correct = 0
-    n_batches = 0
+    # TODO: Erase uppon review
+    # start = time.time()
+    # n_examples = 0
+    # n_correct = 0
+    # n_batches = 0
+    # Initialise lists to compute scores
+    y_true = np.empty((0), int)
+    y_pred = torch.empty(0, dtype=torch.int32, device=device)
+    # Save scores after softmax for roc auc
+    y_scores = torch.empty(0, dtype=torch.float, device=device)
+    
+        
+    # Total Cross Entropy Loss & Total Cluster Cost
     total_cross_entropy = 0
     total_cluster_cost = 0
 
@@ -39,13 +51,19 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     total_avg_separation_cost = 0
 
 
+    # Total Loss
+    total_loss = 0
+
+
     # Iterate through the dataloader
-    for _, (image, label) in enumerate(tqdm(dataloader)):
+    for _, (images, labels) in enumerate(tqdm(dataloader)):
+
+        # Concatenate lists
+        y_true = np.append(y_true, labels.numpy(), axis=0)
         
+
         # Put data into device
-        # image = image.cuda()
-        # label = label.cuda()
-        image, label = image.to(device), label.to(device)
+        images, labels = images.to(device), labels.to(device)
 
 
         # Note: torch.enable_grad() has no effect outside of no_grad()
@@ -60,10 +78,10 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
         with grad_req:
             
             # We pass image by the model    
-            output, min_distances = model(image)
+            logits, min_distances = model(images)
 
             # We first compute the CrossEntropy Loss
-            cross_entropy = torch.nn.functional.cross_entropy(output, label)
+            cross_entropy = torch.nn.functional.cross_entropy(logits, labels)
 
             # Check this condition
             if class_specific:
@@ -75,7 +93,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
                 # Calculate cluster cost
                 # prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).cuda()
                 # prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).to(device)
-                prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,label]).to(device)
+                prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,labels]).to(device)
                 inverted_distances, _ = torch.max((max_dist - min_distances) * prototypes_of_correct_class, dim=1)
                 cluster_cost = torch.mean(max_dist - inverted_distances)
 
@@ -106,16 +124,27 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
                 l1 = model.last_layer.weight.norm(p=1)
 
 
-            # Evaluation statistics
-            _, predicted = torch.max(output.data, 1)
-            n_examples += label.size(0)
-            n_correct += (predicted == label).sum().item()
+            # Compute performance metrics
+            # TODO: Erase original code stuff uppon review
+            # _, predicted = torch.max(logits.data, 1)
+            # n_examples += labels.size(0)
+            # n_correct += (predicted == label).sum().item()
+            # n_batches += 1
 
-            n_batches += 1
+            # Using Softmax
+            # Apply Softmax on Logits and get the argmax to get the predicted labels
+            s_logits = torch.nn.Softmax(dim=1)(logits)
+            y_scores = torch.cat((y_scores, s_logits))
+            s_logits = torch.argmax(s_logits, dim=1)
+            y_pred = torch.cat((y_pred, s_logits))
+
+
+            # Total Losses and Costs
             total_cross_entropy += cross_entropy.item()
             total_cluster_cost += cluster_cost.item()
             total_separation_cost += separation_cost.item()
             total_avg_separation_cost += avg_separation_cost.item()
+
 
 
         # Compute final loss value for train or validation
@@ -138,35 +167,81 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
                     loss = cross_entropy + 0.8 * cluster_cost + 1e-4 * l1
 
 
+
+        # Update Total Running Loss
+        total_loss += loss.item()
+
+
         # Perform backpropagation (if training)
         if mode == "train":
-            # Compute gradients and do backpropagation
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
 
         # TODO: Is this necessary?
-        del image
-        del label
-        del output
-        del predicted
+        del images
+        del labels
+        del logits
+        # del predicted
         del min_distances
 
 
     # Some log prints
-    print('\ttime: \t{0}'.format(time.time() -  start))
-    print('\tcross ent: \t{0}'.format(total_cross_entropy / n_batches))
-    print('\tcluster: \t{0}'.format(total_cluster_cost / n_batches))
+    # print('\ttime: \t{0}'.format(time.time() -  start))
+    # print('Cross Entropy Loss: \t{0}'.format(total_cross_entropy / n_batches))
+    # print('Cluster Loss: \t{0}'.format(total_cluster_cost / n_batches))
+    print('Cross Entropy Loss: \t{0}'.format(total_cross_entropy / len(dataloader)))
+    print('Cluster Loss: \t{0}'.format(total_cluster_cost / len(dataloader)))
 
 
+    # Specific log prints for "class_specific" option
     if class_specific:
-        print('\tseparation:\t{0}'.format(total_separation_cost / n_batches))
-        print('\tavg separation:\t{0}'.format(total_avg_separation_cost / n_batches))
+        # print('Separation Cost:\t{0}'.format(total_separation_cost / n_batches))
+        # print('Average Separation Cost:\t{0}'.format(total_avg_separation_cost / n_batches))
+        print('Separation Cost:\t{0}'.format(total_separation_cost / len(dataloader)))
+        print('Average Separation Cost:\t{0}'.format(total_avg_separation_cost / len(dataloader)))
+    
 
-    print('\taccu: \t\t{0}%'.format(n_correct / n_examples * 100))
+    # Total Epoch Loss
+    run_avg_loss = total_loss / len(dataloader)
+    print('Total Loss:\t{0}'.format(run_avg_loss))
+
+
+    # Compute performance metrics
+    # Get the necessary data
+    y_pred = y_pred.cpu().detach().numpy()
+    y_scores = y_scores.cpu().detach().numpy()
+    
+    # Accuracy, Recall, Precision, F1 and AUC
+    accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
+    recall = recall_score(y_true=y_true, y_pred=y_pred, average='micro')
+    precision = precision_score(y_true=y_true, y_pred=y_pred, average='micro')
+    f1 = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
+    auc = roc_auc_score(y_true=y_true, y_score=y_scores[:, 1], average='micro')
+    
+    # Print performance metrics
+    # print('Accuracy: \t\t{0}%'.format(n_correct / n_examples * 100))
+    print('Accuracy: \t\t{0}%'.format(accuracy))
+    print('Recall: \t\t{0}%'.format(recall))
+    print('Precision: \t\t{0}%'.format(precision))
+    print('F1: \t\t{0}%'.format(f1))
+    print('AUC: \t\t{0}%'.format(auc))
+    
+    # Create a metrics dictionary
+    metrics_dict = {
+        "accuracy":accuracy,
+        "recall":recall,
+        "precision":precision,
+        "f1":f1,
+        "auc":auc
+    }
+    
+    
+    
+    # Get L1
     # print('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
-    print('\tl1: \t\t{0}'.format(model.last_layer.weight.norm(p=1).item()))
+    print('L1: \t\t{0}'.format(model.last_layer.weight.norm(p=1).item()))
 
 
     # Get prototypes
@@ -177,11 +252,12 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     # Compute prototype average pair distance
     with torch.no_grad():
         p_avg_pair_dist = torch.mean(list_of_distances(p, p))
-    print('\tp dist pair: \t{0}'.format(p_avg_pair_dist.item()))
+    
+    print('Prototype Average Distance Pair: \t{0}'.format(p_avg_pair_dist.item()))
 
 
 
-    return n_correct / n_examples
+    return metrics_dict, run_avg_loss
 
 
 
