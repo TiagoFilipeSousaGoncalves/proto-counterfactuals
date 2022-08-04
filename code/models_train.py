@@ -577,9 +577,9 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
     # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
     # Save checkpoint
-    if metrics_dict['accuracy'] > best_acc:
+    if metrics_dict['accuracy'] > best_accuracy:
 
-        print(f"Accuracy increased from {best_acc} to {metrics_dict['accuracy']}. Saving new model...")
+        print(f"Accuracy increased from {best_accuracy} to {metrics_dict['accuracy']}. Saving new model...")
 
         # Model path
         model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
@@ -594,7 +594,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
         print(f"Successfully saved at: {model_path}")
 
         # Update best accuracy value
-        best_acc = metrics_dict['accuracy']
+        best_accuracy = metrics_dict['accuracy']
 
 
 
