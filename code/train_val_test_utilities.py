@@ -218,7 +218,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     recall = recall_score(y_true=y_true, y_pred=y_pred, average='micro')
     precision = precision_score(y_true=y_true, y_pred=y_pred, average='micro')
     f1 = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
-    auc = roc_auc_score(y_true=y_true, y_score=y_scores[:, 1], average='micro')
+    # auc = roc_auc_score(y_true=y_true, y_score=y_scores[:, 1], average='micro')
     
     # Print performance metrics
     # print('Accuracy: \t\t{0}%'.format(n_correct / n_examples * 100))
@@ -226,15 +226,14 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     print('Recall: \t\t{0}%'.format(recall))
     print('Precision: \t\t{0}%'.format(precision))
     print('F1: \t\t{0}%'.format(f1))
-    print('AUC: \t\t{0}%'.format(auc))
+    # print('AUC: \t\t{0}%'.format(auc))
     
     # Create a metrics dictionary
     metrics_dict = {
         "accuracy":accuracy,
         "recall":recall,
         "precision":precision,
-        "f1":f1,
-        "auc":auc
+        "f1":f1
     }
     
     

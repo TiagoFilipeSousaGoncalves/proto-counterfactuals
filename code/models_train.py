@@ -1,5 +1,4 @@
 # Imports
-from cProfile import run
 import os
 import argparse
 import numpy as np
@@ -395,14 +394,15 @@ with open(os.path.join(results_dir, "model_summary.txt"), 'w') as f:
 
 
 
+# TODO: Review
 # Class weights for loss
-if args.classweights:
-    classes = np.array(range(NUM_CLASSES))
-    cw = compute_class_weight('balanced', classes=classes, y=np.array(train_set.images_labels))
-    cw = torch.from_numpy(cw).float().to(DEVICE)
-    print(f"Using class weights {cw}")
-else:
-    cw = None
+# if args.classweights:
+#     classes = np.array(range(NUM_CLASSES))
+#     cw = compute_class_weight('balanced', classes=classes, y=np.array(train_set.images_labels))
+#     cw = torch.from_numpy(cw).float().to(DEVICE)
+#     print(f"Using class weights {cw}")
+# else:
+#     cw = None
 
 
 
@@ -506,8 +506,8 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # Train Loss
     train_losses[epoch] = run_avg_loss
     # Save it to directory
-    # fname = os.path.join(history_dir, f"{model_name}_tr_losses.npy")
-    # np.save(file=fname, arr=train_losses, allow_pickle=True)
+    fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_tr_losses.npy")
+    np.save(file=fname, arr=train_losses, allow_pickle=True)
 
 
     # Train Metrics
@@ -520,11 +520,11 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # F1-Score
     train_metrics[epoch, 3] = metrics_dict['f1']
     # ROC AUC
-    train_metrics[epoch, 4] = metrics_dict['auc']
+    # train_metrics[epoch, 4] = metrics_dict['auc']
 
     # Save it to directory
-    # fname = os.path.join(history_dir, f"{model_name}_tr_metrics.npy")
-    # np.save(file=fname, arr=train_metrics, allow_pickle=True)
+    fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_tr_metrics.npy")
+    np.save(file=fname, arr=train_metrics, allow_pickle=True)
 
     # Plot to Tensorboard
     tbwritter.add_scalar("loss/train", run_avg_loss, global_step=epoch)
@@ -532,7 +532,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     tbwritter.add_scalar("rec/train", metrics_dict['recall'], global_step=epoch)
     tbwritter.add_scalar("prec/train", metrics_dict['precision'], global_step=epoch)
     tbwritter.add_scalar("f1/train", metrics_dict['f1'], global_step=epoch)
-    tbwritter.add_scalar("auc/train", metrics_dict['auc'], global_step=epoch)
+    # tbwritter.add_scalar("auc/train", metrics_dict['auc'], global_step=epoch)
 
 
 
@@ -545,8 +545,8 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # Validation Loss
     val_losses[epoch] = run_avg_loss
     # Save it to directory
-    # fname = os.path.join(history_dir, f"{model_name}_val_losses.npy")
-    # np.save(file=fname, arr=val_losses, allow_pickle=True)
+    fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_val_losses.npy")
+    np.save(file=fname, arr=val_losses, allow_pickle=True)
 
 
     # Train Metrics
@@ -559,11 +559,11 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # F1-Score
     val_metrics[epoch, 3] = metrics_dict['f1']
     # ROC AUC
-    val_metrics[epoch, 4] = metrics_dict['auc']
+    # val_metrics[epoch, 4] = metrics_dict['auc']
 
     # Save it to directory
-    # fname = os.path.join(history_dir, f"{model_name}_val_metrics.npy")
-    # np.save(file=fname, arr=val_metrics, allow_pickle=True)
+    fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_val_metrics.npy")
+    np.save(file=fname, arr=val_metrics, allow_pickle=True)
 
     # Plot to Tensorboard
     tbwritter.add_scalar("loss/val", run_avg_loss, global_step=epoch)
@@ -571,7 +571,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     tbwritter.add_scalar("rec/val", metrics_dict['recall'], global_step=epoch)
     tbwritter.add_scalar("prec/val", metrics_dict['precision'], global_step=epoch)
     tbwritter.add_scalar("f1/val", metrics_dict['f1'], global_step=epoch)
-    tbwritter.add_scalar("auc/val", metrics_dict['auc'], global_step=epoch)
+    # tbwritter.add_scalar("auc/val", metrics_dict['auc'], global_step=epoch)
 
 
 
