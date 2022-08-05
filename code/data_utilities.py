@@ -1,13 +1,9 @@
 # Imports
 import os
-import _pickle as cPickle
 from tqdm import tqdm
 import numpy as np
-import pandas as pd
+import scipy.io as sio
 from PIL import Image
-
-# Sklearn Imports
-from sklearn.model_selection import train_test_split
 
 # PyTorch Imports
 import torch
@@ -86,12 +82,122 @@ def undo_preprocess_input_function(x, mean, std):
 
 
 
+# STANFORDCARSDataset: Dataset Class
+class STANFORDCARSDataset(Dataset):
+    def __init__(self, data_path, cars_subset, cropped=True, transform=None):
+        
+        """
+        Args:
+            data_path (string): Data directory.
+            cars_subset (string): Subset of data for training.
+            cropped (Boolean): Specify if we want the cropped version fo the data set.
+            transform (callable, optional): Optional transform to be applied on a sample.
+        """
+
+
+        # Assert if cars_subset is available
+        assert cars_subset in ("cars_train", "cars_test"), "Please provide a valid subset (cars_train, cars_test)."
+
+
+        # Get the directory of images
+        if cropped:
+            self.images_path = os.path.join(data_path, "stanfordcars", cars_subset, "images_cropped")
+        else:
+            self.images_path = os.path.join(data_path, "stanfordcars", cars_subset, "images")
+
+
+        # Get the correspondent .MAT file
+        if cars_subset == "cars_train":
+            mat_file = sio.loadmat(os.path.join(data_path, "stanfordcars", "car_devkit", "devkit", f"{cars_subset}_annos.mat"))
+        else:
+            mat_file = sio.loadmat(os.path.join(data_path, "stanfordcars", "car_devkit", "devkit", f"{cars_subset}_annos_withlabels.mat"))
+
+
+        # Create lists to append stuff
+        image_fnames = list()
+        image_labels = list()
+        image_bboxes = list()
+
+        # Go through data points
+        for entries in mat_file['annotations']:
+            for sample in entries:
+                # dtype=[('bbox_x1', 'O'), ('bbox_y1', 'O'), ('bbox_x2', 'O'), ('bbox_y2', 'O'), ('class', 'O'), ('fname', 'O')])}
+                bbox_x1 = sample[0][0,0]
+                bbox_y1 = sample[1][0,0]
+                bbox_x2 = sample[2][0,0]
+                bbox_y2 = sample[3][0,0]
+                label = sample[4][0,0]
+                fname = sample[5][0]
+
+                # Append fname
+                image_fnames.append(fname)
+
+                # Append label
+                image_labels.append(label)
+
+                # Append bbox
+                image_bboxes.append((bbox_x1, bbox_y1, bbox_x2, bbox_y2))
+
+
+
+        # Add these variables to the class
+        self.image_fnames = image_fnames
+        self.image_labels = np.array(image_labels) - 1
+        self.image_bboxes = image_bboxes
+
+
+        # Extra variables
+        self.class_names = sio.loadmat(os.path.join(data_path, "stanfordcars", "car_devkit", "devkit", "cars_meta.mat"), squeeze_me=True)["class_names"].tolist()
+        self.class_to_idx = {cls: i for i, cls in enumerate(self.class_names)}
+        self.idx_to_class = {i:cls for i, cls in enumerate(self.class_names)}
+
+
+        # Transforms
+        self.transform = transform
+
+
+        return
+
+
+
+    # Method: __len__
+    def __len__(self):
+        
+        return len(self.image_fnames)
+
+
+
+    # Method: __getitem__
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        
+
+        # Get images
+        # Open the file
+        image = Image.open(os.path.join(self.images_path, self.image_fnames[idx])).convert('RGB')
+
+        # Get labels
+        label = self.image_labels[idx]
+
+
+        # Apply transformation
+        if self.transform:
+            image = self.transform(image)
+
+
+        return image, label
+
+
+
 # CUB2002011Dataset: Dataset Class
 class CUB2002011Dataset(Dataset):
     def __init__(self, data_path, classes_txt, transform=None):
+        
         """
         Args:
-            base_data_path (string): Data directory.
+            data_path (string): Data directory.
+            classes_txt (string): File with the classes.
             transform (callable, optional): Optional transform to be applied on a sample.
         """
         
@@ -167,13 +273,3 @@ class CUB2002011Dataset(Dataset):
             image = self.transform(image)
 
         return image, label
-
-
-
-# Run this file to test its functions
-if __name__ == "__main__":
-
-    data_path = os.path.join("data", "cub_200_2011", "processed_data", "train", "images")
-    classes_txt = os.path.join("data", "cub_200_2011", "source_data", "classes.txt")
-    dataset = CUB2002011Dataset(data_path=data_path, classes_txt=classes_txt)
-    print(f"Length of the dataset: {len(dataset)}")

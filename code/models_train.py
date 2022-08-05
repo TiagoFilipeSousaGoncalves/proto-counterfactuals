@@ -20,7 +20,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import preprocess_input_function, CUB2002011Dataset
+from data_utilities import preprocess_input_function, CUB2002011Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
 from train_val_test_utilities import model_train, model_validation, last_only, warm_only, joint
@@ -36,7 +36,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011"], help="Data set: CUB2002011")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "STANFORDCARS"], help="Data set: CUB2002011, STANFORDCARS.")
 
 # Model
 # base_architecture = 'vgg19'
@@ -52,10 +52,6 @@ parser.add_argument('--img_size', type=int, default=224, help="Size of the image
 # Prototype shape
 # prototype_shape = (2000, 128, 1, 1)
 parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
-
-# Number of classes
-# num_classes = 200
-parser.add_argument('--num_classes', type=int, default=200, help="Number of classes.")
 
 # Prototype Activation Function
 # prototype_activation_function = 'log'
@@ -208,9 +204,6 @@ IMG_SIZE = args.img_size
 # Prototype shape
 PROTOTYPE_SHAPE = args.prototype_shape
 
-# Number of classes
-NUM_CLASSES = args.num_classes
-
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
@@ -274,6 +267,7 @@ val_transforms = torchvision.transforms.Compose([
 
 
 # Dataset
+# CUB2002011
 if DATASET == "CUB2002011":
     # Train Dataset
     train_set = CUB2002011Dataset(
@@ -295,6 +289,41 @@ if DATASET == "CUB2002011":
         classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
         transform=val_transforms
     )
+
+    # Number of classes
+    NUM_CLASSES = len(train_set.labels_dict)
+
+
+
+# STANFORDCARS
+elif DATASET == "STANFORDCARS":
+    # Train Dataset
+    train_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_train",
+        cropped=True,
+        transform=train_transforms
+    )
+
+    # Train Push Dataset (Prototypes)
+    train_push_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_train",
+        cropped=True,
+        transform=train_push_transforms
+    )
+
+    # Validation Dataset
+    val_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_test",
+        cropped=True,
+        transform=val_transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(train_set.class_names)
+
 
 
 

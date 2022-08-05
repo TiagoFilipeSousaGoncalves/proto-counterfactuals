@@ -132,7 +132,9 @@ dmypy.json
 # Directories
 # code/ProtoPNet-master/
 data/cub2002011
+data/stanfordcars
 results/cub2002011
+results/stanfordcars
 
 # macOS files
 *.DS_Store
