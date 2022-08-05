@@ -193,14 +193,13 @@ class STANFORDCARSDataset(Dataset):
 # CUB2002011Dataset: Dataset Class
 class CUB2002011Dataset(Dataset):
     def __init__(self, data_path, classes_txt, transform=None):
-        
+
         """
         Args:
             data_path (string): Data directory.
             classes_txt (string): File with the classes.
             transform (callable, optional): Optional transform to be applied on a sample.
         """
-        
 
         # Data path (get images folders)
         images_folders = [f for f in os.listdir(data_path) if not f.startswith('.')]

@@ -131,13 +131,15 @@ dmypy.json
 
 # Directories
 # code/ProtoPNet-master/
-data/cub_200_2011
+data/cub2002011
 data/stanfordcars
 results/cub2002011
 results/stanfordcars
 
+
 # macOS files
 *.DS_Store
+
 
 # SLURM files
 *.err

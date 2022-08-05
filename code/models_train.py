@@ -271,22 +271,22 @@ val_transforms = torchvision.transforms.Compose([
 if DATASET == "CUB2002011":
     # Train Dataset
     train_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "train", "cropped"),
-        classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
+        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
         transform=train_transforms
     )
 
     # Train Push Dataset (Prototypes)
     train_push_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "train", "cropped"),
-        classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
+        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
          transform=train_push_transforms
     )
 
     # Validation Dataset
     val_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "test", "cropped"),
-        classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
+        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
         transform=val_transforms
     )
 
@@ -504,7 +504,8 @@ val_metrics = np.zeros_like(train_metrics)
 
 # Initialise best accuracy
 best_accuracy = -np.inf
-
+best_accuracy_push = -np.inf
+best_accuracy_push_last = -np.inf
 
 
 # Go through the number of Epochs
@@ -633,7 +634,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
             prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
             class_specific=class_specific,
-            preprocess_input_function=preprocess_input_function, # normalize if needed
+            preprocess_input_function=None, # normalize if needed (FIXME: we apply this in the dataloader already)
             prototype_layer_stride=1,
             root_dir_for_saving_prototypes=saved_prototypes_dir, # if not None, prototypes will be saved here
             epoch_number=None, # if not provided, prototypes saved previously will be overwritten
@@ -644,8 +645,28 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             device=DEVICE
             )
         
-        _, _ = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+        metrics_dict, run_avg_loss = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
         # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70)
+        # Save checkpoint
+        if metrics_dict['accuracy'] > best_accuracy_push:
+
+            print(f"Accuracy increased from {best_accuracy_push} to {metrics_dict['accuracy']}. Saving new model...")
+
+            # Model path
+            model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
+            save_dict = {
+                'epoch':epoch,
+                'model_state_dict':ppnet_model.state_dict(),
+                'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+                'joint_optimizer_state_dict':joint_optimizer.state_dict(),
+                'run_avg_loss': run_avg_loss,
+            }
+            torch.save(save_dict, model_path)
+            print(f"Successfully saved at: {model_path}")
+
+            # Update best accuracy value
+            best_accuracy_push = metrics_dict['accuracy']
+
 
 
         # If the protoype activation function is not linear
@@ -655,244 +676,29 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             for i in range(20):
                 print('iteration: \t{0}'.format(i))
                 _, _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
-                
-                _, _ = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+                metrics_dict, run_avg_loss = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
                 # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70)
+                # Save checkpoint
+                if metrics_dict['accuracy'] > best_accuracy_push_last:
+
+                    print(f"Accuracy increased from {best_accuracy_push_last} to {metrics_dict['accuracy']}. Saving new model...")
+
+                    # Model path
+                    model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
+                    save_dict = {
+                        'epoch':epoch,
+                        'model_state_dict':ppnet_model.state_dict(),
+                        'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+                        'joint_optimizer_state_dict':joint_optimizer.state_dict(),
+                        'run_avg_loss': run_avg_loss,
+                    }
+                    torch.save(save_dict, model_path)
+                    print(f"Successfully saved at: {model_path}")
+
+                    # Update best accuracy value
+                    best_accuracy_push_last = metrics_dict['accuracy']
    
 
-
-
-
-
-
-
-
-
-
-"""
-    # Iterate through dataloader
-    for images, labels in tqdm(train_loader):
-        # Concatenate lists
-        y_train_true = np.append(y_train_true, labels.numpy(), axis=0)
-
-        # Move data and model to GPU (or not)
-        images, labels = images.to(DEVICE, non_blocking=True), labels.to(DEVICE, non_blocking=True)
-
-        # Find the loss and update the model parameters accordingly
-        # Clear the gradients of all optimized variables
-        OPTIMISER.zero_grad(set_to_none=True)
-
-
-        # Forward pass: compute predicted outputs by passing inputs to the model
-        logits = model(images)
-
-        
-        # Compute the batch loss
-        # Using CrossEntropy w/ Softmax
-        loss = LOSS(logits, labels)
-
-        # Update batch losses
-        run_train_loss += loss
-
-        # Backward pass: compute gradient of the loss with respect to model parameters
-        loss.backward()
-        
-        # Perform a single optimization step (parameter update)
-        OPTIMISER.step()
-
-        # Using Softmax
-        # Apply Softmax on Logits and get the argmax to get the predicted labels
-        s_logits = torch.nn.Softmax(dim=1)(logits)
-        y_train_scores = torch.cat((y_train_scores, s_logits))
-        s_logits = torch.argmax(s_logits, dim=1)
-        y_train_pred = torch.cat((y_train_pred, s_logits))
-
-
-    # Compute Average Train Loss
-    avg_train_loss = run_train_loss/len(train_loader.dataset)
-    
-
-    # Compute Train Metrics
-    y_train_pred = y_train_pred.cpu().detach().numpy()
-    y_train_scores = y_train_scores.cpu().detach().numpy()
-    train_acc = accuracy_score(y_true=y_train_true, y_pred=y_train_pred)
-    train_recall = recall_score(y_true=y_train_true, y_pred=y_train_pred, average='micro')
-    train_precision = precision_score(y_true=y_train_true, y_pred=y_train_pred, average='micro')
-    train_f1 = f1_score(y_true=y_train_true, y_pred=y_train_pred, average='micro')
-    train_auc = roc_auc_score(y_true=y_train_true, y_score=y_train_scores[:, 1], average='micro')
-
-    # Print Statistics
-    print(f"Train Loss: {avg_train_loss}\tTrain Accuracy: {train_acc}")
-
-
-    # Append values to the arrays
-    # Train Loss
-    train_losses[epoch] = avg_train_loss
-    # Save it to directory
-    fname = os.path.join(history_dir, f"{model_name}_tr_losses.npy")
-    np.save(file=fname, arr=train_losses, allow_pickle=True)
-
-
-    # Train Metrics
-    # Acc
-    train_metrics[epoch, 0] = train_acc
-    # Recall
-    train_metrics[epoch, 1] = train_recall
-    # Precision
-    train_metrics[epoch, 2] = train_precision
-    # F1-Score
-    train_metrics[epoch, 3] = train_f1
-    # ROC AUC
-    train_metrics[epoch, 4] = train_auc
-
-    # Save it to directory
-    fname = os.path.join(history_dir, f"{model_name}_tr_metrics.npy")
-    np.save(file=fname, arr=train_metrics, allow_pickle=True)
-
-    # Plot to Tensorboard
-    tbwritter.add_scalar("loss/train", avg_train_loss, global_step=epoch)
-    tbwritter.add_scalar("acc/train", train_acc, global_step=epoch)
-    tbwritter.add_scalar("rec/train", train_recall, global_step=epoch)
-    tbwritter.add_scalar("prec/train", train_precision, global_step=epoch)
-    tbwritter.add_scalar("f1/train", train_f1, global_step=epoch)
-    tbwritter.add_scalar("auc/train", train_auc, global_step=epoch)
-
-    # Update Variables
-    # Min Training Loss
-    if avg_train_loss < min_train_loss:
-        print(f"Train loss decreased from {min_train_loss} to {avg_train_loss}.")
-        min_train_loss = avg_train_loss
-
-
-    # Validation Loop
-    print("Validation Phase")
-
-
-    # Initialise lists to compute scores
-    y_val_true = np.empty((0), int)
-    y_val_pred = torch.empty(0, dtype=torch.int32, device=DEVICE)
-    y_val_scores = torch.empty(0, dtype=torch.float, device=DEVICE) # save scores after softmax for roc auc
-
-    # Running train loss
-    run_val_loss = 0.0
-
-    # Put model in evaluation mode
-    model.eval()
-
-    # Deactivate gradients
-    with torch.no_grad():
-
-        # Iterate through dataloader
-        for images, labels in tqdm(val_loader):
-            y_val_true = np.append(y_val_true, labels.numpy(), axis=0)
-
-            # Move data data anda model to GPU (or not)
-            images, labels = images.to(DEVICE, non_blocking=True), labels.to(DEVICE, non_blocking=True)
-
-            # Forward pass: compute predicted outputs by passing inputs to the model
-            logits = model(images)
-            
-            # Compute the batch loss
-            # Using CrossEntropy w/ Softmax
-            loss = VAL_LOSS(logits, labels)
-            
-            # Update batch losses
-            run_val_loss += loss
-
-
-            # Using Softmax Activation
-            # Apply Softmax on Logits and get the argmax to get the predicted labels
-            s_logits = torch.nn.Softmax(dim=1)(logits)                        
-            y_val_scores = torch.cat((y_val_scores, s_logits))
-            s_logits = torch.argmax(s_logits, dim=1)
-            y_val_pred = torch.cat((y_val_pred, s_logits))
-
-        
-
-        # Compute Average Validation Loss
-        avg_val_loss = run_val_loss/len(val_loader.dataset)
-
-        # Compute Validation Accuracy
-        y_val_pred = y_val_pred.cpu().detach().numpy()
-        y_val_scores = y_val_scores.cpu().detach().numpy()
-        val_acc = accuracy_score(y_true=y_val_true, y_pred=y_val_pred)
-        val_recall = recall_score(y_true=y_val_true, y_pred=y_val_pred, average='micro')
-        val_precision = precision_score(y_true=y_val_true, y_pred=y_val_pred, average='micro')
-        val_f1 = f1_score(y_true=y_val_true, y_pred=y_val_pred, average='micro')
-        val_auc = roc_auc_score(y_true=y_val_true, y_score=y_val_scores[:, 1], average='micro')
-
-        # Print Statistics
-        print(f"Validation Loss: {avg_val_loss}\tValidation Accuracy: {val_acc}")
-
-        # Append values to the arrays
-        # Validation Loss
-        val_losses[epoch] = avg_val_loss
-        # Save it to directory
-        fname = os.path.join(history_dir, f"{model_name}_val_losses.npy")
-        np.save(file=fname, arr=val_losses, allow_pickle=True)
-
-
-        # Train Metrics
-        # Acc
-        val_metrics[epoch, 0] = val_acc
-        # Recall
-        val_metrics[epoch, 1] = val_recall
-        # Precision
-        val_metrics[epoch, 2] = val_precision
-        # F1-Score
-        val_metrics[epoch, 3] = val_f1
-        # ROC AUC
-        val_metrics[epoch, 4] = val_auc
-
-        # Save it to directory
-        fname = os.path.join(history_dir, f"{model_name}_val_metrics.npy")
-        np.save(file=fname, arr=val_metrics, allow_pickle=True)
-
-        # Plot to Tensorboard
-        tbwritter.add_scalar("loss/val", avg_val_loss, global_step=epoch)
-        tbwritter.add_scalar("acc/val", val_acc, global_step=epoch)
-        tbwritter.add_scalar("rec/val", val_recall, global_step=epoch)
-        tbwritter.add_scalar("prec/val", val_precision, global_step=epoch)
-        tbwritter.add_scalar("f1/val", val_f1, global_step=epoch)
-        tbwritter.add_scalar("auc/val", val_auc, global_step=epoch)
-
-        # Update Variables
-        # Min validation loss and save if validation loss decreases
-        if avg_val_loss < min_val_loss:
-            print(f"Validation loss decreased from {min_val_loss} to {avg_val_loss}.")
-            min_val_loss = avg_val_loss
-
-            print("Saving best model on validation...")
-
-            # Save checkpoint
-            model_path = os.path.join(weights_dir, f"{model_name}_{dataset.lower()}_best.pt")
-            
-            save_dict = {
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': OPTIMISER.state_dict(),
-                'loss': avg_train_loss,
-            }
-            torch.save(save_dict, model_path)
-
-            print(f"Successfully saved at: {model_path}")
-
-
-        # Checkpoint loop/condition
-        if epoch % save_freq == 0 and epoch > 0:
-
-            # Save checkpoint
-            model_path = os.path.join(weights_dir, f"{model_name}_{dataset.lower()}_{epoch:04}.pt")
-
-            save_dict = {
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': OPTIMISER.state_dict(),
-                'loss': avg_train_loss,
-            }
-            torch.save(save_dict, model_path)
-
-"""
 
 # Finish statement
 print("Finished.")
