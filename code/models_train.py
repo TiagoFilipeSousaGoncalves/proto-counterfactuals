@@ -697,7 +697,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
                     # Update best accuracy value
                     best_accuracy_push_last = metrics_dict['accuracy']
-   
+
 
 
 # Finish statement

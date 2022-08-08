@@ -20,7 +20,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import preprocess_input_function, CUB2002011Dataset
+from data_utilities import preprocess_input_function, CUB2002011Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
 from train_val_test_utilities import model_test
