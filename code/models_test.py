@@ -143,8 +143,8 @@ test_transforms = torchvision.transforms.Compose([
 if DATASET == "CUB2002011":
     # Test
     test_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "test", "cropped"),
-        classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
+        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
         transform=test_transforms
     )
 
