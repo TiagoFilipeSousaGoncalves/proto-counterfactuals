@@ -39,8 +39,7 @@ parser.add_argument('--data_dir', type=str, default="data", help="Directory of t
 parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "STANFORDCARS"], help="Data set: CUB2002011, STANFORDCARS.")
 
 # Model
-# base_architecture = 'vgg19'
-parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "resnet18", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
@@ -48,10 +47,6 @@ parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for tra
 # Image size
 # img_size = 224
 parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
-
-# Prototype shape
-# prototype_shape = (2000, 128, 1, 1)
-parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
 
 # Prototype Activation Function
 # prototype_activation_function = 'log'
@@ -201,9 +196,6 @@ BATCH_SIZE = args.batchsize
 # Image size (after transforms)
 IMG_SIZE = args.img_size
 
-# Prototype shape
-PROTOTYPE_SHAPE = args.prototype_shape
-
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
@@ -242,25 +234,23 @@ img_width = IMG_SIZE
 
 # Train Transforms
 train_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.Resize(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
-    torchvision.transforms.RandomCrop(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.05, 0.1), scale=(0.95, 1.05), shear=0, resample=0, fillcolor=(0, 0, 0)),
     torchvision.transforms.RandomHorizontalFlip(p=0.5),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
 
-# Train Push Transforms
+# Train Push Transforms (without Normalize)
 train_push_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.Resize(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
-    torchvision.transforms.ToTensor(),
-    torchvision.transforms.Normalize(mean=MEAN, std=STD)
+    torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.ToTensor()
 ])
 
 # Validation Transforms
 val_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.Resize(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
-    torchvision.transforms.RandomCrop(IMG_SIZE if RESIZE_OPT == 'resizeshortest_randomcrop' else (IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.RandomCrop((IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
@@ -326,9 +316,6 @@ elif DATASET == "STANFORDCARS":
 
 
 
-
-
-
 # Results and Weights
 weights_dir = os.path.join(results_dir, "weights")
 if not os.path.isdir(weights_dir):
@@ -350,6 +337,24 @@ DEVICE = f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {DEVICE}")
 
 
+
+# Define prototype shape according to original paper
+# The number of prototypes can be chosen with prior domain knowledge or hyperparameter search: we used 10 prototypes per class
+NUM_PROTOTYPES_CLASS = int(NUM_CLASSES * 10)
+
+# For VGG-16, VGG-19, DenseNet-121, DenseNet-161, we used 128 as the number of channels in a prototype
+if BASE_ARCHITECTURE.lower() in ("densenet121", "densenet161", "vgg16", "vgg19"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 128, 1, 1)
+
+# For ResNet-34, we used 256 as the number of channels in a prototype;
+elif BASE_ARCHITECTURE.lower() in ("resnet34"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 256, 1, 1)
+
+# For ResNet-152, we used 512 as the number of channels in a prototype
+elif BASE_ARCHITECTURE.lower() in ("resnet152"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 1, 1)
+
+
 # Construct the Model
 ppnet_model = construct_PPNet(
     base_architecture=BASE_ARCHITECTURE,
@@ -363,8 +368,7 @@ ppnet_model = construct_PPNet(
 # if prototype_activation_function == 'linear':
 #     ppnet.set_last_layer_incorrect_connection(incorrect_strength=0)
 
-
-
+# Define if the model is class specific or not 
 class_specific = True
 
 
@@ -455,7 +459,7 @@ train_loader = DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=True
 train_push_loader = DataLoader(train_push_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 
 # Validation
-val_loader = DataLoader(dataset=val_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=WORKERS)
+val_loader = DataLoader(dataset=val_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 
 
 
@@ -634,7 +638,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
             prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
             class_specific=class_specific,
-            preprocess_input_function=None, # normalize if needed (FIXME: we apply this in the dataloader already)
+            preprocess_input_function=preprocess_input_function, # normalize if needed (FIXME: according to original implementation)
             prototype_layer_stride=1,
             root_dir_for_saving_prototypes=saved_prototypes_dir, # if not None, prototypes will be saved here
             epoch_number=None, # if not provided, prototypes saved previously will be overwritten
@@ -643,7 +647,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
             save_prototype_class_identity=True,
             device=DEVICE
-            )
+        )
         
         metrics_dict, run_avg_loss = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
         # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70)

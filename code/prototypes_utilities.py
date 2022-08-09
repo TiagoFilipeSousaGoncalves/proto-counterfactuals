@@ -197,13 +197,15 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
                     prototype_self_act_filename_prefix=None,
                     proto_bound_boxes_filename_prefix=None,
                     save_prototype_class_identity=True, # which class the prototype image comes from
-                    log=print,
                     prototype_activation_function_in_numpy=None,
                     device='cpu'):
 
-    prototype_network_parallel.eval()
-    log('\tpush')
 
+    # Put model into evaluation mode
+    prototype_network_parallel.eval()
+    print('Push Phase')
+
+    # Start time
     start = time.time()
     # prototype_shape = prototype_network_parallel.module.prototype_shape
     prototype_shape = prototype_network_parallel.prototype_shape
@@ -288,14 +290,14 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
         np.save(os.path.join(proto_epoch_dir, proto_bound_boxes_filename_prefix + str(epoch_number) + '.npy'),
                 proto_bound_boxes)
 
-    log('\tExecuting push ...')
+    print('Executing push...')
     prototype_update = np.reshape(global_min_fmap_patches, tuple(prototype_shape))
     # prototype_network_parallel.module.prototype_vectors.data.copy_(torch.tensor(prototype_update, dtype=torch.float32).cuda())
     # prototype_network_parallel.prototype_vectors.data.copy_(torch.tensor(prototype_update, dtype=torch.float32).cuda())
     prototype_network_parallel.prototype_vectors.data.copy_(torch.tensor(prototype_update, dtype=torch.float32).to(device))
     # prototype_network_parallel.cuda()
-    end = time.time()
-    log('\tpush time: \t{0}'.format(end -  start))
+    # end = time.time()
+    print('Push time: \t{0}'.format(time.time() -  start))
 
 
 
@@ -493,6 +495,6 @@ def update_prototypes_on_batch(search_batch_input,
                     pil_proto_img_j = (proto_img_j.copy() * 255).astype(np.uint8)
                     pil_proto_img_j = Image.fromarray(pil_proto_img_j.copy()).convert('RGB')
                     pil_proto_img_j.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.png'))
-                
+
     if class_specific:
         del class_to_img_index_dict
