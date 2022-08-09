@@ -167,6 +167,13 @@ elif DATASET == "STANFORDCARS":
 
 
 
+# Test DataLoader
+test_loader = DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
+print(f'Size of test set: {len(test_loader.dataset)}')
+print(f'Batch size: {BATCH_SIZE}')
+
+
+
 # Results and Weights
 weights_dir = os.path.join(results_dir, "weights")
 
@@ -198,25 +205,22 @@ ppnet_model = ppnet_model.to(DEVICE)
 
 
 # Load model weights
-# model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
-model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
-# model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
-model_weights = torch.load(model_path, map_location=DEVICE)
-ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
-print("Model weights loaded with success.")
+model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
+model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 
 
-# Test DataLoader
-test_loader = DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
+# Iterate through these model weights types
+for model_fname in [model_path, model_path_push, model_path_push_last]:
+    model_weights = torch.load(model_fname, map_location=DEVICE)
+    ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
+    print(f"Model weights loaded with success from {model_fname}.")
 
 
-# Test Phase 
-print("Test Phase")
-print(f'Size of test set: {len(test_loader.dataset)}')
-print(f'Batch size: {BATCH_SIZE}')
-metrics_dict, _ = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
-test_accuracy = metrics_dict["accuracy"]
-print(f"Test Accuracy: {test_accuracy}")
+    # Get performance metrics
+    metrics_dict, _ = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+    test_accuracy = metrics_dict["accuracy"]
+    print(f"Test Accuracy: {test_accuracy}")
 
 
 
