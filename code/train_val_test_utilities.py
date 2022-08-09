@@ -168,23 +168,23 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
 
 
-        # Update Total Running Loss
-        total_loss += loss.item()
+            # Update Total Running Loss
+            total_loss += loss.item()
 
 
-        # Perform backpropagation (if training)
-        if mode == "train":
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            # Perform backpropagation (if training)
+            if mode == "train":
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
 
 
         # TODO: Is this necessary?
-        del images
-        del labels
-        del logits
+        # del images
+        # del labels
+        # del logits
         # del predicted
-        del min_distances
+        # del min_distances
 
 
     # Some log prints
@@ -212,14 +212,14 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     # Get the necessary data
     y_pred = y_pred.cpu().detach().numpy()
     y_scores = y_scores.cpu().detach().numpy()
-    
+
     # Accuracy, Recall, Precision, F1 and AUC
     accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
     recall = recall_score(y_true=y_true, y_pred=y_pred, average='micro')
     precision = precision_score(y_true=y_true, y_pred=y_pred, average='micro')
     f1 = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
     # auc = roc_auc_score(y_true=y_true, y_score=y_scores[:, 1], average='micro')
-    
+
     # Print performance metrics
     # print('Accuracy: \t\t{0}%'.format(n_correct / n_examples * 100))
     print('Accuracy: \t\t{0}%'.format(accuracy))
@@ -227,7 +227,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     print('Precision: \t\t{0}%'.format(precision))
     print('F1: \t\t{0}%'.format(f1))
     # print('AUC: \t\t{0}%'.format(auc))
-    
+
     # Create a metrics dictionary
     metrics_dict = {
         "accuracy":accuracy,
