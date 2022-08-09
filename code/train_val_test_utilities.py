@@ -307,18 +307,18 @@ def last_only(model):
     # for p in model.module.features.parameters():
     for p in model.features.parameters():
         p.requires_grad = False
-    
+
     # for p in model.module.add_on_layers.parameters():
     for p in model.add_on_layers.parameters():
         p.requires_grad = False
-    
+
     # model.module.prototype_vectors.requires_grad = False
     model.prototype_vectors.requires_grad = False
     # for p in model.module.last_layer.parameters():
     for p in model.last_layer.parameters():
         p.requires_grad = True
-    
-    print('\tlast layer')
+
+    # print('\tlast layer')
 
 
 
