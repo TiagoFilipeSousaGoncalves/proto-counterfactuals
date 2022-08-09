@@ -2,12 +2,6 @@
 import os
 import argparse
 import numpy as np
-import datetime
-from torchinfo import summary
-
-# Sklearn Imports
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
-from sklearn.utils.class_weight import compute_class_weight
 
 # PyTorch Imports
 import torch
@@ -20,9 +14,8 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import preprocess_input_function, CUB2002011Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
-from prototypes_utilities import push_prototypes
 from train_val_test_utilities import model_test
 
 
@@ -36,11 +29,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011"], help="Data set: CUB2002011")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "STANFORDCARS"], help="Data set: CUB2002011, STANFORDCARS.")
 
 # Model
-# base_architecture = 'vgg19'
-parser.add_argument('--base_architecture', type=str, required=True, choices=["vgg19"], help='Base architecture: vgg19, ')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "resnet18", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
@@ -64,12 +56,6 @@ parser.add_argument('--prototype_activation_function', type=str, default='log', 
 # Add on layers type
 # add_on_layers_type = 'regular'
 parser.add_argument('--add_on_layers_type', type=str, default='regular', help="Add on layers type.")
-
-# Resize
-parser.add_argument('--resize', type=str, choices=["direct_resize", "resizeshortest_randomcrop"], default="direct_resize", help="Resize data transformation")
-
-# Class Weights
-parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance")
 
 # Output directory
 parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
@@ -125,9 +111,6 @@ NUM_CLASSES = args.num_classes
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
-# Resize (data transforms)
-RESIZE_OPT = args.resize
-
 
 
 # Get the directory of results
@@ -141,9 +124,9 @@ STD = [0.229, 0.224, 0.225]
 
 
 # Input Data Dimensions
-img_nr_channels = 3
-img_height = IMG_SIZE
-img_width = IMG_SIZE
+# img_nr_channels = 3
+# img_height = IMG_SIZE
+# img_width = IMG_SIZE
 
 
 
@@ -158,12 +141,30 @@ test_transforms = torchvision.transforms.Compose([
 
 # Dataset
 if DATASET == "CUB2002011":
-    # Test Dataset
+    # Test
     test_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub_200_2011", "processed_data", "test", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub_200_2011", "source_data", "classes.txt"),
         transform=test_transforms
     )
+
+    # Number of classes
+    NUM_CLASSES = len(test_set.labels_dict)
+
+
+# STANFORDCARS
+elif DATASET == "STANFORDCARS":
+    # Test
+    test_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_test",
+        cropped=True,
+        transform=test_transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(test_set.class_names)
+
 
 
 # Results and Weights
@@ -183,7 +184,8 @@ ppnet_model = construct_PPNet(
     prototype_shape=PROTOTYPE_SHAPE,
     num_classes=NUM_CLASSES,
     prototype_activation_function=PROTOTYPE_ACTIVATION_FUNCTION,
-    add_on_layers_type=ADD_ON_LAYERS_TYPE)
+    add_on_layers_type=ADD_ON_LAYERS_TYPE
+)
 
 
 # Define if the model should be class specific
@@ -194,22 +196,27 @@ class_specific = True
 # Put model into DEVICE (CPU or GPU)
 ppnet_model = ppnet_model.to(DEVICE)
 
+
 # Load model weights
-model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+# model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
+# model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 model_weights = torch.load(model_path, map_location=DEVICE)
 ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
 print("Model weights loaded with success.")
 
 
 # Test DataLoader
-test_loader = DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=WORKERS)
+test_loader = DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 
 
 # Test Phase 
 print("Test Phase")
 print(f'Size of test set: {len(test_loader.dataset)}')
 print(f'Batch size: {BATCH_SIZE}')
-acc = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+metrics_dict, _ = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+test_accuracy = metrics_dict["accuracy"]
+print(f"Test Accuracy: {test_accuracy}")
 
 
 
