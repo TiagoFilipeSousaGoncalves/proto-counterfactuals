@@ -43,7 +43,7 @@ parser.add_argument('--img_size', type=int, default=224, help="Size of the image
 
 # Prototype shape
 # prototype_shape = (2000, 128, 1, 1)
-parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
+# parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
 
 # Number of classes
 # num_classes = 200
@@ -103,7 +103,7 @@ BATCH_SIZE = args.batchsize
 IMG_SIZE = args.img_size
 
 # Prototype shape
-PROTOTYPE_SHAPE = args.prototype_shape
+# PROTOTYPE_SHAPE = args.prototype_shape
 
 # Number of classes
 NUM_CLASSES = args.num_classes
@@ -181,6 +181,26 @@ weights_dir = os.path.join(results_dir, "weights")
 # Choose GPU
 DEVICE = f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {DEVICE}")
+
+
+
+# Define prototype shape according to original paper
+# The number of prototypes can be chosen with prior domain knowledge or hyperparameter search: we used 10 prototypes per class
+NUM_PROTOTYPES_CLASS = int(NUM_CLASSES * 10)
+
+# For VGG-16, VGG-19, DenseNet-121, DenseNet-161, we used 128 as the number of channels in a prototype
+if BASE_ARCHITECTURE.lower() in ("densenet121", "densenet161", "vgg16", "vgg19"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 128, 1, 1)
+
+# For ResNet-34, we used 256 as the number of channels in a prototype;
+elif BASE_ARCHITECTURE.lower() in ("resnet34"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 256, 1, 1)
+
+# For ResNet-152, we used 512 as the number of channels in a prototype
+elif BASE_ARCHITECTURE.lower() in ("resnet152"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 1, 1)
+
+
 
 
 # Construct the Model
