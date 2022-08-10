@@ -23,7 +23,7 @@ np.random.seed(random_seed)
 from data_utilities import preprocess_input_function, CUB2002011Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
-from train_val_test_utilities import model_train, model_validation, last_only, warm_only, joint
+from train_val_test_utilities import model_train, model_validation, last_only, warm_only, joint, print_metrics
 
 
 
@@ -521,24 +521,25 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     print("Training Phase")
 
 
-    # Put model in training mode
-    ppnet_model.train()
-
-
     if epoch < NUM_WARM_EPOCHS:
+        print("Training: Warm Phase")
         warm_only(model=ppnet_model)
-        metrics_dict, run_avg_loss = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
+        metrics_dict = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=warm_optimizer, class_specific=class_specific, coefs=COEFS)
 
 
     else:
+        print("Training: Joint Phase")
         joint(model=ppnet_model)
         joint_lr_scheduler.step()
-        metrics_dict, run_avg_loss = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS)
+        metrics_dict = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS)
     
+
+    # Print metrics
+    print_metrics(metrics_dict=metrics_dict)
 
     # Append values to the arrays
     # Train Loss
-    train_losses[epoch] = run_avg_loss
+    train_losses[epoch] = metrics_dict["run_avg_loss"]
     # Save it to directory
     fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_tr_losses.npy")
     np.save(file=fname, arr=train_losses, allow_pickle=True)
@@ -561,7 +562,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     np.save(file=fname, arr=train_metrics, allow_pickle=True)
 
     # Plot to Tensorboard
-    tbwritter.add_scalar("loss/train", run_avg_loss, global_step=epoch)
+    tbwritter.add_scalar("loss/train", metrics_dict["run_avg_loss"], global_step=epoch)
     tbwritter.add_scalar("acc/train", metrics_dict['accuracy'], global_step=epoch)
     tbwritter.add_scalar("rec/train", metrics_dict['recall'], global_step=epoch)
     tbwritter.add_scalar("prec/train", metrics_dict['precision'], global_step=epoch)
@@ -572,12 +573,14 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
     # Validation Phase 
     print("Validation Phase")
-    metrics_dict, run_avg_loss = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
-    
+    metrics_dict = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+
+    # Print metrics
+    print_metrics(metrics_dict=metrics_dict)
 
     # Append values to the arrays
     # Validation Loss
-    val_losses[epoch] = run_avg_loss
+    val_losses[epoch] = metrics_dict["run_avg_loss"]
     # Save it to directory
     fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_val_losses.npy")
     np.save(file=fname, arr=val_losses, allow_pickle=True)
@@ -600,7 +603,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     np.save(file=fname, arr=val_metrics, allow_pickle=True)
 
     # Plot to Tensorboard
-    tbwritter.add_scalar("loss/val", run_avg_loss, global_step=epoch)
+    tbwritter.add_scalar("loss/val", metrics_dict["run_avg_loss"], global_step=epoch)
     tbwritter.add_scalar("acc/val", metrics_dict['accuracy'], global_step=epoch)
     tbwritter.add_scalar("rec/val", metrics_dict['recall'], global_step=epoch)
     tbwritter.add_scalar("prec/val", metrics_dict['precision'], global_step=epoch)
@@ -622,7 +625,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             'model_state_dict':ppnet_model.state_dict(),
             'warm_optimizer_state_dict':warm_optimizer.state_dict(),
             'joint_optimizer_state_dict':joint_optimizer.state_dict(),
-            'run_avg_loss': run_avg_loss,
+            'run_avg_loss': metrics_dict["run_avg_loss"],
         }
         torch.save(save_dict, model_path)
         print(f"Successfully saved at: {model_path}")
@@ -634,6 +637,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
     # PUSH START and PUSH EPOCHS
     if epoch >= PUSH_START and epoch in PUSH_EPOCHS:
+        print("Pushing Phase")
         push_prototypes(
             train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
             prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
@@ -649,7 +653,13 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             device=DEVICE
         )
         
-        metrics_dict, run_avg_loss = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+        metrics_dict = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+
+
+        # Print metrics
+        print_metrics(metrics_dict=metrics_dict)
+
+
         # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70)
         # Save checkpoint
         if metrics_dict['accuracy'] > best_accuracy_push:
@@ -663,7 +673,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
                 'model_state_dict':ppnet_model.state_dict(),
                 'warm_optimizer_state_dict':warm_optimizer.state_dict(),
                 'joint_optimizer_state_dict':joint_optimizer.state_dict(),
-                'run_avg_loss': run_avg_loss,
+                'run_avg_loss': metrics_dict["run_avg_loss"],
             }
             torch.save(save_dict, model_path)
             print(f"Successfully saved at: {model_path}")
@@ -675,14 +685,21 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
         # If the protoype activation function is not linear
         if PROTOTYPE_ACTIVATION_FUNCTION != 'linear':
+            print("Optimizing last layer...")
             last_only(model=ppnet_model)
             
             for i in range(20):
-                print('iteration: \t{0}'.format(i))
-                _, _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
-                metrics_dict, run_avg_loss = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
-                # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70)
+                print(f'Step {i+1} of {20}')
+                print("Training")
+                metrics_dict = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
+                print_metrics(metrics_dict=metrics_dict)
+                
+                print("Validation")
+                metrics_dict = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+                print_metrics(metrics_dict=metrics_dict)
+
                 # Save checkpoint
+                # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70)
                 if metrics_dict['accuracy'] > best_accuracy_push_last:
 
                     print(f"Accuracy increased from {best_accuracy_push_last} to {metrics_dict['accuracy']}. Saving new model...")
@@ -694,7 +711,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
                         'model_state_dict':ppnet_model.state_dict(),
                         'warm_optimizer_state_dict':warm_optimizer.state_dict(),
                         'joint_optimizer_state_dict':joint_optimizer.state_dict(),
-                        'run_avg_loss': run_avg_loss,
+                        'run_avg_loss': metrics_dict["run_avg_loss"],
                     }
                     torch.save(save_dict, model_path)
                     print(f"Successfully saved at: {model_path}")

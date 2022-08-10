@@ -238,7 +238,7 @@ for model_fname in [model_path, model_path_push, model_path_push_last]:
 
 
     # Get performance metrics
-    metrics_dict, _ = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+    metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
     test_accuracy = metrics_dict["accuracy"]
     print(f"Test Accuracy: {test_accuracy}")
 

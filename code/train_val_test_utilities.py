@@ -191,21 +191,28 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     # print('\ttime: \t{0}'.format(time.time() -  start))
     # print('Cross Entropy Loss: \t{0}'.format(total_cross_entropy / n_batches))
     # print('Cluster Loss: \t{0}'.format(total_cluster_cost / n_batches))
-    print('Cross Entropy Loss: \t{0}'.format(total_cross_entropy / len(dataloader)))
-    print('Cluster Loss: \t{0}'.format(total_cluster_cost / len(dataloader)))
+    ce_loss = total_cross_entropy / len(dataloader)
+    # print('Cross Entropy Loss: \t{0}'.format(ce_loss))
+    cluster_loss = total_cluster_cost / len(dataloader)
+    # print('Cluster Loss: \t{0}'.format(cluster_loss))
 
 
     # Specific log prints for "class_specific" option
     if class_specific:
         # print('Separation Cost:\t{0}'.format(total_separation_cost / n_batches))
         # print('Average Separation Cost:\t{0}'.format(total_avg_separation_cost / n_batches))
-        print('Separation Cost:\t{0}'.format(total_separation_cost / len(dataloader)))
-        print('Average Separation Cost:\t{0}'.format(total_avg_separation_cost / len(dataloader)))
+        sep_cost = total_separation_cost / len(dataloader)
+        # print('Separation Cost:\t{0}'.format(sep_cost))
+        avg_sep_cost = total_avg_separation_cost / len(dataloader)
+        # print('Average Separation Cost:\t{0}'.format(avg_sep_cost))
+    else:
+        sep_cost = 0.0
+        avg_sep_cost = 0.0
     
 
     # Total Epoch Loss
     run_avg_loss = total_loss / len(dataloader)
-    print('Total Loss:\t{0}'.format(run_avg_loss))
+    # print('Total Loss:\t{0}'.format(run_avg_loss))
 
 
     # Compute performance metrics
@@ -222,25 +229,17 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
     # Print performance metrics
     # print('Accuracy: \t\t{0}%'.format(n_correct / n_examples * 100))
-    print('Accuracy: \t\t{0}%'.format(accuracy))
-    print('Recall: \t\t{0}%'.format(recall))
-    print('Precision: \t\t{0}%'.format(precision))
-    print('F1: \t\t{0}%'.format(f1))
+    # print('Accuracy: \t\t{0}%'.format(accuracy))
+    # print('Recall: \t\t{0}%'.format(recall))
+    # print('Precision: \t\t{0}%'.format(precision))
+    # print('F1: \t\t{0}%'.format(f1))
     # print('AUC: \t\t{0}%'.format(auc))
 
-    # Create a metrics dictionary
-    metrics_dict = {
-        "accuracy":accuracy,
-        "recall":recall,
-        "precision":precision,
-        "f1":f1
-    }
-    
-    
-    
+
     # Get L1
     # print('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
-    print('L1: \t\t{0}'.format(model.last_layer.weight.norm(p=1).item()))
+    # print('L1: \t\t{0}'.format(model.last_layer.weight.norm(p=1).item()))
+    l1 = model.last_layer.weight.norm(p=1).item()
 
 
     # Get prototypes
@@ -252,25 +251,90 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     with torch.no_grad():
         p_avg_pair_dist = torch.mean(list_of_distances(p, p))
     
-    print('Prototype Average Distance Pair: \t{0}'.format(p_avg_pair_dist.item()))
+    # print('Prototype Average Distance Pair: \t{0}'.format(p_avg_pair_dist.item()))
+    p_avg_pair_dist_ = p_avg_pair_dist.item()
+
+
+    # Create a metrics dictionary
+    metrics_dict = {
+        "accuracy":accuracy,
+        "recall":recall,
+        "precision":precision,
+        "f1":f1,
+        "run_avg_loss":run_avg_loss,
+        "sep_cost":sep_cost,
+        "avg_sep_cost":avg_sep_cost,
+        "ce_loss":ce_loss,
+        "cluster_loss":cluster_loss,
+        "l1":l1,
+        "p_avg_pair_dist":p_avg_pair_dist_
+    }
 
 
 
-    return metrics_dict, run_avg_loss
+    return metrics_dict
+
+
+
+# Function: Print Metrics
+def print_metrics(metrics_dict):
+
+    # Accuracy
+    accuracy = metrics_dict["accuracy"]
+
+    # Recall
+    recall = metrics_dict["recall"]
+
+    # Precision
+    precision = metrics_dict["precision"]
+    
+    # F1-Score
+    f1 = metrics_dict["f1"]
+
+    # Loss
+    run_avg_loss = metrics_dict["run_avg_loss"]
+
+    # Separation Cost
+    sep_cost = metrics_dict["sep_cost"]
+
+    # Average Separation Cost
+    avg_sep_cost = metrics_dict["avg_sep_cost"]
+
+    # Cross Entropy Loss
+    ce_loss = metrics_dict["ce_loss"]
+
+    # Cluster Loss
+    cluster_loss = metrics_dict["cluster_loss"]
+
+    # L1 Distance
+    l1 = metrics_dict["l1"]
+
+    # Prototype Pair Average Distance
+    p_avg_pair_dist = metrics_dict["p_avg_pair_dist"]
+
+
+    # Print metrics
+    print('Accuracy: {0}'.format(accuracy))
+    print('Recall: {0}'.format(recall))
+    print('Precision: {0}'.format(precision))
+    print('F1: {0}'.format(f1))
+    print('Total Loss: {0}'.format(run_avg_loss))
+    print('Separation Cost: {0}'.format(sep_cost))
+    print('Average Separation Cost: {0}'.format(avg_sep_cost))
+    print('Cross Entropy Loss: {0}'.format(ce_loss))
+    print('Cluster Loss: {0}'.format(cluster_loss))
+    print('L1: {0}'.format(l1))
+    print('Prototype Average Distance Pair: {0}'.format(p_avg_pair_dist))
+
+    return
 
 
 
 # Function: Train
 def model_train(model, dataloader, device, optimizer, class_specific=False, coefs=None):
 
-    # TODO: Erase uppon review
-    # assert(optimizer is not None)
-
-    # If model is not in training mode, change it to training mode
-    if not model.training:
-        print('Model: Training')
-        model.train()
-
+    # Put model in training mode
+    model.train()
 
     return run_model(model=model, dataloader=dataloader, mode="train", device=device, optimizer=optimizer, class_specific=class_specific, coefs=coefs)
 
@@ -279,11 +343,8 @@ def model_train(model, dataloader, device, optimizer, class_specific=False, coef
 # Function: Validation
 def model_validation(model, dataloader, device, class_specific=False):
 
-    # If model in train training mode, change it to evaluation mode
-    if model.training:
-        print('Model: Validation')
-        model.eval()
-    
+    # Put model in evaluation mode
+    model.eval()
 
     return run_model(model=model, dataloader=dataloader, mode="validation", device=device, optimizer=None, class_specific=class_specific)
 
@@ -292,17 +353,14 @@ def model_validation(model, dataloader, device, class_specific=False):
 # Function: Test
 def model_test(model, dataloader, device, class_specific=False):
 
-    # If model in train training mode, change it to evaluation mode
-    if model.training:
-        print('Model: Test')
-        model.eval()
-
+    # Put model in evaluation mode
+    model.eval()
 
     return run_model(model=model, dataloader=dataloader, mode="test", device=device, optimizer=None, class_specific=class_specific)
 
 
 
-# Function: 
+# Function: Activate gradients on parameters for last-layer training phase
 def last_only(model):
     # for p in model.module.features.parameters():
     for p in model.features.parameters():
@@ -322,7 +380,7 @@ def last_only(model):
 
 
 
-# Function:
+# Function: Activate gradients on parameters for warm-training phase
 def warm_only(model):
     # for p in model.module.features.parameters():
     for p in model.features.parameters():
@@ -339,11 +397,11 @@ def warm_only(model):
     for p in model.last_layer.parameters():
         p.requires_grad = True
     
-    print('\twarm')
+    # print('\twarm')
 
 
 
-# Function:
+# Function: Activate gradients on parameters for joint-training phase
 def joint(model):
     # for p in model.module.features.parameters():
     for p in model.features.parameters():
@@ -360,4 +418,4 @@ def joint(model):
     for p in model.last_layer.parameters():
         p.requires_grad = True
     
-    print('\tjoint')
+    # print('\tjoint')
