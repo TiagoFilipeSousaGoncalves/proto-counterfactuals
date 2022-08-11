@@ -95,6 +95,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
                 # prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).to(device)
                 labels_ = torch.reshape(labels, (-1,))
                 print(labels_.shape)
+                print(labels_.dtype)
                 print(labels_)
                 prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,labels]).to(device)
                 exit()
