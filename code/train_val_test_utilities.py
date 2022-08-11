@@ -91,16 +91,16 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
                 # Note: prototypes_of_correct_class is a tensor of shape batch_size * num_prototypes
                 # Calculate cluster cost
+                # TODO: Erase this part uppon review
                 # prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).cuda()
                 # prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).to(device)
-                labels_ = torch.reshape(labels, (-1,)).to(torch.int64)
-                print(labels_.shape)
-                print(labels_.dtype)
-                print(labels_)
-                
+                # labels_ = torch.reshape(labels, (-1,)).to(torch.int64)
+                # print(labels_.shape)
+                # print(labels_.dtype)
+                # print(labels_)
+
                 # Note: We had to convert labels to torch.int64 to allow slicing
                 prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,labels.to(torch.int64)]).to(device)
-                exit()
                 inverted_distances, _ = torch.max((max_dist - min_distances) * prototypes_of_correct_class, dim=1)
                 cluster_cost = torch.mean(max_dist - inverted_distances)
 
