@@ -131,7 +131,7 @@ PROTOTYPE_SHAPE = args.prototype_shape
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
 # Optimized last later
-OPTMIZE_LAST_LAYER = args.optimize_last_layer
+OPTIMIZE_LAST_LAYER = args.optimize_last_layer
 
 # K
 K = args.k
@@ -435,7 +435,7 @@ prune_prototypes(
 
 # Get performance metrics
 # accu = tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)
-metrics_dict, _ = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
 test_prune_accuracy = metrics_dict["accuracy"]
 print(f"Accuracy on the test set, after pruning: {test_prune_accuracy}")
 
@@ -459,7 +459,7 @@ if test_prune_accuracy > best_accuracy:
 
 
 # Last layer optimization
-if OPTMIZE_LAST_LAYER:
+if OPTIMIZE_LAST_LAYER:
 
     # Define optimizers and learning rate schedulers
     # Last Layer Optimizer
@@ -480,7 +480,7 @@ if OPTMIZE_LAST_LAYER:
 
         # Train Phase
         # _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=coefs, log=log)
-        metrics_dict = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=coefs)
+        metrics_dict = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=COEFS)
 
         # Test Phase
         # accu = tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)

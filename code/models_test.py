@@ -45,10 +45,6 @@ parser.add_argument('--img_size', type=int, default=224, help="Size of the image
 # prototype_shape = (2000, 128, 1, 1)
 # parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
 
-# Number of classes
-# num_classes = 200
-parser.add_argument('--num_classes', type=int, default=200, help="Number of classes.")
-
 # Prototype Activation Function
 # prototype_activation_function = 'log'
 parser.add_argument('--prototype_activation_function', type=str, default='log', help="Prototype activation function.")
