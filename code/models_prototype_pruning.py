@@ -12,8 +12,9 @@ import torchvision
 
 # Project Imports
 from data_utilities import preprocess_input_function, CUB2002011Dataset, STANFORDCARSDataset
-from pruning_utilities import prune_prototypes
 from model_utilities import construct_PPNet
+from prototypes_utilities import push_prototypes
+from pruning_utilities import prune_prototypes
 from train_val_test_utilities import model_train, model_test, last_only
 
 
@@ -30,8 +31,7 @@ parser.add_argument('--data_dir', type=str, default="data", help="Directory of t
 parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "STANFORDCARS"], help="Data set: CUB2002011, STANFORDCARS.")
 
 # Model
-# base_architecture = 'vgg19'
-parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "resnet18", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
@@ -42,7 +42,7 @@ parser.add_argument('--img_size', type=int, default=224, help="Size of the image
 
 # Prototype shape
 # prototype_shape = (2000, 128, 1, 1)
-parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
+# parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
 
 # Prototype Activation Function
 # prototype_activation_function = 'log'
@@ -147,7 +147,6 @@ STD = [0.229, 0.224, 0.225]
 
 
 # Input Data Dimensions
-img_nr_channels = 3
 img_height = IMG_SIZE
 img_width = IMG_SIZE
 
@@ -254,6 +253,24 @@ print(f"Using device: {DEVICE}")
 
 
 
+# Define prototype shape according to original paper
+# The number of prototypes can be chosen with prior domain knowledge or hyperparameter search: we used 10 prototypes per class
+NUM_PROTOTYPES_CLASS = int(NUM_CLASSES * 10)
+
+# For VGG-16, VGG-19, DenseNet-121, DenseNet-161, we used 128 as the number of channels in a prototype
+if BASE_ARCHITECTURE.lower() in ("densenet121", "densenet161", "vgg16", "vgg19"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 128, 1, 1)
+
+# For ResNet-34, we used 256 as the number of channels in a prototype;
+elif BASE_ARCHITECTURE.lower() in ("resnet34"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 256, 1, 1)
+
+# For ResNet-152, we used 512 as the number of channels in a prototype
+elif BASE_ARCHITECTURE.lower() in ("resnet152"):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 1, 1)
+
+
+
 # TODO: Erase uppon review
 # parser.add_argument('-modeldir', nargs=1, type=str)
 # parser.add_argument('-model', nargs=1, type=str)
@@ -336,15 +353,64 @@ print('Train Push set size: {0}'.format(len(train_push_loader.dataset)))
 print('Batch size: {0}'.format(BATCH_SIZE))
 
 
+# Define some extra paths and directories
+# Directory for saved prototypes
+saved_prototypes_dir = os.path.join(weights_dir, 'prototypes')
+if not os.path.isdir(saved_prototypes_dir):
+    os.makedirs(saved_prototypes_dir)
+
+
+# Output weight matrix filename
+weight_matrix_filename = 'outputL_weights'
+
+# Prefix for prototype images
+prototype_img_filename_prefix = 'prototype-img'
+
+# Prefix for prototype self activation
+prototype_self_act_filename_prefix = 'prototype-self-act'
+
+# Prefix for prototype bouding boxes
+proto_bound_boxes_filename_prefix = 'bb'
+
+
+
+
+
 # Best Accuracy Variable
 best_accuracy = -np.inf
 
 # TODO
 # tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)
-metrics_dict, _ = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
 test_accuracy = metrics_dict["accuracy"]
 print(f"Accuracy on the test set, before pruning: {test_accuracy}")
 
+# Update best accuracy
+if test_accuracy > best_accuracy:
+    best_accuracy = test_accuracy
+
+
+
+# We must execute the push operation first
+print("Pushing prototypes...")
+push_prototypes(
+    train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
+    prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
+    class_specific=class_specific,
+    preprocess_input_function=preprocess_input_function, # normalize if needed (FIXME: according to original implementation)
+    prototype_layer_stride=1,
+    root_dir_for_saving_prototypes=saved_prototypes_dir, # if not None, prototypes will be saved here
+    epoch_number=None, # if not provided, prototypes saved previously will be overwritten
+    prototype_img_filename_prefix=prototype_img_filename_prefix,
+    prototype_self_act_filename_prefix=prototype_self_act_filename_prefix,
+    proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
+    save_prototype_class_identity=True,
+    device=DEVICE
+)
+
+metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+test_accuracy = metrics_dict["accuracy"]
+print(f"Accuracy on the test set, after pushing: {test_accuracy}")
 
 # Update best accuracy
 if test_accuracy > best_accuracy:
@@ -362,7 +428,7 @@ prune_prototypes(
     prune_threshold=PRUNE_THRESHOLD,
     preprocess_input_function=preprocess_input_function, # normalize
     original_model_dir=weights_dir,
-    epoch_number=epoch,
+    epoch_number=None,
     copy_prototype_imgs=True
 )
 
@@ -414,11 +480,11 @@ if OPTMIZE_LAST_LAYER:
 
         # Train Phase
         # _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=coefs, log=log)
-        _, _ = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=coefs)
+        metrics_dict = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer, class_specific=class_specific, coefs=coefs)
 
         # Test Phase
         # accu = tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)
-        metrics_dict, _ = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+        metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
         test_prune_last_accuracy = metrics_dict["accuracy"]
 
         # Save new model
@@ -427,7 +493,7 @@ if OPTMIZE_LAST_LAYER:
             print(f"Accuracy increased from {best_accuracy} to {test_prune_last_accuracy}. Saving new model...")
 
             # Model path
-            model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_pruned_last.pt")
+            model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_pruned_last_k{K}_pt{PRUNE_THRESHOLD}.pt")
             save_dict = {
                 'model_state_dict':ppnet_model.state_dict(),
             }
