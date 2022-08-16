@@ -101,9 +101,6 @@ IMG_SIZE = args.img_size
 # Prototype shape
 # PROTOTYPE_SHAPE = args.prototype_shape
 
-# Number of classes
-NUM_CLASSES = args.num_classes
-
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
