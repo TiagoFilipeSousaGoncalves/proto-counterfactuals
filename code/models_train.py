@@ -532,7 +532,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
         joint(model=ppnet_model)
         joint_lr_scheduler.step()
         metrics_dict = model_train(model=ppnet_model, dataloader=train_loader, device=DEVICE, optimizer=joint_optimizer, class_specific=class_specific, coefs=COEFS)
-    
+
 
     # Print metrics
     print_metrics(metrics_dict=metrics_dict)
