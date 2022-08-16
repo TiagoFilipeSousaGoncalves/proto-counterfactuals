@@ -32,7 +32,7 @@ parser.add_argument('--data_dir', type=str, default="data", help="Directory of t
 parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "STANFORDCARS"], help="Data set: CUB2002011, STANFORDCARS.")
 
 # Model
-parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "resnet18", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
