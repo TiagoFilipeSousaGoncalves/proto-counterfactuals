@@ -53,7 +53,8 @@ def prune_prototypes(dataloader, prototype_network_parallel, device, k, prune_th
 
 
     # Bookkeeping of prototypes to be pruned
-    class_of_prototypes_to_prune = torch.argmax(prototype_network_parallel.module.prototype_class_identity[prototypes_to_prune], dim=1).numpy().reshape(-1, 1)
+    # class_of_prototypes_to_prune = torch.argmax(prototype_network_parallel.module.prototype_class_identity[prototypes_to_prune], dim=1).numpy().reshape(-1, 1)
+    class_of_prototypes_to_prune = torch.argmax(prototype_network_parallel.prototype_class_identity[prototypes_to_prune], dim=1).numpy().reshape(-1, 1)
     prototypes_to_prune_np = np.array(prototypes_to_prune).reshape(-1, 1)
     prune_info = np.hstack((prototypes_to_prune_np, class_of_prototypes_to_prune))
 
