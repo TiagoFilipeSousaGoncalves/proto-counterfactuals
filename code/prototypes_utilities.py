@@ -289,8 +289,12 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
     # We don't need to strict this to the epoch
     # if proto_epoch_dir != None and proto_bound_boxes_filename_prefix != None:
     if proto_bound_boxes_filename_prefix != None:
-        np.save(os.path.join(proto_epoch_dir, proto_bound_boxes_filename_prefix + '-receptive_field' + str(epoch_number) + '.npy'), proto_rf_boxes)
-        np.save(os.path.join(proto_epoch_dir, proto_bound_boxes_filename_prefix + str(epoch_number) + '.npy'), proto_bound_boxes)
+        if epoch_number:
+            np.save(os.path.join(proto_epoch_dir, proto_bound_boxes_filename_prefix + '-receptive_field' + str(epoch_number) + '.npy'), proto_rf_boxes)
+            np.save(os.path.join(proto_epoch_dir, proto_bound_boxes_filename_prefix + str(epoch_number) + '.npy'), proto_bound_boxes)
+        else:
+            np.save(os.path.join(proto_epoch_dir, proto_bound_boxes_filename_prefix + '-receptive_field' + '.npy'), proto_rf_boxes)
+            np.save(os.path.join(proto_epoch_dir, proto_bound_boxes_filename_prefix + '.npy'), proto_bound_boxes)
 
     print('Executing push...')
     prototype_update = np.reshape(global_min_fmap_patches, tuple(prototype_shape))
