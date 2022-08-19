@@ -1,8 +1,6 @@
 # Imports
 import os
 import shutil
-import tqdm
-import numpy as np
 import pandas as pd
 
 # Sklearn Imports
