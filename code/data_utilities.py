@@ -3,6 +3,7 @@ import os
 import copy
 from tqdm import tqdm
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.io as sio
 import cv2
@@ -14,7 +15,6 @@ from torch.utils.data import Dataset
 
 
 
-# General
 # Function: Resize images
 def resize_images(datapath, newpath, newheight=512):
     
@@ -38,7 +38,6 @@ def resize_images(datapath, newpath, newheight=512):
 
 
 
-# Helpers
 # Function: Preprocess base function 
 def preprocess(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
     assert x.size(1) == 3
@@ -356,6 +355,140 @@ class CUB2002011Dataset(Dataset):
         # Get labels
         folder = img_path.split("/")[0]
         label = self.labels_dict[folder]
+
+        # Apply transformation
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label
+
+
+
+# PH2Dataset: Dataset Class
+class PH2Dataset(Dataset):
+    def __init__(self, data_path, subset, cropped, transform=None):
+
+        """
+        Args:
+            data_path (string): Data directory.
+            cropped (boolean): If we want the cropped version of the data set.
+            transform (callable, optional): Optional transform to be applied on a sample.
+        """
+
+
+        assert subset in ("train", "test"), "Subset must be in ('train', 'test')."
+
+
+        # Directories
+        ph2_dir = os.path.join(data_path, "ph2")
+
+
+        # Select if you want the cropped version or not
+        if cropped:
+            self.images_dir = os.path.join(ph2_dir, "processed_images", subset, "cropped")
+        else:
+            self.images_dir = os.path.join(ph2_dir, "processed_images", subset, "raw")
+        
+
+        # Get image names
+        image_names = [i for i in os.listdir(self.images_dir) if not i.startswith('.')]
+        image_names = [i.split('.')[0] for i in image_names]
+
+
+
+        # Get labels
+        ph2_xlsx = os.path.join(ph2_dir, "PH2_dataset.xlsx")
+        
+        # Open PH2 XLSX file
+        ph2_df = pd.read_excel(ph2_xlsx, skiprows=[i for i in range(12)])
+
+        # Get only classification columns
+        ph2_df = ph2_df.copy()[['Image Name', 'Common Nevus', 'Atypical Nevus', 'Melanoma']]
+
+
+        # Create a diagnosis dictionary
+        self.diagnosis_dict = {
+            "Common Nevus":0,
+            "Atypical Nevus":1,
+            "Melanoma":2
+        }
+
+        # Create an inverse diagnosis dictionary
+        self.inv_diagnosis_dict = {
+            0:"Common Nevus",
+            1:"Atypical Nevus",
+            2:"Melanoma"
+        }
+
+        # Add column "Label"
+        ph2_df["Label"] = -1
+
+
+        # Go through the DataFrame
+        ph2_df = ph2_df.copy().reset_index()
+
+        for index, row in ph2_df.iterrows():
+            
+            # Get values
+            if row['Common Nevus'] == "X":
+                ph2_df.iloc[index, -1] = self.diagnosis_dict['Common Nevus']
+
+            elif row['Atypical Nevus'] == "X":
+                ph2_df.iloc[index, -1] = self.diagnosis_dict['Atypical Nevus']
+            
+            elif row['Melanoma'] == "X":
+                ph2_df.iloc[index, -1] = self.diagnosis_dict['Melanoma']
+        
+
+        # Get X, y
+        X, y = ph2_df.copy()['Image Name'].values, ph2_df.copy()['Label'].values
+
+
+        # Create a variable "image_labels"
+        ph2_dataset_imgs, ph2_dataset_labels = list(), list()
+
+        # Iterate through X and y
+        for img_name, img_label in zip(X, y):
+
+            # If it exists in our directory, append it to the dataset
+            if img_name in image_names:
+                ph2_dataset_imgs.append(img_name)
+                ph2_dataset_labels.append(img_label)
+        
+
+
+        # Create final variables
+        self.images_names = ph2_dataset_imgs.copy()
+        self.images_labels = ph2_dataset_labels.copy()
+
+
+        # Transforms
+        self.transform = transform
+
+
+        return
+
+
+
+    # Method: __len__
+    def __len__(self):
+
+        return len(self.images_names)
+
+
+
+    # Method: __getitem__
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+
+        # Get images
+        img_path = os.path.join(self.images_dir, self.images_names[idx])
+        image = Image.open(img_path).convert('RGB')
+
+        # Get labels
+        label = self.images_labels[idx]
 
         # Apply transformation
         if self.transform:

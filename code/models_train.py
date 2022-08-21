@@ -20,7 +20,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import preprocess_input_function, CUB2002011Dataset, STANFORDCARSDataset
+from data_utilities import preprocess_input_function, CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
 from train_val_test_utilities import model_train, model_validation, last_only, warm_only, joint, print_metrics
@@ -36,10 +36,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "STANFORDCARS"], help="Data set: CUB2002011, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
 
 # Model
-parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
@@ -226,7 +226,6 @@ STD = [0.229, 0.224, 0.225]
 
 
 # Input Data Dimensions
-img_nr_channels = 3
 img_height = IMG_SIZE
 img_width = IMG_SIZE
 
@@ -282,6 +281,37 @@ if DATASET == "CUB2002011":
 
     # Number of classes
     NUM_CLASSES = len(train_set.labels_dict)
+
+
+
+# PH2
+elif DATASET == "PH2":
+    # Train Dataset
+    train_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        transform=train_transforms
+    )
+
+    # Train Push Dataset (Prototypes)
+    train_push_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        transform=train_push_transforms
+    )
+
+    # Validation Dataset
+    val_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        transform=val_transforms
+    )
+
+    # Number of Classes
+    NUM_CLASSES = len(train_set.diagnosis_dict)
 
 
 
