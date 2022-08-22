@@ -388,7 +388,7 @@ class PH2Dataset(Dataset):
             self.images_dir = os.path.join(ph2_dir, "processed_images", subset, "cropped")
         else:
             self.images_dir = os.path.join(ph2_dir, "processed_images", subset, "raw")
-        
+
 
         # Get image names
         image_names = [i for i in os.listdir(self.images_dir) if not i.startswith('.')]
@@ -398,7 +398,7 @@ class PH2Dataset(Dataset):
 
         # Get labels
         ph2_xlsx = os.path.join(ph2_dir, "PH2_dataset.xlsx")
-        
+
         # Open PH2 XLSX file
         ph2_df = pd.read_excel(ph2_xlsx, skiprows=[i for i in range(12)])
 
@@ -428,17 +428,17 @@ class PH2Dataset(Dataset):
         ph2_df = ph2_df.copy().reset_index()
 
         for index, row in ph2_df.iterrows():
-            
+
             # Get values
             if row['Common Nevus'] == "X":
                 ph2_df.iloc[index, -1] = self.diagnosis_dict['Common Nevus']
 
             elif row['Atypical Nevus'] == "X":
                 ph2_df.iloc[index, -1] = self.diagnosis_dict['Atypical Nevus']
-            
+
             elif row['Melanoma'] == "X":
                 ph2_df.iloc[index, -1] = self.diagnosis_dict['Melanoma']
-        
+
 
         # Get X, y
         X, y = ph2_df.copy()['Image Name'].values, ph2_df.copy()['Label'].values
@@ -454,7 +454,6 @@ class PH2Dataset(Dataset):
             if img_name in image_names:
                 ph2_dataset_imgs.append(img_name)
                 ph2_dataset_labels.append(img_label)
-        
 
 
         # Create final variables
