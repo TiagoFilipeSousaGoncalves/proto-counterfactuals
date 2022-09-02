@@ -459,6 +459,7 @@ class PH2Dataset(Dataset):
         # Create final variables
         self.images_names = ph2_dataset_imgs.copy()
         self.images_labels = ph2_dataset_labels.copy()
+        self.cropped = cropped
 
 
         # Transforms
@@ -483,7 +484,13 @@ class PH2Dataset(Dataset):
 
 
         # Get images
-        img_path = os.path.join(self.images_dir, self.images_names[idx])
+        if self.cropped:
+            img_path = os.path.join(self.images_dir, f"{self.images_names[idx]}.png")
+        else:
+            img_path = os.path.join(self.images_dir, self.images_names[idx], f"{self.images_names[idx]}_Dermoscopic_Image", f"{self.images_names[idx]}.bmp")
+        
+        
+        # Open image
         image = Image.open(img_path).convert('RGB')
 
         # Get labels
