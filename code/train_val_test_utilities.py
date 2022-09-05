@@ -79,8 +79,8 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
             
             # We pass image by the model    
             logits, min_distances = model(images)
-            print(type(logits))
-            print(type(labels))
+            print(logits.type())
+            print(labels.type())
 
             # We first compute the CrossEntropy Loss
             cross_entropy = torch.nn.functional.cross_entropy(logits, labels)
