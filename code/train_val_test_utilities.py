@@ -72,15 +72,15 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
         
         else:
             grad_req = torch.no_grad()
-        
+
 
         # Get model's outputs
         with grad_req:
             
             # We pass image by the model    
             logits, min_distances = model(images)
-            print(logits.type(), logits)
-            print(labels.type(), labels)
+            # print(logits.type(), logits)
+            # print(labels.type(), labels)
 
             # We first compute the CrossEntropy Loss
             cross_entropy = torch.nn.functional.cross_entropy(logits, labels.long())
