@@ -25,7 +25,6 @@ def augment(source_dir, target_dir):
 
     print(target_folders)
 
-    exit()
 
 
     # Iterate through all the folders
