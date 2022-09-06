@@ -23,6 +23,10 @@ def augment(source_dir, target_dir):
     folders = [os.path.join(source_dir, folder) for folder in next(os.walk(source_dir))[1]]
     target_folders = [os.path.join(target_dir, folder) for folder in next(os.walk(source_dir))[1]]
 
+    print(target_folders)
+
+    exit()
+
 
     # Iterate through all the folders
     for i in range(len(folders)):
