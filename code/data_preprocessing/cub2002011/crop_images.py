@@ -8,7 +8,7 @@ from PIL import Image
 
 # Directories and Files
 data = "data"
-cub_200_2011 = "cub_200_2011"
+cub_200_2011 = "cub2002011"
 source_data = "source_data"
 images_txt = "images.txt"
 train_test_split_txt = "train_test_split.txt"
