@@ -15,21 +15,32 @@ def augment(source_dir, target_dir):
     # source_dir = datasets_root_dir + "train_cropped/"
     # target_dir = datasets_root_dir + "train_cropped_augmented/"
 
-
+    # Create new directories (if needed)
     if not os.path.isdir(target_dir):
         os.makedirs(target_dir)
 
 
-    folders = [os.path.join(source_dir, folder) for folder in next(os.walk(source_dir))[1]]
-    target_folders = [os.path.join(target_dir, folder) for folder in next(os.walk(source_dir))[1]]
+    # Get image names
+    img_folders = [f for f in os.listdir(source_dir) if not f.startswith('.')]
+    img_folders.sort()
+    # source_folders = [os.path.join(source_dir, folder) for folder in next(os.walk(source_dir))[1]]
+    
+    # Get source folders
+    source_folders = [os.path.join(source_dir, folder) for folder in img_folders]
+    
+    # Get target folders
+    # target_folders = [os.path.join(target_dir, folder) for folder in next(os.walk(source_dir))[1]]
+    target_folders = [os.path.join(target_dir, folder) for folder in img_folders]
 
-    print(target_folders)
 
+    # Debug prints
+    # print(folders)
+    # print(target_folders)
 
 
     # Iterate through all the folders
-    for i in range(len(folders)):
-        fd = folders[i]
+    for i in range(len(source_folders)):
+        fd = source_folders[i]
         tfd = target_folders[i]
 
         # Rotation
@@ -70,8 +81,8 @@ def augment(source_dir, target_dir):
 if __name__ == "__main__":
 
     # CUB2002011
-    CUB_SRC_DIR = "data/cub2002011/processed_data/train/cropped/"
-    CUB_TARGET_DIR = "data/cub2002011/processed_data/train/cropped_augmented/"
+    CUB_SRC_DIR = "data/cub2002011/processed_data/train/cropped"
+    CUB_TARGET_DIR = "data/cub2002011/processed_data/train/cropped_augmented"
     augment(source_dir=CUB_SRC_DIR, target_dir=CUB_TARGET_DIR)
 
     print("Finished.")
