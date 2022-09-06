@@ -88,7 +88,7 @@ parser.add_argument("--classweights", action="store_true", help="Weight loss wit
 
 # Number of training epochs
 # num_train_epochs = 1000
-parser.add_argument('--num_train_epochs', type=int, default=1000, help="Number of training epochs.")
+parser.add_argument('--num_train_epochs', type=int, default=300, help="Number of training epochs.")
 
 # Number of warm epochs
 # num_warm_epochs = 5
@@ -234,8 +234,8 @@ img_width = IMG_SIZE
 # Train Transforms
 train_transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
-    torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.05, 0.1), scale=(0.95, 1.05), shear=0, resample=0, fillcolor=(0, 0, 0)),
-    torchvision.transforms.RandomHorizontalFlip(p=0.5),
+    # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.05, 0.1), scale=(0.95, 1.05), shear=0, resample=0, fillcolor=(0, 0, 0)),
+    # torchvision.transforms.RandomHorizontalFlip(p=0.5),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
@@ -262,6 +262,7 @@ if DATASET == "CUB2002011":
     train_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=True,
         transform=train_transforms
     )
 
@@ -269,13 +270,15 @@ if DATASET == "CUB2002011":
     train_push_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
-         transform=train_push_transforms
+        augmented=False,
+        transform=train_push_transforms
     )
 
     # Validation Dataset
     val_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=False,
         transform=val_transforms
     )
 

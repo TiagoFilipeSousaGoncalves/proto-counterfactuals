@@ -290,7 +290,7 @@ class STANFORDCARSDataset(Dataset):
 
 # CUB2002011Dataset: Dataset Class
 class CUB2002011Dataset(Dataset):
-    def __init__(self, data_path, classes_txt, transform=None):
+    def __init__(self, data_path, classes_txt, augmented, transform=None):
 
         """
         Args:
@@ -307,13 +307,21 @@ class CUB2002011Dataset(Dataset):
         for folder in images_folders:
 
             # Get images
-            img_fnames = [i for i in os.listdir(os.path.join(data_path, folder)) if not i.startswith('.')]
+            if augmented:
+                img_fnames = [i for i in os.listdir(os.path.join(data_path, folder, "augmented")) if not i.startswith('.')]
+            else:
+                img_fnames = [i for i in os.listdir(os.path.join(data_path, folder)) if not i.startswith('.')]
+
 
             # Get each image
             for img_name in img_fnames:
 
                 # Build the complete path
-                img_path = os.path.join(folder, img_name)
+                if augmented:
+                    img_path = os.path.join(folder, "augmented", img_name)
+                else:
+                    img_path = os.path.join(folder, img_name)
+
 
                 # Append this path to our variable of images_fpaths
                 images_fpaths.append(img_path)
@@ -338,6 +346,9 @@ class CUB2002011Dataset(Dataset):
 
         # Transforms
         self.transform = transform
+
+        # Augmented
+        self.augmented = augmented
 
 
         return
