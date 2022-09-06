@@ -108,7 +108,10 @@ def save_preprocessed_img(fname, preprocessed_imgs, mean, std, index=0):
 def save_prototype(fname, load_img_dir, epoch, index):
     
     # Get prototype image
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img'+str(index)+'.png'))
+    if epoch:
+        p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img'+str(index)+'.png'))
+    else:
+        p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img'+str(index)+'.png'))
     
     # plt.axis('off')
     plt.imsave(fname, p_img)
@@ -121,7 +124,10 @@ def save_prototype(fname, load_img_dir, epoch, index):
 def save_prototype_self_activation(fname, load_img_dir, epoch, index):
 
     # Get prototype self-activation
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original_with_self_act'+str(index)+'.png'))
+    if epoch:
+        p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original_with_self_act'+str(index)+'.png'))
+    else:
+        p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img-original_with_self_act'+str(index)+'.png'))
     
     # plt.axis('off')
     plt.imsave(fname, p_img)
@@ -134,11 +140,14 @@ def save_prototype_self_activation(fname, load_img_dir, epoch, index):
 def save_prototype_original_img_with_bbox(fname, load_img_dir, epoch, index, bbox_height_start, bbox_height_end, bbox_width_start, bbox_width_end, color=(0, 255, 255)):
     
     # Load image with OpenCV
-    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original'+str(index)+'.png'))
-    
+    if epoch:
+        p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original'+str(index)+'.png'))
+    else:
+        p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'prototype-img-original'+str(index)+'.png'))
+
     # Draw bounding-boc
     cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
-    
+
     # Get RGB image
     p_img_rgb = p_img_bgr[...,::-1]
     p_img_rgb = np.float32(p_img_rgb) / 255

@@ -321,7 +321,7 @@ for i in range(1, 11):
     save_prototype(
         fname=os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i),
         load_img_dir=saved_prototypes_dir,
-        epoch=start_epoch_number, 
+        epoch=None, 
         index=sorted_indices_act[-i].item()
     )
 
@@ -329,7 +329,7 @@ for i in range(1, 11):
     # Save prototype original image with bounding-box
     save_prototype_original_img_with_bbox(
         fname=os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_in_original_pimg.png' % i),
-        epoch=start_epoch_number,
+        epoch=None,
         index=sorted_indices_act[-i].item(),
         bbox_height_start=prototype_info[sorted_indices_act[-i].item()][1],
         bbox_height_end=prototype_info[sorted_indices_act[-i].item()][2],
@@ -343,7 +343,7 @@ for i in range(1, 11):
     save_prototype_self_activation(
         fname=os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_self_act.png' % i),
         load_img_dir=saved_prototypes_dir,
-        epoch=start_epoch_number,
+        epoch=None,
         index=sorted_indices_act[-i].item()
     )
     
@@ -413,7 +413,7 @@ for i, c in enumerate(topk_classes.detach().cpu().numpy()):
         save_prototype(
             fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype.png' % prototype_cnt),
             load_img_dir=saved_prototypes_dir,
-            epoch=start_epoch_number,
+            epoch=None,
             index=prototype_index
         )
     
@@ -422,7 +422,7 @@ for i, c in enumerate(topk_classes.detach().cpu().numpy()):
         save_prototype_original_img_with_bbox(
             fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype_in_original_pimg.png' % prototype_cnt),
             load_img_dir=saved_prototypes_dir,
-            epoch=start_epoch_number,
+            epoch=None,
             index=prototype_index,
             bbox_height_start=prototype_info[prototype_index][1],
             bbox_height_end=prototype_info[prototype_index][2],
@@ -436,7 +436,7 @@ for i, c in enumerate(topk_classes.detach().cpu().numpy()):
         save_prototype_self_activation(
             fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype_self_act.png' % prototype_cnt),
             load_img_dir=saved_prototypes_dir,
-            epoch=start_epoch_number,
+            epoch=None,
             index=prototype_index
         )
 
