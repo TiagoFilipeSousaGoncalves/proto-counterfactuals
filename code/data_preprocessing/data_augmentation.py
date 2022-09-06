@@ -34,10 +34,11 @@ def augment(source_dir, target_dir):
 
 
     # Debug prints
-    # print(folders)
-    # print(target_folders)
+    print(source_folders)
+    print(target_folders)
 
-
+    exit()
+    
     # Iterate through all the folders
     for i in range(len(source_folders)):
         fd = source_folders[i]
