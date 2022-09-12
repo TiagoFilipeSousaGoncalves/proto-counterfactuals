@@ -324,6 +324,7 @@ elif DATASET == "STANFORDCARS":
     train_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_train",
+        augmented=True,
         cropped=True,
         transform=train_transforms
     )
@@ -332,6 +333,7 @@ elif DATASET == "STANFORDCARS":
     train_push_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_train",
+        augmented=False,
         cropped=True,
         transform=train_push_transforms
     )
@@ -340,6 +342,7 @@ elif DATASET == "STANFORDCARS":
     val_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_test",
+        augmented=False,
         cropped=True,
         transform=val_transforms
     )
