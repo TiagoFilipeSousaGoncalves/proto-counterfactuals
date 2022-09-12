@@ -1,6 +1,5 @@
 # Imports
 import os
-import numpy as np
 import scipy.io as sio
 from PIL import Image
 
@@ -24,7 +23,7 @@ for cars_subset in [cars_train, cars_test]:
     # Create a directory for cropped images
     if not os.path.isdir(os.path.join(data, stanfordcars, cars_subset, "images_cropped")):
         os.makedirs(os.path.join(data, stanfordcars, cars_subset, "images_cropped"))
-    
+
 
     # Get the correspondent .MAT file
     if cars_subset == cars_train:
@@ -46,7 +45,7 @@ for cars_subset in [cars_train, cars_test]:
             fname = sample[5][0]
             # print(sample)
             # print(bbox_x1, bbox_y1, bbox_x2, bbox_y2, label, fname)
-            
+
 
             # Open the file
             pil_image = Image.open(os.path.join(data, stanfordcars, cars_subset, "images", fname)).convert('RGB')
@@ -55,7 +54,7 @@ for cars_subset in [cars_train, cars_test]:
             # Crop image
             pil_image_crop = pil_image.crop((bbox_x1, bbox_y1, bbox_x2, bbox_y2))
             # pil_image_crop.show()
-            
+
             # Save cropped image
             pil_image_crop.save(os.path.join(data, stanfordcars, cars_subset, "images_cropped", fname))
 
