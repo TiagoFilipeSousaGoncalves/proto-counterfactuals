@@ -17,7 +17,7 @@ cars_train = "cars_train"
 for cars_subset in [cars_train, cars_test]:
 
     # Get the directory of images
-    images_fpath = os.path.join(data, stanfordcars, cars_subset, "images", "images_cropped")
+    images_fpath = os.path.join(data, stanfordcars, cars_subset, "images_cropped")
 
     # Get images' fnames
     images_fnames = os.listdir(images_fpath)
