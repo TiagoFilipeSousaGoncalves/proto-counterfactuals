@@ -325,24 +325,29 @@ class CUB2002011Dataset(Dataset):
 
                 # Append this path to our variable of images_fpaths
                 images_fpaths.append(img_path)
+            
+
+            # Clean images_fpaths (to prevent IsADirectoryError errors)
+            images_fpaths = [path for path in images_fpaths if not os.path.isdir(path)]
         
 
         # Add this to our variables
         self.data_path = data_path
         self.images_fpaths = images_fpaths
 
-        
+
         # Extract labels from data path
         labels = np.genfromtxt(classes_txt, dtype=str)
         labels_dict = dict()
         for label_info in labels:
             labels_dict[label_info[1]] = int(label_info[0]) -1
-        
+
+
         # print(f"Number of Labels: {len(labels_dict)}")
         # print(f"Labels dict: {labels_dict}")
 
         self.labels_dict = labels_dict
-        
+
 
         # Transforms
         self.transform = transform
