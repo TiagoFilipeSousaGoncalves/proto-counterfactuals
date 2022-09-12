@@ -182,7 +182,7 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_wi
 # Dataset
 # STANFORDCARSDataset: Dataset Class
 class STANFORDCARSDataset(Dataset):
-    def __init__(self, data_path, cars_subset, cropped=True, transform=None):
+    def __init__(self, data_path, cars_subset, augmented, cropped=True, transform=None):
         
         """
         Args:
@@ -239,12 +239,49 @@ class STANFORDCARSDataset(Dataset):
 
 
         # Add these variables to the class
-        self.image_fnames = image_fnames
-        self.image_labels = np.array(image_labels) - 1
-        self.image_bboxes = image_bboxes
+        # image_fnames = image_fnames
+        image_labels = np.array(image_labels) - 1
+        # self.image_bboxes = image_bboxes
+
+
+        # Get the right path and labels of the augmented version of the dataset
+        images_fpaths, images_flabels = list(), list()
+
+            
+        # Go to folder
+        for fname, label in zip(image_fnames, image_labels):
+            
+            # Enter the path of images
+            if augmented:
+                image_folder_path = os.path.join(self.images_path, fname.split('.')[0], "augmented")
+            else:
+                image_folder_path = os.path.join(self.images_path, fname.split('.')[0])
+
+
+
+
+            # Get images in this folder
+            images = [i for i in os.listdir(image_folder_path) if not i.startswith('.')]
+
+            # Clean directories (if needed)
+            images = [path for path in images if not os.path.isdir(image_folder_path, path)]
+
+
+            # Go through these images
+            for img in images:
+
+                # Get image path
+                img_path = os.path.join(image_folder_path, img)
+
+                # Append path and label to the proper list
+                images_fpaths.append(img_path)
+                images_flabels.append(label)
+
 
 
         # Extra variables
+        self.images_fpaths = images_fpaths
+        self.images_flabels = images_flabels
         self.class_names = sio.loadmat(os.path.join(data_path, "stanfordcars", "car_devkit", "devkit", "cars_meta.mat"), squeeze_me=True)["class_names"].tolist()
         self.class_to_idx = {cls: i for i, cls in enumerate(self.class_names)}
         self.idx_to_class = {i:cls for i, cls in enumerate(self.class_names)}
@@ -261,7 +298,7 @@ class STANFORDCARSDataset(Dataset):
     # Method: __len__
     def __len__(self):
         
-        return len(self.image_fnames)
+        return len(self.images_fpaths)
 
 
 
@@ -273,10 +310,10 @@ class STANFORDCARSDataset(Dataset):
 
         # Get images
         # Open the file
-        image = Image.open(os.path.join(self.images_path, self.image_fnames[idx])).convert('RGB')
+        image = Image.open(self.images_fpaths[idx]).convert('RGB')
 
         # Get labels
-        label = self.image_labels[idx]
+        label = self.images_flabels[idx]
 
 
         # Apply transformation
