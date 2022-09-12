@@ -4,6 +4,7 @@
 
 # Imports
 import os
+import argparse
 import Augmentor
 
 
@@ -80,9 +81,27 @@ def augment(source_dir):
 # Run this file to proceed with the data augmentation
 if __name__ == "__main__":
 
-    # CUB2002011
-    CUB_SRC_DIR = "data/cub2002011/processed_data/train/cropped"
-    # CUB_TARGET_DIR = "data/cub2002011/processed_data/train/cropped_augmented"
-    augment(source_dir=CUB_SRC_DIR)
+    # CLI Interface
+    # Data set
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    if args.dataset == "CUB2002011":
+        # CUB2002011
+        CUB_SRC_DIR = "data/cub2002011/processed_data/train/cropped"
+        augment(source_dir=CUB_SRC_DIR)
+
+    elif args.dataset == "STANFORDCARS":
+        # STANFORDCARS
+        STANFORDCARS_SRC_DIR = "data/stanfordcars/cars_train/images_cropped"
+        augment(source_dir=STANFORDCARS_SRC_DIR)
+    
+    else:
+        pass
+
+
 
     print("Finished.")
