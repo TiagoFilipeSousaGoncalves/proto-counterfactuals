@@ -364,8 +364,8 @@ class CUB2002011Dataset(Dataset):
                 images_fpaths.append(img_path)
             
 
-            # Clean images_fpaths (to prevent IsADirectoryError errors)
-            images_fpaths = [path for path in images_fpaths if not os.path.isdir(path)]
+        # Clean images_fpaths (to prevent IsADirectoryError errors)
+        images_fpaths = [path for path in images_fpaths if not os.path.isdir(data_path, path)]
         
 
         # Add this to our variables
