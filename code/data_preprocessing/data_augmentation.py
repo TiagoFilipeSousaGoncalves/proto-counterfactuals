@@ -35,7 +35,7 @@ def augment(source_dir):
 
 
     # Debug prints
-    print(source_folders)
+    # print(source_folders)
     # print(target_folders)
 
 
