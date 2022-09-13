@@ -264,7 +264,7 @@ class STANFORDCARSDataset(Dataset):
             images = [i for i in os.listdir(image_folder_path) if not i.startswith('.')]
 
             # Clean directories (if needed)
-            images = [path for path in images if not os.path.isdir(image_folder_path, path)]
+            images = [path for path in images if not os.path.isdir(os.path.join(image_folder_path, path))]
 
 
             # Go through these images
@@ -365,7 +365,7 @@ class CUB2002011Dataset(Dataset):
             
 
         # Clean images_fpaths (to prevent IsADirectoryError errors)
-        images_fpaths = [path for path in images_fpaths if not os.path.isdir(data_path, path)]
+        images_fpaths = [path for path in images_fpaths if not os.path.isdir(os.path.join(data_path, path))]
         
 
         # Add this to our variables
