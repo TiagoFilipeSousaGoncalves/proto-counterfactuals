@@ -140,6 +140,7 @@ if DATASET == "CUB2002011":
     test_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=False,
         transform=test_transforms
     )
 
@@ -169,6 +170,7 @@ elif DATASET == "STANFORDCARS":
     test_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_test",
+        augmented=False,
         cropped=True,
         transform=test_transforms
     )
