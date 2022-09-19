@@ -1,12 +1,15 @@
 #!/bin/bash
-#SBATCH --gres=gpu:1
-#SBATCH -o job-%j.out
-#SBATCH -e job-%j.err
+#
+#SBATCH -p gtx1080ti_11GB                 # Partition        (check w/ $sinfo)
+#SBATCH --job-name=tr_stan_dn161          # Job name
+#SBATCH -c 3                              # Number of cores
+#SBATCH -o slurm.%N.%j.out                # STDOUT
+#SBATCH -e slurm.%N.%j.err                # STDERR
 
 
 
 echo "STANFORDCARS DenseNet161"
 
-python code/models_train.py --dataset STANFORDCARS --base_architecture densenet161 --batchsize 16 --num_workers 3 --gpu_id 0
+python code/models_train.py --dataset STANFORDCARS --base_architecture densenet161 --batchsize 32 --num_workers 2 --gpu_id 0
 
 echo "Finished"
