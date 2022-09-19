@@ -5,7 +5,6 @@
 #SBATCH -c 2                                # Number of cores
 #SBATCH -o slurm.%N.%j.out                  # STDOUT
 #SBATCH -e slurm.%N.%j.err                  # STDERR
-#SBATCH --account=tgoncalv                  # Account name     (check w/ $sacctmgr show assoc)
 
 
 
