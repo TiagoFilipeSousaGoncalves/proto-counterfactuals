@@ -112,7 +112,7 @@ BATCH_SIZE = args.batchsize
 IMG_SIZE = args.img_size
 
 # Prototype shape
-PROTOTYPE_SHAPE = args.prototype_shape
+# PROTOTYPE_SHAPE = args.prototype_shape
 
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
