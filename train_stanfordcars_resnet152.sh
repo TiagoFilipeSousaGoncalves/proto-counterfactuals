@@ -10,6 +10,6 @@
 
 echo "STANFORDCARS ResNet152"
 
-python code/models_train.py --dataset STANFORDCARS --base_architecture resnet152 --batchsize 64 --num_workers 2 --gpu_id 0
+python code/models_train.py --dataset STANFORDCARS --base_architecture resnet152 --batchsize 64 --num_workers 0 --gpu_id 0
 
 echo "Finished"
