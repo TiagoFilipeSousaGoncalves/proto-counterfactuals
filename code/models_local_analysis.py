@@ -110,7 +110,7 @@ BATCH_SIZE = args.batchsize
 IMG_SIZE = args.img_size
 
 # Prototype shape
-PROTOTYPE_SHAPE = args.prototype_shape
+# PROTOTYPE_SHAPE = args.prototype_shape
 
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
@@ -139,9 +139,14 @@ test_transforms = torchvision.transforms.Compose([
 # Dataset
 # CUB2002011
 if DATASET == "CUB2002011":
+
+    # Get image directories
+    data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
+    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+
     # Test Dataset
     test_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
+        data_path=data_path,
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
         augmented=False,
         transform=test_transforms
@@ -149,6 +154,9 @@ if DATASET == "CUB2002011":
 
     # Number of classes
     NUM_CLASSES = len(test_set.labels_dict)
+
+    # Labels dictionary
+    labels_dict = test_set.labels_dict.copy()
 
 
 # PH2
@@ -200,11 +208,14 @@ elif BASE_ARCHITECTURE.lower() in ("resnet152"):
 
 
 # Create Test DataLoader
-test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=WORKERS)
+test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 
 
-# Results and Weights
+# Weights
 weights_dir = os.path.join(results_dir, "weights")
+
+# Prototypes
+load_img_dir = os.path.join(weights_dir, 'prototypes')
 
 
 # Choose GPU
@@ -255,37 +266,46 @@ max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
 
 # Get model performance metrics
 # accu = tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=print)
+"""
 metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
 test_accuracy = metrics_dict["accuracy"]
 print(f"Accuracy on test: {test_accuracy}.")
-
+"""
 
 # TODO: Implement the loop
 # Go through all image directories
 for image_dir in image_directories:
 
     # Get images in this directory
-    image_names = [i for i in os.listdir(image_dir) if not i.startswith('.')]
+    image_names = [i for i in os.listdir(os.path.join(data_path, image_dir)) if not i.startswith('.')]
+    image_names = [i for i in image_names if not os.path.isdir(os.path.join(data_path, i))]
 
     # Go through all images in a single directory
     for image_name in image_names:
 
         # Get image label
-        image_label = None
+        image_label = labels_dict[image_dir]
+
+        # Create image analysis path
+        image_analysis_path = os.path.join(save_analysis_path, image_dir, image_name)
+        if not os.path.isdir(image_analysis_path):
+            os.makedirs(image_analysis_path)
 
         # Analyse this image
         _ = retrieve_image_prototypes(
-            save_analysis_path=save_analysis_path,
+            save_analysis_path=image_analysis_path,
             weights_dir=weights_dir,
+            load_img_dir=load_img_dir,
             ppnet_model=ppnet_model,
             device=DEVICE,
             test_transforms=test_transforms,
-            test_image_dir=image_dir,
+            test_image_dir=os.path.join(data_path, image_dir),
             test_image_name=image_name,
             test_image_label=image_label,
             norm_params={"mean":MEAN, "std":STD},
             img_size=IMG_SIZE
         )
+        exit()
 
 
 

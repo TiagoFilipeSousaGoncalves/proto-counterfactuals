@@ -27,7 +27,7 @@ from prototypes_utilities import find_high_activation_crop
 
 
 # Function: Retrieve prototypes from an image
-def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, norm_params, img_size):
+def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, norm_params, img_size):
 
     # TODO: Erase uppon review
     # parser.add_argument('-imgdir', nargs=1, type=str)
@@ -136,6 +136,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         # Save prototype original image with bounding-box
         save_prototype_original_img_with_bbox(
             fname=os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_in_original_pimg.png' % i),
+            load_img_dir=load_img_dir,
             epoch=None,
             index=sorted_indices_act[-i].item(),
             bbox_height_start=prototype_info[sorted_indices_act[-i].item()][1],
