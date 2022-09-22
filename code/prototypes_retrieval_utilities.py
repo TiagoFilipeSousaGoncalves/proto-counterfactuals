@@ -359,6 +359,6 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
         print('Prediction is correct.')
     else:
         print('Prediction is wrong.')
-    
 
-    return 0
+
+    return
