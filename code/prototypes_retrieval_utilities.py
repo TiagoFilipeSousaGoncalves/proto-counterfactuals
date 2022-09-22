@@ -39,7 +39,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
     # Open a file to save a small report w/ .TXT extension
-    report = open("report.txt", "at")
+    report = open(os.path.join(save_analysis_path, "report.txt"), "at")
 
     # Specify the test image to be analyzed
     test_image_path = os.path.join(test_image_dir, test_image_name)
@@ -57,9 +57,9 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
     # Append information to the report
     # print('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' number of classes.')
-    report.write('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' number of classes.')
+    report.write('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' number of classes.\n')
     # print('Their class identities are: ' + str(prototype_img_identity))
-    report.write('Their class identities are: ' + str(prototype_img_identity))
+    report.write('Their class identities are: ' + str(prototype_img_identity) + '\n')
 
 
     # Confirm prototype connects most strongly to its own class
@@ -67,10 +67,10 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     prototype_max_connection = prototype_max_connection.cpu().numpy()
     if np.sum(prototype_max_connection == prototype_img_identity) == ppnet_model.num_prototypes:
         # print('All prototypes connect most strongly to their respective classes.')
-        report.write('All prototypes connect most strongly to their respective classes.')
+        report.write('All prototypes connect most strongly to their respective classes.\n')
     else:
         # print('WARNING: Not all prototypes connect most strongly to their respective classes.')
-        report.write('WARNING: Not all prototypes connect most strongly to their respective classes.')
+        report.write('WARNING: Not all prototypes connect most strongly to their respective classes.\n')
 
 
     # Get protoype shape
@@ -103,7 +103,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     for i in range(logits.size(0)):
         tables.append((torch.argmax(logits, dim=1)[i].item(), labels_test[i].item()))
         # print(str(i) + ' ' + str(tables[-1]))
-        report.write(str(i) + ' ' + str(tables[-1]))
+        report.write(f"{str(i)}, {str(tables[-1])}\n")
 
 
     # Get prediction and ground-truth labels
@@ -114,9 +114,9 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     
     # Append information to the report
     # print('Predicted: ' + str(predicted_cls))
-    report.write('Predicted: ' + str(predicted_cls))
+    report.write(f'Predicted: {str(predicted_cls)}\n')
     # print('Actual: ' + str(correct_cls))
-    report.write('Actual: ' + str(correct_cls))
+    report.write(f'Actual: {str(correct_cls)}\n')
     
     
     # Save original image
@@ -137,17 +137,17 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
     # Append information to the report
     # print('Most activated 10 prototypes of this image:')
-    report.write(f'Most activated {most_k_activated} prototypes of this image:')
+    report.write(f'Most activated {most_k_activated} prototypes of this image:\n')
     array_act, sorted_indices_act = torch.sort(prototype_activations[idx])
     # for i in range(1, 11):
     for i in range(1, most_k_activated + 1):
         # print('top {0} activated prototype for this image:'.format(i))
-        report.write('top {0} activated prototype for this image:'.format(i))
+        report.write(f'Top-{i} activated prototype for this image:\n')
 
 
         # Save prototype
         prototype_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i)
-        report.write(f"Prototype: {prototype_fname}")
+        report.write(f"Prototype: {prototype_fname}\n")
         save_prototype(
             fname=prototype_fname,
             load_img_dir=saved_prototypes_dir,
@@ -158,7 +158,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
         # Save prototype original image with bounding-box
         prototype_bbox_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_in_original_pimg.png' % i)
-        report.write(f"Prototype with bounding-box: {prototype_bbox_fname}")
+        report.write(f"Prototype with bounding-box: {prototype_bbox_fname}\n")
         save_prototype_original_img_with_bbox(
             fname=prototype_bbox_fname,
             load_img_dir=load_img_dir,
@@ -174,7 +174,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
         # Save prototype self-activation
         prototype_self_act_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_self_act.png' % i)
-        report.write(f"Prototype self-activation: {prototype_self_act_fname}")
+        report.write(f"Prototype self-activation: {prototype_self_act_fname}\n")
         save_prototype_self_activation(
             fname=prototype_self_act_fname,
             load_img_dir=saved_prototypes_dir,
@@ -185,22 +185,22 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
         # Add information to the report
         # print('prototype index: {0}'.format(sorted_indices_act[-i].item()))
-        report.write('prototype index: {0}'.format(sorted_indices_act[-i].item()))
+        report.write(f'Prototype index: {sorted_indices_act[-i].item()}\n')
         # print('prototype class identity: {0}'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
-        report.write('prototype class identity: {0}'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
+        report.write(f'Prototype class identity: {prototype_img_identity[sorted_indices_act[-i].item()]}\n')
 
 
         # Prototype maximum connection
         if prototype_max_connection[sorted_indices_act[-i].item()] != prototype_img_identity[sorted_indices_act[-i].item()]:
             # print('prototype connection identity: {0}'.format(prototype_max_connection[sorted_indices_act[-i].item()]))
-            report.write('Prototype connection identity: {0}'.format(prototype_max_connection[sorted_indices_act[-i].item()]))
+            report.write(f'Prototype connection identity: {prototype_max_connection[sorted_indices_act[-i].item()]}\n')
 
 
         # Add more information to the report
         # print('activation value (similarity score): {0}'.format(array_act[-i]))
-        report.write('Activation value (similarity score): {0}'.format(array_act[-i]))
+        report.write(f'Activation value (similarity score): {array_act[-i]}\n')
         # print('last layer connection with predicted class: {0}'.format(ppnet_model.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
-        report.write('last layer connection with predicted class: {0}'.format(ppnet_model.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
+        report.write(f'Last layer connection with predicted class: {ppnet_model.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]}\n')
 
 
         # Get activation pattern and upsampled activation pattern
@@ -212,7 +212,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
         high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
         high_act_patch_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_by_top-%d_prototype.png' % i)
         # print ('most highly activated patch of the chosen image by this prototype:')
-        report.write(f'Most highly activated patch of the chosen image by this prototype: {high_act_patch_fname}')
+        report.write(f'Most highly activated patch of the chosen image by this prototype: {high_act_patch_fname}\n')
         # plt.axis('off')
         plt.imsave(high_act_patch_fname, high_act_patch)
 
@@ -220,7 +220,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
         # Show the most highly activated patch of the image by this prototype in the original image
         high_act_patch_img_bbox_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % i)
         # print('most highly activated patch by this prototype shown in the original image:')
-        print(f'Most highly activated patch by this prototype shown in the original image: {high_act_patch_img_bbox_fname}')
+        print(f'Most highly activated patch by this prototype shown in the original image: {high_act_patch_img_bbox_fname}\n')
         imsave_with_bbox(
             fname=high_act_patch_img_bbox_fname,
             img_rgb=original_img,
@@ -240,17 +240,17 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
         overlayed_img = 0.5 * original_img + 0.3 * heatmap
         prototype_act_map_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'prototype_activation_map_by_top-%d_prototype.png' % i)
         # print('prototype activation map of the chosen image:')
-        report.write('Prototype activation map of the chosen image: {prototype_act_map_fname}')
+        report.write(f'Prototype activation map of the chosen image: {prototype_act_map_fname}\n')
         # plt.axis('off')
         plt.imsave(prototype_act_map_fname, overlayed_img)
         # print('--------------------------------------------------------------')
-        report.write('--------------------------------------------------------------')
+        report.write('\n')
 
-    
+
     # Close report
     report.close()
 
-    
+
     return
 
 

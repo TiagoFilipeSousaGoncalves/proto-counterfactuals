@@ -284,12 +284,12 @@ for image_dir in image_directories:
         image_label = labels_dict[image_dir]
 
         # Create image analysis path
-        image_analysis_path = os.path.join(save_analysis_path, image_dir, image_name)
+        image_analysis_path = os.path.join(save_analysis_path, image_dir, image_name.split('.')[0])
         if not os.path.isdir(image_analysis_path):
             os.makedirs(image_analysis_path)
 
         # Analyse this image
-        _ = retrieve_image_prototypes(
+        retrieve_image_prototypes(
             save_analysis_path=image_analysis_path,
             weights_dir=weights_dir,
             load_img_dir=load_img_dir,
