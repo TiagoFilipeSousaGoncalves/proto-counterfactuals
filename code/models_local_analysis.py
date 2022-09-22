@@ -43,15 +43,11 @@ parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011",
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
 
 # Batch size
-parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
+parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation.")
 
 # Image size
 # img_size = 224
-parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
-
-# Prototype shape
-# prototype_shape = (2000, 128, 1, 1)
-# parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
+parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms.")
 
 # Prototype Activation Function
 # prototype_activation_function = 'log'
@@ -61,20 +57,20 @@ parser.add_argument('--prototype_activation_function', type=str, default='log', 
 # add_on_layers_type = 'regular'
 parser.add_argument('--add_on_layers_type', type=str, default='regular', help="Add on layers type.")
 
-# Class Weights
-parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance")
-
 # Output directory
 parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
 
 # Number of workers
-parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader")
+parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader.")
 
 # GPU ID
-parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU")
+parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU.")
 
 # Get checkpoint
-parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training")
+parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint that contains weights and model parameters.")
+
+# Compute metrics on test
+parser.add_argument("--compute_metrics", action="store_true", help="Compute metrics on a specific data subset.")
 
 
 
@@ -109,11 +105,11 @@ BATCH_SIZE = args.batchsize
 # Image size (after transforms)
 IMG_SIZE = args.img_size
 
-# Prototype shape
-# PROTOTYPE_SHAPE = args.prototype_shape
-
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
+
+# Compute metrics on data subset
+COMPUTE_METRICS = args.compute_metrics
 
 
 
@@ -231,7 +227,8 @@ ppnet_model = construct_PPNet(
     prototype_shape=PROTOTYPE_SHAPE,
     num_classes=NUM_CLASSES,
     prototype_activation_function=PROTOTYPE_ACTIVATION_FUNCTION,
-    add_on_layers_type=ADD_ON_LAYERS_TYPE)
+    add_on_layers_type=ADD_ON_LAYERS_TYPE
+)
 
 
 # Define if the model should be class specific
@@ -242,7 +239,7 @@ class_specific = True
 # Put model into DEVICE (CPU or GPU)
 ppnet_model = ppnet_model.to(DEVICE)
 
-# Load model weights
+# TODO: Decide which of model weights should we load
 # model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
 model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
 # model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
@@ -266,13 +263,13 @@ max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
 
 # Get model performance metrics
 # accu = tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=print)
-"""
-metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
-test_accuracy = metrics_dict["accuracy"]
-print(f"Accuracy on test: {test_accuracy}.")
-"""
+if COMPUTE_METRICS:
+    metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+    test_accuracy = metrics_dict["accuracy"]
+    print(f"Accuracy on test: {test_accuracy}.")
 
-# TODO: Implement the loop
+
+
 # Go through all image directories
 for image_dir in image_directories:
 
