@@ -307,11 +307,11 @@ for image_dir in image_directories:
 
 
         # Add information to our data dictionary
-        analysis_dict["Image Filename"] = img_fname
-        analysis_dict["Ground-Truth Label"] = gt_label
-        analysis_dict["Predicted Label"] = pred_label
-        analysis_dict["Number Prototypes Connected Class Identity"] = nr_prototypes_cls_ident
-        analysis_dict["Top-10 Activated Prototypes"] = topk_proto_cls_ident
+        analysis_dict["Image Filename"].append(img_fname)
+        analysis_dict["Ground-Truth Label"].append(gt_label)
+        analysis_dict["Predicted Label"].append(pred_label)
+        analysis_dict["Number Prototypes Connected Class Identity"].append(nr_prototypes_cls_ident)
+        analysis_dict["Top-10 Activated Prototypes"].append(topk_proto_cls_ident)
 
 
 # Save data dictionary into a .CSV
