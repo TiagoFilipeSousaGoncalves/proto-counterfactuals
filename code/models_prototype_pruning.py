@@ -11,7 +11,7 @@ import torch.utils.data
 import torchvision
 
 # Project Imports
-from data_utilities import preprocess_input_function, CUB2002011Dataset, STANFORDCARSDataset
+from data_utilities import preprocess_input_function, CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
 from pruning_utilities import prune_prototypes
@@ -28,10 +28,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "STANFORDCARS"], help="Data set: CUB2002011, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
 
 # Model
-parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19, ')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
@@ -39,10 +39,6 @@ parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for tra
 # Image size
 # img_size = 224
 parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
-
-# Prototype shape
-# prototype_shape = (2000, 128, 1, 1)
-# parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
 
 # Prototype Activation Function
 # prototype_activation_function = 'log'
@@ -85,6 +81,9 @@ parser.add_argument("--k", type=int, default=6, help="K.")
 # prune_threshold = 3
 parser.add_argument("--prune_threshold", type=int, default=3, help="Prune threshold.")
 
+# Need push
+parser.add_argument("--need_push", action="store_true", default=False, help="Perform push operation.")
+
 
 
 # Parse the arguments
@@ -124,9 +123,6 @@ BATCH_SIZE = args.batchsize
 # Image size (after transforms)
 IMG_SIZE = args.img_size
 
-# Prototype shape
-# PROTOTYPE_SHAPE = args.prototype_shape
-
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
@@ -139,6 +135,10 @@ K = args.k
 # Prune threshold
 PRUNE_THRESHOLD = args.prune_threshold
 
+# Need push
+NEED_PUSH = args.need_push
+
+
 
 # Load data
 # Mean and STD to Normalize the inputs into pretrained models
@@ -146,17 +146,12 @@ MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
 
 
-# Input Data Dimensions
-img_height = IMG_SIZE
-img_width = IMG_SIZE
-
-
 
 # Train Transforms
 train_transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
-    torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.05, 0.1), scale=(0.95, 1.05), shear=0, resample=0, fillcolor=(0, 0, 0)),
-    torchvision.transforms.RandomHorizontalFlip(p=0.5),
+    # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.05, 0.1), scale=(0.95, 1.05), shear=0, resample=0, fillcolor=(0, 0, 0)),
+    # torchvision.transforms.RandomHorizontalFlip(p=0.5),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
@@ -182,6 +177,7 @@ if DATASET == "CUB2002011":
     train_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=True,
         transform=train_transforms
     )
 
@@ -189,18 +185,51 @@ if DATASET == "CUB2002011":
     train_push_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
-         transform=train_push_transforms
+        augmented=False,
+        transform=train_push_transforms
     )
 
     # Test Dataset
     test_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=False,
         transform=test_transforms
     )
 
     # Number of classes
     NUM_CLASSES = len(train_set.labels_dict)
+
+
+
+# PH2
+elif DATASET == "PH2":
+    # Train Dataset
+    train_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        transform=train_transforms
+    )
+
+    # Train Push Dataset (Prototypes)
+    train_push_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        transform=train_push_transforms
+    )
+
+    # Test Dataset
+    test_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        transform=test_transforms
+    )
+
+    # Number of Classes
+    NUM_CLASSES = len(train_set.diagnosis_dict)
 
 
 
@@ -210,6 +239,7 @@ elif DATASET == "STANFORDCARS":
     train_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_train",
+        augmented=True,
         cropped=True,
         transform=train_transforms
     )
@@ -218,6 +248,7 @@ elif DATASET == "STANFORDCARS":
     train_push_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_train",
+        augmented=False,
         cropped=True,
         transform=train_push_transforms
     )
@@ -226,6 +257,7 @@ elif DATASET == "STANFORDCARS":
     test_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_test",
+        augmented=False,
         cropped=True,
         transform=test_transforms
     )
@@ -242,7 +274,7 @@ results_dir = os.path.join(OUTPUT_DIR, CHECKPOINT)
 weights_dir = os.path.join(results_dir, "weights")
 
 # Pruned model dir
-pruned_model_dir = os.path.join(weights_dir, f'pruned_prototypes_k{K}_pt{PRUNE_THRESHOLD}')
+pruned_model_dir = os.path.join(weights_dir, "pruning", f'k{K}_pt{PRUNE_THRESHOLD}')
 
 if not os.path.isdir(pruned_model_dir):
     os.makedirs(pruned_model_dir)
@@ -325,20 +357,14 @@ ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
 print("Model weights loaded with success.")
 
 
-# TODO: Erase uppon review
-# load the data
-# from settings import train_dir, test_dir, train_push_dir
-# train_batch_size = 80
-# test_batch_size = 100
-# img_size = 224
-# train_push_batch_size = 80
 
 
-# DataLoaders
+
+# Dataloaders
 # Train Loader
 train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS, pin_memory=False)
 
-# Train Push Loader ( The push set is needed for pruning because it is unnormalized)
+# Train Push Loader (The push set is needed for pruning because it is unnormalized)
 train_push_loader = torch.utils.data.DataLoader(dataset=train_push_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=WORKERS, pin_memory=False)
 
 # Test Loader
@@ -374,12 +400,10 @@ proto_bound_boxes_filename_prefix = 'bb'
 
 
 
-
-
-# Best Accuracy Variable
+# Best Accuracy Variable (before prunning)
 best_accuracy = -np.inf
 
-# TODO
+# Test the model
 # tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)
 metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
 test_accuracy = metrics_dict["accuracy"]
@@ -391,30 +415,31 @@ if test_accuracy > best_accuracy:
 
 
 
-# We must execute the push operation first
-print("Pushing prototypes...")
-push_prototypes(
-    train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
-    prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
-    class_specific=class_specific,
-    preprocess_input_function=preprocess_input_function, # normalize if needed (FIXME: according to original implementation)
-    prototype_layer_stride=1,
-    root_dir_for_saving_prototypes=saved_prototypes_dir, # if not None, prototypes will be saved here
-    epoch_number=None, # if not provided, prototypes saved previously will be overwritten
-    prototype_img_filename_prefix=prototype_img_filename_prefix,
-    prototype_self_act_filename_prefix=prototype_self_act_filename_prefix,
-    proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
-    save_prototype_class_identity=True,
-    device=DEVICE
-)
+# We must execute the push operation first (if needed)
+if NEED_PUSH:
+    print("Pushing prototypes...")
+    push_prototypes(
+        train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
+        prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
+        class_specific=class_specific,
+        preprocess_input_function=preprocess_input_function, # normalize if needed (FIXME: according to original implementation)
+        prototype_layer_stride=1,
+        root_dir_for_saving_prototypes=saved_prototypes_dir, # if not None, prototypes will be saved here
+        epoch_number=None, # if not provided, prototypes saved previously will be overwritten
+        prototype_img_filename_prefix=prototype_img_filename_prefix,
+        prototype_self_act_filename_prefix=prototype_self_act_filename_prefix,
+        proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
+        save_prototype_class_identity=True,
+        device=DEVICE
+    )
 
-metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
-test_accuracy = metrics_dict["accuracy"]
-print(f"Accuracy on the test set, after pushing: {test_accuracy}")
+    metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+    test_accuracy = metrics_dict["accuracy"]
+    print(f"Accuracy on the test set, after pushing: {test_accuracy}")
 
-# Update best accuracy
-if test_accuracy > best_accuracy:
-    best_accuracy = test_accuracy
+    # Update best accuracy
+    if test_accuracy > best_accuracy:
+        best_accuracy = test_accuracy
 
 
 
@@ -428,33 +453,31 @@ prune_prototypes(
     prune_threshold=PRUNE_THRESHOLD,
     preprocess_input_function=preprocess_input_function, # normalize
     original_model_dir=weights_dir,
-    epoch_number=None,
+    pruned_model_dir=pruned_model_dir,
     copy_prototype_imgs=True
 )
 
 
 # Get performance metrics
 # accu = tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=log)
+best_prune_accuracy = -np.inf
 metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
 test_prune_accuracy = metrics_dict["accuracy"]
 print(f"Accuracy on the test set, after pruning: {test_prune_accuracy}")
 
 # Save new model
 # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=original_model_name.split('push')[0] + 'prune', accu=accu, target_accu=0.70, log=log)
-if test_prune_accuracy > best_accuracy:
+if test_prune_accuracy > best_prune_accuracy:
     print(f"Accuracy increased from {best_accuracy} to {test_prune_accuracy}. Saving new model...")
 
     # Model path
-    model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_pruned.pt")
-    save_dict = {
-        'model_state_dict':ppnet_model.state_dict(),
-    }
-
+    model_path = os.path.join(pruned_model_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_pruned.pt")
+    save_dict = {'model_state_dict':ppnet_model.state_dict(),}
     torch.save(save_dict, model_path)
     print(f"Successfully saved at: {model_path}")
 
     # Update best accuracy value
-    best_accuracy = test_prune_accuracy
+    best_prune_accuracy = test_prune_accuracy
 
 
 
@@ -463,11 +486,7 @@ if OPTIMIZE_LAST_LAYER:
 
     # Define optimizers and learning rate schedulers
     # Last Layer Optimizer
-    last_layer_optimizer_specs = [
-
-        {'params': ppnet_model.last_layer.parameters(), 'lr': LAST_LAYER_OPTIMIZER_LR}
-        
-    ]
+    last_layer_optimizer_specs = [{'params': ppnet_model.last_layer.parameters(), 'lr': LAST_LAYER_OPTIMIZER_LR}]
     last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
 
 
@@ -489,20 +508,18 @@ if OPTIMIZE_LAST_LAYER:
 
         # Save new model
         # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=original_model_name.split('push')[0] + '_' + str(i) + 'prune', accu=accu, target_accu=0.70, log=log)
-        if test_prune_last_accuracy > best_accuracy:
-            print(f"Accuracy increased from {best_accuracy} to {test_prune_last_accuracy}. Saving new model...")
+        if test_prune_last_accuracy > best_prune_accuracy:
+            print(f"Accuracy increased from {best_prune_accuracy} to {test_prune_last_accuracy}. Saving new model...")
 
             # Model path
-            model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_pruned_last_k{K}_pt{PRUNE_THRESHOLD}.pt")
-            save_dict = {
-                'model_state_dict':ppnet_model.state_dict(),
-            }
+            model_path = os.path.join(pruned_model_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_pruned_last.pt")
+            save_dict = {'model_state_dict':ppnet_model.state_dict(),}
 
             torch.save(save_dict, model_path)
             print(f"Successfully saved at: {model_path}")
 
             # Update best accuracy value
-            best_accuracy = test_prune_last_accuracy
+            best_prune_accuracy = test_prune_last_accuracy
 
 
 
