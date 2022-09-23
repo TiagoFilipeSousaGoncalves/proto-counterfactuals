@@ -3,21 +3,13 @@
 
 # Imports
 import os
-import re
-import copy
 import argparse
-import numpy as np
-import matplotlib.pyplot as plt
-import cv2
-from PIL import Image
+import pandas as pd
 
 # PyTorch Imports
 import torch
 import torchvision
 import torch.utils.data
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
-from torch.autograd import Variable
 
 # Project Imports
 from data_utilities import save_preprocessed_img, save_prototype, save_prototype_self_activation, save_prototype_original_img_with_bbox, imsave_with_bbox, CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
@@ -270,6 +262,16 @@ if COMPUTE_METRICS:
 
 
 
+# Analysis .CSV
+analysis_dict = {
+    "Image Filename":list(),
+    "Ground-Truth Label":list(),
+    "Predicted Label":list(),
+    "Number Prototypes Connected Class Identity":list(),
+    "Top-10 Activated Prototypes":list()
+}
+
+
 # Go through all image directories
 for image_dir in image_directories:
 
@@ -289,7 +291,7 @@ for image_dir in image_directories:
             os.makedirs(image_analysis_path)
 
         # Analyse this image
-        retrieve_image_prototypes(
+        img_fname, gt_label, pred_label, nr_prototypes_cls_ident, topk_proto_cls_ident = retrieve_image_prototypes(
             save_analysis_path=image_analysis_path,
             weights_dir=weights_dir,
             load_img_dir=load_img_dir,
@@ -302,8 +304,19 @@ for image_dir in image_directories:
             norm_params={"mean":MEAN, "std":STD},
             img_size=IMG_SIZE
         )
-        exit()
 
+
+        # Add information to our data dictionary
+        analysis_dict["Image Filename"] = img_fname
+        analysis_dict["Ground-Truth Label"] = gt_label
+        analysis_dict["Predicted Label"] = pred_label
+        analysis_dict["Number Prototypes Connected Class Identity"] = nr_prototypes_cls_ident
+        analysis_dict["Top-10 Activated Prototypes"] = topk_proto_cls_ident
+
+
+# Save data dictionary into a .CSV
+analysis_df = pd.DataFrame.from_dict(data=analysis_dict)
+analysis_df.to_csv(path_or_buf=os.path.join(save_analysis_path, "analysis.csv"))
 
 
 # parser.add_argument('-imgdir', nargs=1, type=str)

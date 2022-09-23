@@ -24,20 +24,6 @@ from prototypes_utilities import find_high_activation_crop
 # Function: Retrieve prototypes from an image
 def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, norm_params, img_size, most_k_activated=10):
 
-    # TODO: Erase uppon review
-    # parser.add_argument('-imgdir', nargs=1, type=str)
-    # parser.add_argument('-img', nargs=1, type=str)
-    # parser.add_argument('-imgclass', nargs=1, type=int, default=-1)
-    # args = parser.parse_args()
-
-
-    
-    # TODO: Erase uppon review
-    # test_image_dir = args.imgdir[0] #'./local_analysis/Painted_Bunting_Class15_0081/'
-    # test_image_name = args.img[0] #'Painted_Bunting_0081_15230.jpg'
-    # test_image_label = args.imgclass[0] #15
-
-
     # Open a file to save a small report w/ .TXT extension
     report = open(os.path.join(save_analysis_path, "report.txt"), "at")
 
@@ -65,6 +51,10 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     # Confirm prototype connects most strongly to its own class
     prototype_max_connection = torch.argmax(ppnet_model.last_layer.weight, dim=0)
     prototype_max_connection = prototype_max_connection.cpu().numpy()
+
+    # Number of prototypes that connect to their classe identities:
+    nr_prototypes_cls_ident = np.sum(prototype_max_connection == prototype_img_identity)
+
     if np.sum(prototype_max_connection == prototype_img_identity) == ppnet_model.num_prototypes:
         # print('All prototypes connect most strongly to their respective classes.')
         report.write('All prototypes connect most strongly to their respective classes.\n')
@@ -139,6 +129,12 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     # print('Most activated 10 prototypes of this image:')
     report.write(f'Most activated {most_k_activated} prototypes of this image:\n')
     array_act, sorted_indices_act = torch.sort(prototype_activations[idx])
+
+
+    # Create a list of the identitities of the top-K most activated prototypes
+    topk_proto_cls_ident = list()
+
+
     # for i in range(1, 11):
     for i in range(1, most_k_activated + 1):
         # print('top {0} activated prototype for this image:'.format(i))
@@ -188,6 +184,9 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
         report.write(f'Prototype index: {sorted_indices_act[-i].item()}\n')
         # print('prototype class identity: {0}'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
         report.write(f'Prototype class identity: {prototype_img_identity[sorted_indices_act[-i].item()]}\n')
+        
+        # Append it to the list
+        topk_proto_cls_ident.append(prototype_img_identity[sorted_indices_act[-i].item()])
 
 
         # Prototype maximum connection
@@ -251,7 +250,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     report.close()
 
 
-    return
+    return test_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident
 
 
 
