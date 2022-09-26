@@ -31,11 +31,32 @@ proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join(CHECKPOINT, "analys
 
 
 # Get rows where ground-truth is equal to the predicted label
-proto_stats_pr_df = proto_stats_df.copy()[proto_stats_df["Ground-Truth Label"]==proto_stats_df["Predicted Label"]]
+proto_stats_pr_df = proto_stats_df.copy()[["Image Filename", "Ground-Truth Label", "Predicted Label", "Number Prototypes Connected Class Identity", "Top-10 Activated Prototypes"]][proto_stats_df["Ground-Truth Label"]==proto_stats_df["Predicted Label"]]
 # print(proto_stats_pr_df.head())
 
 
 
 # Create a anoter column to count the number of prototypes (out of the most activated) that are related to the class identity
 proto_stats_pr_df["Out-of-TopK Identity Activated Prototypes"] = 0
-print(proto_stats_pr_df.head())
+# print(proto_stats_pr_df.head())
+
+
+# Reset index so that indices match the number of rows
+proto_stats_pr_df.reset_index()
+
+# Iterate through rows
+for index, row in proto_stats_pr_df.iterrows():
+
+    # Get label
+    label = row["Ground-Truth Label"]
+
+    # Get the cls identity of top-k most activated prototypes
+    top_k_proto = row["Top-10 Activated Prototypes"]
+
+    # Apply a processing to this string
+    top_k_proto = top_k_proto.split('[')[0]
+    top_k_proto = top_k_proto.split(']')[0]
+    top_k_proto = [i for i in top_k_proto.split(',')]
+    print(top_k_proto)
+    # [192, 134, 196, 154, 197, 37, 195, 42, 39, 102]
+    exit()
