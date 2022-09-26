@@ -71,4 +71,9 @@ for index, row in proto_stats_pr_df.iterrows():
     proto_stats_pr_df.iloc[[index], [-1]] = count
 
 
-print(proto_stats_pr_df.head())
+# print(proto_stats_pr_df.head())
+
+
+# Get mean value of top-k cls-identity prototypes using this model
+mean_value = proto_stats_pr_df["Out-of-TopK Identity Activated Prototypes"].mean()
+print(f"Average number of class-identity prototypes per correctly classified image: {mean_value}")
