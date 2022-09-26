@@ -32,4 +32,10 @@ proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join(CHECKPOINT, "analys
 
 # Get rows where ground-truth is equal to the predicted label
 proto_stats_pr_df = proto_stats_df.copy()[proto_stats_df["Ground-Truth Label"]==proto_stats_df["Predicted Label"]]
+# print(proto_stats_pr_df.head())
+
+
+
+# Create a anoter column to count the number of prototypes (out of the most activated) that are related to the class identity
+proto_stats_pr_df["Out-of-TopK Identity Activated Prototypes"] = 0
 print(proto_stats_pr_df.head())
