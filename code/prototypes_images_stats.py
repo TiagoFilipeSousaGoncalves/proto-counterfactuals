@@ -68,7 +68,7 @@ for index, row in proto_stats_pr_df.iterrows():
     
 
     # Update the dataframe
-    row["Out-of-TopK Identity Activated Prototypes"] = count
+    proto_stats_pr_df.iloc[index, 4] = count
 
 
 print(proto_stats_pr_df.head())
