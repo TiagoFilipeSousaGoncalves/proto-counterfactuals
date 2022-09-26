@@ -57,6 +57,18 @@ for index, row in proto_stats_pr_df.iterrows():
     top_k_proto = top_k_proto.split('[')[1]
     top_k_proto = top_k_proto.split(']')[0]
     top_k_proto = [i for i in top_k_proto.split(',')]
-    print(top_k_proto)
-    # [192, 134, 196, 154, 197, 37, 195, 42, 39, 102]
-    exit()
+    # print(top_k_proto)
+    
+    # Count the number of prototypes that are equal to image class
+    count = 0
+    
+    for p in top_k_proto:
+        if p == label:
+            count += 1
+    
+
+    # Update the dataframe
+    row["Out-of-TopK Identity Activated Prototypes"] = count
+    break
+
+print(proto_stats_pr_df.head())
