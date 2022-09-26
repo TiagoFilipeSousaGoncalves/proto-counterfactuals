@@ -42,7 +42,7 @@ proto_stats_pr_df["Out-of-TopK Identity Activated Prototypes"] = 0
 
 
 # Reset index so that indices match the number of rows
-proto_stats_pr_df.reset_index()
+proto_stats_pr_df = proto_stats_pr_df.reset_index()
 
 # Iterate through rows
 for index, row in proto_stats_pr_df.iterrows():
