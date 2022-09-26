@@ -69,6 +69,6 @@ for index, row in proto_stats_pr_df.iterrows():
 
     # Update the dataframe
     row["Out-of-TopK Identity Activated Prototypes"] = count
-    break
+
 
 print(proto_stats_pr_df.head())
