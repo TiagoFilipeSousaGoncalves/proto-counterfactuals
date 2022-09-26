@@ -26,5 +26,5 @@ CHECKPOINT = args.checkpoint
 
 
 # Open the .CSV file
-proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join(CHECKPOINT, "analysis"," local", "analysis.csv"), sep=",", header=0)
+proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join(CHECKPOINT, "analysis", "local", "analysis.csv"), sep=",", header=0)
 print(proto_stats_df.head())
