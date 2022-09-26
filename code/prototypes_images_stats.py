@@ -63,7 +63,7 @@ for index, row in proto_stats_pr_df.iterrows():
     count = 0
     
     for p in top_k_proto:
-        if p == label:
+        if int(p) == int(label):
             count += 1
     
 
