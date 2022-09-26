@@ -74,7 +74,15 @@ for index, row in proto_stats_pr_df.iterrows():
 # print(proto_stats_pr_df.head())
 
 
+# Open a file to save a small report w/ .TXT extension
+report = open(os.path.join(CHECKPOINT, "analysis", "local", "proto_stats.txt"), "at")
+
 # Get mean value of top-k cls-identity prototypes using this model
 mean_value = proto_stats_pr_df["Out-of-TopK Identity Activated Prototypes"].mean()
-print(f"Number of prototypes per class identity: {10}")
-print(f"Average number of class-identity prototypes per correctly classified image: {mean_value}")
+# print(f"Number of prototypes per class identity: {10}")
+report.write(f"Number of prototypes per class identity: {10}\n")
+# print(f"Average number of class-identity prototypes per correctly classified image: {mean_value}")
+report.write(f"Average number of class-identity prototypes per correctly classified image: {mean_value}\n")
+
+# Close report
+report.close()
