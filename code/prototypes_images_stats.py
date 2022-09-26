@@ -68,7 +68,7 @@ for index, row in proto_stats_pr_df.iterrows():
     
 
     # Update the dataframe
-    proto_stats_pr_df.iloc[index, -1] = count
+    proto_stats_pr_df.iloc[[index], [4]] = count
 
 
 print(proto_stats_pr_df.head())
