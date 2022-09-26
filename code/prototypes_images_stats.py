@@ -54,7 +54,7 @@ for index, row in proto_stats_pr_df.iterrows():
     top_k_proto = row["Top-10 Activated Prototypes"]
 
     # Apply a processing to this string
-    top_k_proto = top_k_proto.split('[')[0]
+    top_k_proto = top_k_proto.split('[')[1]
     top_k_proto = top_k_proto.split(']')[0]
     top_k_proto = [i for i in top_k_proto.split(',')]
     print(top_k_proto)
