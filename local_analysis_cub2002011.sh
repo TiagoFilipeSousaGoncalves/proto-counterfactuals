@@ -11,10 +11,10 @@
 echo "CUB2002011"
 
 python code/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/densenet121/2022-09-14_06-32-51/
-python code/models_global_analysis.py --dataset CUB2002011 --base_architecture densenet161 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/densenet161/2022-09-15_16-14-45
-python code/models_global_analysis.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/resnet34/2022-09-17_17-03-33/
-# python code/models_test.py --dataset CUB2002011 --base_architecture resnet152 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/resnet152/2022-08-19_18-07-45/
-# python code/models_test.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/vgg16/2022-08-23_18-52-48/
-# python code/models_test.py --dataset CUB2002011 --base_architecture vgg19 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/vgg19/2022-08-26_08-12-03/
+python code/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet161 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/densenet161/2022-09-15_16-14-45
+python code/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/resnet34/2022-09-17_17-03-33/
+# python code/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet152 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/resnet152/2022-08-19_18-07-45/
+# python code/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/vgg16/2022-08-23_18-52-48/
+# python code/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg19 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/vgg19/2022-08-26_08-12-03/
 
 echo "Finished."
