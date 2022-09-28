@@ -47,10 +47,6 @@ parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for tra
 # img_size = 224
 parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
 
-# Prototype shape
-# prototype_shape = (2000, 128, 1, 1)
-# parser.add_argument('--prototype_shape', type=tuple, default=(2000, 128, 1, 1), help="Prototype shape.")
-
 # Prototype Activation Function
 # prototype_activation_function = 'log'
 parser.add_argument('--prototype_activation_function', type=str, default='log', help="Prototype activation function.")
@@ -110,9 +106,6 @@ BATCH_SIZE = args.batchsize
 
 # Image size (after transforms)
 IMG_SIZE = args.img_size
-
-# Prototype shape
-# PROTOTYPE_SHAPE = args.prototype_shape
 
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
@@ -291,13 +284,13 @@ test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SIZ
 
 
 # Root directory for saving train images
-root_dir_for_saving_train_images = os.path.join(weights_dir, f'K_{K}_nearest_train')
+root_dir_for_saving_train_images = os.path.join(results_dir, "analysis", "global", f'K_{K}_nearest_train')
 if not os.path.isdir(root_dir_for_saving_train_images):
     os.makedirs(root_dir_for_saving_train_images)
 
 
 # Root directory for saving test images
-root_dir_for_saving_test_images = os.path.join(weights_dir, f'K_{K}_nearest_test')
+root_dir_for_saving_test_images = os.path.join(results_dir, "analysis", "global", f'K_{K}_nearest_test')
 if not os.path.isdir(root_dir_for_saving_test_images):
     os.makedirs(root_dir_for_saving_test_images)
 

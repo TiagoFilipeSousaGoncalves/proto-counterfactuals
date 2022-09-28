@@ -26,7 +26,7 @@ CHECKPOINT = args.checkpoint
 
 
 # Open the .CSV file
-proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join(CHECKPOINT, "analysis", "local", "analysis.csv"), sep=",", header=0)
+proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join("results", CHECKPOINT, "analysis", "local", "analysis.csv"), sep=",", header=0)
 # print(proto_stats_df.head())
 
 
@@ -75,7 +75,7 @@ for index, row in proto_stats_pr_df.iterrows():
 
 
 # Open a file to save a small report w/ .TXT extension
-report = open(os.path.join(CHECKPOINT, "analysis", "local", "proto_stats.txt"), "at")
+report = open(os.path.join("results", CHECKPOINT, "analysis", "local", "proto_stats.txt"), "at")
 
 # Get mean value of top-k cls-identity prototypes using this model
 mean_value = proto_stats_pr_df["Out-of-TopK Identity Activated Prototypes"].mean()
