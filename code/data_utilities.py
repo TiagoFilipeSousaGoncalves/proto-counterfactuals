@@ -247,6 +247,10 @@ class STANFORDCARSDataset(Dataset):
         # Get the right path and labels of the augmented version of the dataset
         images_fpaths, images_flabels = list(), list()
 
+
+        # Create labels dictionary
+        labels_dict = dict()
+
             
         # Go to folder
         for fname, label in zip(image_fnames, image_labels):
@@ -267,6 +271,10 @@ class STANFORDCARSDataset(Dataset):
             images = [path for path in images if not os.path.isdir(os.path.join(image_folder_path, path))]
 
 
+            # Add to labels dictionary
+            labels_dict[fname.split('.')[0]] = label
+
+
             # Go through these images
             for img in images:
 
@@ -285,6 +293,7 @@ class STANFORDCARSDataset(Dataset):
         self.class_names = sio.loadmat(os.path.join(data_path, "stanfordcars", "car_devkit", "devkit", "cars_meta.mat"), squeeze_me=True)["class_names"].tolist()
         self.class_to_idx = {cls: i for i, cls in enumerate(self.class_names)}
         self.idx_to_class = {i:cls for i, cls in enumerate(self.class_names)}
+        self.labels_dict = labels_dict
 
 
         # Transforms
@@ -377,7 +386,7 @@ class CUB2002011Dataset(Dataset):
         labels = np.genfromtxt(classes_txt, dtype=str)
         labels_dict = dict()
         for label_info in labels:
-            labels_dict[label_info[1]] = int(label_info[0]) -1
+            labels_dict[label_info[1]] = int(label_info[0]) - 1
 
 
         # print(f"Number of Labels: {len(labels_dict)}")

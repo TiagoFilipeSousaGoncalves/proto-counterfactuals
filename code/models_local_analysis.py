@@ -163,6 +163,11 @@ elif DATASET == "PH2":
 
 # STANFORDCARS
 elif DATASET == "STANFORDCARS":
+
+    # Get image directories
+    data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_test", "images_cropped")
+    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+
     # Test Dataset
     test_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
@@ -174,6 +179,9 @@ elif DATASET == "STANFORDCARS":
 
     # Number of classes
     NUM_CLASSES = len(test_set.class_names)
+
+    # Labels dictionary
+    labels_dict = test_set.labels_dict.copy()
 
 
 
