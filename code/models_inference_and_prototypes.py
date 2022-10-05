@@ -248,7 +248,7 @@ with torch.no_grad():
         ground_truth_label = labels.cpu().detach().numpy()
 
         # Get the counterfactual (i.e., the second most activated class)
-        cntr_fac = np.argsort(predicted_scores.copy())[1]
+        cntr_fac = np.argsort(predicted_scores[0].copy())[1]
 
 
         # Add information to the dictionary
