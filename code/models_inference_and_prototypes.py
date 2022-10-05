@@ -2,6 +2,7 @@
 import os
 import argparse
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 # PyTorch Imports
@@ -96,6 +97,12 @@ ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
 # Get the directory of results
 results_dir = os.path.join(OUTPUT_DIR, CHECKPOINT)
+
+
+# Inference directory
+inference_dir = os.path.join(OUTPUT_DIR, CHECKPOINT, "analysis", "counterfac-inf")
+if not os.path.isdir(inference_dir):
+    os.makedirs(inference_dir)
 
 
 # Load data
@@ -266,6 +273,13 @@ with torch.no_grad():
 
         # Debug print
         # print(f"Evolution of the inference dictionary:\n {inference_dict}\n")
+
+
+# Create dataframe from dictionary
+inference_df = pd.DataFrame.from_dict(inference_dict)
+
+# Convert this into .CSV
+inference_df.to_csv(os.path.join(inference_dir, "inference_results.csv"), index=False)
 
 
 print("Finished.")
