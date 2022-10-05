@@ -248,6 +248,7 @@ with torch.no_grad():
         ground_truth_label = labels.cpu().detach().numpy()
 
         # Get the counterfactual (i.e., the second most activated class)
+        deb_gt = np.argsort(predicted_scores[0].copy())[0]
         cntr_fac = np.argsort(predicted_scores[0].copy())[1]
 
 
@@ -257,9 +258,9 @@ with torch.no_grad():
         inference_dict["Ground-Truth Label"].append(ground_truth_label[0])
         print(f"Ground-Truth Label: {ground_truth_label[0]}")
         inference_dict["Predicted Label"].append(predicted_label[0])
-        print(f"Predicted Label: {predicted_label[0]}")
+        print(f"Predicted Label: {predicted_label[0]} (debug: {deb_gt}")
         inference_dict["Predicted Scores"].append(predicted_scores[0])
-        print(f"Predicted Scores: {predicted_scores[0]}")
+        # print(f"Predicted Scores: {predicted_scores[0]}")
         inference_dict["Counterfactuals"].append(cntr_fac)
         print(f"Counterfactuals: {cntr_fac}")
 
