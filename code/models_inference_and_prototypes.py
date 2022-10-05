@@ -2,6 +2,7 @@
 import os
 import argparse
 import numpy as np
+from tqdm import tqdm
 
 # PyTorch Imports
 import torch
@@ -16,7 +17,7 @@ np.random.seed(random_seed)
 # Project Imports
 from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
-from train_val_test_utilities import model_test
+from train_val_test_utilities import model_predict
 
 
 
@@ -34,12 +35,9 @@ parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011",
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
 
-# Batch size
-parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
-
 # Image size
 # img_size = 224
-parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
+parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms.")
 
 # Prototype Activation Function
 # prototype_activation_function = 'log'
@@ -53,13 +51,13 @@ parser.add_argument('--add_on_layers_type', type=str, default='regular', help="A
 parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
 
 # Number of workers
-parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader")
+parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader.")
 
 # GPU ID
-parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU")
+parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU.")
 
 # Get checkpoint
-parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training")
+parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint (i.e., model weights).")
 
 
 
@@ -87,9 +85,6 @@ WORKERS = args.num_workers
 
 # Prototype activation function
 PROTOTYPE_ACTIVATION_FUNCTION = args.prototype_activation_function
-
-# Batch size
-BATCH_SIZE = args.batchsize
 
 # Image size (after transforms)
 IMG_SIZE = args.img_size
@@ -167,9 +162,8 @@ elif DATASET == "STANFORDCARS":
 
 
 # Test DataLoader
-test_loader = DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
+test_loader = DataLoader(dataset=test_set, batch_size=1, shuffle=False, pin_memory=False, num_workers=WORKERS)
 print(f'Size of test set: {len(test_loader.dataset)}')
-print(f'Batch size: {BATCH_SIZE}')
 
 
 
@@ -224,23 +218,43 @@ ppnet_model = ppnet_model.to(DEVICE)
 
 
 # Load model weights
-model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
-model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
+# model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+# model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
 model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
+model_weights = torch.load(model_path_push_last, map_location=DEVICE)
+ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
+print(f"Model weights loaded with success from {model_path_push_last}.")
 
 
-# Iterate through these model weights types
-for model_fname in [model_path, model_path_push, model_path_push_last]:
-    model_weights = torch.load(model_fname, map_location=DEVICE)
-    ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
-    print(f"Model weights loaded with success from {model_fname}.")
+
+# Perform inference and iterate through the dataloader
+inference_dict = {
+    "Image Index":list(),
+    "Ground-Truth Label":list(),
+    "Predicted Label":list(),
+    "Predicted Scores":list()
+}
 
 
-    # Get performance metrics
-    metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
-    test_accuracy = metrics_dict["accuracy"]
-    print(f"Test Accuracy: {test_accuracy}")
+with torch.no_grad():
+    for idx, (images, labels) in enumerate(tqdm(test_loader)):
 
+        # Put data into GPU or CPU
+        images, labels = images.to(DEVICE), labels.to(DEVICE)
+
+        # Get scores and prediction
+        predicted_label, predicted_scores = model_predict(model=ppnet_model, in_data=images)
+        ground_truth_label = labels.cpu().detach().numpy()
+
+
+        # Add information to the dictionary
+        inference_dict["Image Index"].append(idx)
+        inference_dict["Ground-Truth Label"].append(ground_truth_label[0])
+        inference_dict["Predicted Label"].append(predicted_label[0])
+        inference_dict["Predicted Scores"].append(predicted_scores[0])
+
+        # Debug print
+        print(f"Evolution of the inference dictionary:\n {inference_dict}\n")
 
 
 print("Finished.")

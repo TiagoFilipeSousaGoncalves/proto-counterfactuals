@@ -415,16 +415,37 @@ def joint(model):
     # for p in model.module.features.parameters():
     for p in model.features.parameters():
         p.requires_grad = True
-    
+
     # for p in model.module.add_on_layers.parameters():
     for p in model.add_on_layers.parameters():
         p.requires_grad = True
-    
+
     # model.module.prototype_vectors.requires_grad = True
     model.prototype_vectors.requires_grad = True
-    
+
     # for p in model.module.last_layer.parameters():
     for p in model.last_layer.parameters():
         p.requires_grad = True
-    
+
     # print('\tjoint')
+
+
+
+# Function: Get model predictions (i.e., inference)
+def model_predict(model, in_data):
+
+
+    # Get the logits and the minimum distances with the model in inference mode
+    logits, min_distances = model(in_data)
+
+
+    # Using Softmax: Apply softmax on logits to get the predicted scores
+    s_logits = torch.nn.Softmax(dim=1)(logits)
+    predicted_scores = s_logits.cpu().detach().numpy()
+
+    # Get predicted label using argmax
+    s_label = torch.argmax(s_logits, dim=1)
+    predicted_label = s_label.cpu().detach().numpy()
+
+
+    return predicted_label, predicted_scores
