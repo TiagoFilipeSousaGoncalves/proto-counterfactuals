@@ -232,7 +232,8 @@ inference_dict = {
     "Image Index":list(),
     "Ground-Truth Label":list(),
     "Predicted Label":list(),
-    "Predicted Scores":list()
+    "Predicted Scores":list(),
+    "Counterfactuals":list()
 }
 
 
@@ -246,15 +247,24 @@ with torch.no_grad():
         predicted_label, predicted_scores = model_predict(model=ppnet_model, in_data=images)
         ground_truth_label = labels.cpu().detach().numpy()
 
+        # Get the counterfactual (i.e., the second most activated class)
+        cntr_fac = np.argsort(predicted_scores.copy())[1]
+
 
         # Add information to the dictionary
         inference_dict["Image Index"].append(idx)
+        print(f"Image Index: {idx}")
         inference_dict["Ground-Truth Label"].append(ground_truth_label[0])
+        print(f"Ground-Truth Label: {ground_truth_label[0]}")
         inference_dict["Predicted Label"].append(predicted_label[0])
+        print(f"Predicted Label: {predicted_label[0]}")
         inference_dict["Predicted Scores"].append(predicted_scores[0])
+        print(f"Predicted Scores: {predicted_scores[0]}")
+        inference_dict["Counterfactuals"].append(cntr_fac)
+        print(f"Counterfactuals: {cntr_fac}")
 
         # Debug print
-        print(f"Evolution of the inference dictionary:\n {inference_dict}\n")
+        # print(f"Evolution of the inference dictionary:\n {inference_dict}\n")
 
 
 print("Finished.")
