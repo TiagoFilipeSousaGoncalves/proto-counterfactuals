@@ -70,7 +70,7 @@ report = open(os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", 
 
 
 # Iterate through frequencies
-for idx, row in (cf_freqs):
+for idx, row in enumerate(cf_freqs):
 
     # Label
     print(f"Label: {idx}")
