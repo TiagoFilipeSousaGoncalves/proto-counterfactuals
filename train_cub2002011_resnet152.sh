@@ -8,6 +8,6 @@
 
 echo "CUB2002011 ResNet152"
 
-python code/models_train.py --dataset CUB2002011 --base_architecture resnet152 --batchsize 32 --num_workers 3 --gpu_id 0
+python code/models_train.py --dataset CUB2002011 --base_architecture resnet152 --batchsize 32 --num_workers 0 --gpu_id 0
 
 echo "Finished"
