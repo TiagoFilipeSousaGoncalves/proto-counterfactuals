@@ -1,10 +1,5 @@
 #!/bin/bash
 
-#SBATCH -p titanxp_12GB                 # Partition        (check w/ $sinfo)
-#SBATCH --job-name=tr_cub                 # Job name
-#SBATCH -o slurm.%N.%j.out                # STDOUT
-#SBATCH -e slurm.%N.%j.err                # STDERR
-
 
 
 # CUB2002011 "densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"
