@@ -8,6 +8,8 @@
 
 echo "CUB2002011 VGG16"
 
-python code/models_train.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0
+NUM_WORKERS=$(nproc)
+
+python code/models_train.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers $NUM_WORKERS --gpu_id 0
 
 echo "Finished"
