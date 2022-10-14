@@ -8,7 +8,7 @@
 
 echo "CUB2002011 VGG19"
 
-NUM_WORKERS=$(nproc)
+NUM_WORKERS=$(nproc) / 4
 
 python code/models_train.py --dataset CUB2002011 --base_architecture vgg19 --batchsize 16 --num_workers $NUM_WORKERS --gpu_id 0
 
