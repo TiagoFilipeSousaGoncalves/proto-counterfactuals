@@ -8,8 +8,8 @@
 
 echo "CUB2002011 ResNet152"
 
-NUM_WORKERS=$(nproc) / 4
+NUM_WORKERS=$(nproc)
 
-python code/models_train.py --dataset CUB2002011 --base_architecture resnet152 --batchsize 32 --num_workers $NUM_WORKERS --gpu_id 0
+python code/models_train.py --dataset CUB2002011 --base_architecture resnet152 --batchsize 32 --num_workers $((NUM_WORKERS/4)) --gpu_id 0
 
 echo "Finished"
