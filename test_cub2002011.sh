@@ -15,7 +15,7 @@ python code/models_test.py --dataset CUB2002011 --base_architecture densenet121 
 python code/models_test.py --dataset CUB2002011 --base_architecture densenet161 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint cub2002011/densenet161/2022-09-15_16-14-45/
 python code/models_test.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint cub2002011/resnet34/2022-09-17_17-03-33/
 # python code/models_test.py --dataset CUB2002011 --base_architecture resnet152 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/resnet152/
-# python code/models_test.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/vgg16/
+python code/models_test.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint cub2002011/vgg16/2022-10-14_21-14-35/
 # python code/models_test.py --dataset CUB2002011 --base_architecture vgg19 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/vgg19/
 
 echo "Finished."
