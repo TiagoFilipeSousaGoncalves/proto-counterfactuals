@@ -13,9 +13,9 @@ echo "STARTED | CUB2002011 | Prototype Inference Stats"
 # python code/prototypes_inference_stats.py --checkpoint cub2002011/densenet121/2022-09-14_06-32-51/
 # python code/prototypes_inference_stats.py --checkpoint cub2002011/densenet161/2022-09-15_16-14-45/
 # python code/prototypes_inference_stats.py --checkpoint cub2002011/resnet34/2022-09-17_17-03-33/
-# python code/prototypes_inference_stats.py --checkpoint cub2002011/resnet152/
-python code/prototypes_inference_stats.py --checkpoint cub2002011/vgg16/2022-10-14_21-14-35/
-python code/prototypes_inference_stats.py --checkpoint cub2002011/vgg19/2022-10-17_08-13-40/
+python code/prototypes_inference_stats.py --checkpoint cub2002011/resnet152/
+# python code/prototypes_inference_stats.py --checkpoint cub2002011/vgg16/2022-10-14_21-14-35/
+# python code/prototypes_inference_stats.py --checkpoint cub2002011/vgg19/2022-10-17_08-13-40/
 
 
 echo "FINISHED | CUB2002011 | Prototype Inference Stats"
