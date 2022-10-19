@@ -43,7 +43,7 @@ proto_stats_pr_df = proto_stats_pr_df.reset_index()
 
 # Generate a matrix to get the frequencies
 gt_labels = np.unique(proto_stats_df.copy()["Ground-Truth Label"].values)
-print(f"Range of gt_labels: {len(gt_labels)}")
+# print(f"Range of gt_labels: {len(gt_labels)}")
 cf_freqs = np.zeros(shape=(len(gt_labels), len(gt_labels)))
 
 
@@ -73,16 +73,16 @@ report = open(os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", 
 for idx, row in enumerate(cf_freqs):
 
     # Label
-    print(f"Label: {idx}")
+    # print(f"Label: {idx}")
     report.write(f"Label: {idx}\n")
 
     # Counterfactuals
     cfs = np.nonzero(row)
-    print(f"Possible Counterfactuals: {cfs}")
+    # print(f"Possible Counterfactuals: {cfs}")
     report.write(f"Possible Counterfactuals: {cfs}\n")
 
     # Add line
-    print("\n")
+    # print("\n")
     report.write("\n")
 
 
