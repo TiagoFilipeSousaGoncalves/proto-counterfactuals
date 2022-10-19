@@ -15,10 +15,7 @@ echo "STARTED | CUB2002011 | LOCAL ANALYSIS"
 # python code/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/resnet34/2022-09-17_17-03-33/
 # python code/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet152 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint cub2002011/resnet152/
 # python code/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/vgg16/2022-10-14_21-14-35/
-<<<<<<< HEAD
 python code/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg19 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/vgg19/2022-10-17_08-13-40
-=======
-python code/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg19 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/vgg19/2022-10-17_08-13-40/
->>>>>>> 46c4f8815fd2e7d5bf79584ab924f0975fcc6a73
+
 
 echo "FINISHED | CUB2002011 | LOCAL ANALYSIS"
