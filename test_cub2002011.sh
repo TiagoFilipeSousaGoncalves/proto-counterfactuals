@@ -1,8 +1,7 @@
 #!/bin/bash
 #
-#SBATCH -p fast_prototyping                   # Partition        (check w/ $sinfo)
+#SBATCH -p fast_prototyping                 # Partition        (check w/ $sinfo)
 #SBATCH --job-name=test_cub2002011          # Job name
-#SBATCH -c 2                                # Number of cores
 #SBATCH -o slurm.%N.%j.out                  # STDOUT
 #SBATCH -e slurm.%N.%j.err                  # STDERR
 
