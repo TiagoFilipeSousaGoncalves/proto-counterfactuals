@@ -4,7 +4,6 @@
 #SBATCH --job-name=tr_stan_vgg19          # Job name
 #SBATCH -o slurm.%N.%j.out                # STDOUT
 #SBATCH -e slurm.%N.%j.err                # STDERR
-#SBATCH --reservation=tgoncalv_1          # Reservation Name
 
 
 
