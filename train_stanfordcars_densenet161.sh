@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH -p gpu                            # Partition        (check w/ $sinfo)
+#SBATCH -p gtx1080_8GB                            # Partition        (check w/ $sinfo)
 #SBATCH --job-name=tr_stan_dn161          # Job name
 #SBATCH -o slurm.%N.%j.out                # STDOUT
 #SBATCH -e slurm.%N.%j.err                # STDERR
