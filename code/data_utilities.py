@@ -437,7 +437,7 @@ class CUB2002011Dataset(Dataset):
 
 # PH2Dataset: Dataset Class
 class PH2Dataset(Dataset):
-    def __init__(self, data_path, subset, cropped, transform=None):
+    def __init__(self, data_path, subset, cropped, augmented, transform=None):
 
         """
         Args:
@@ -457,6 +457,7 @@ class PH2Dataset(Dataset):
         # Select if you want the cropped version or not
         if cropped:
             self.images_dir = os.path.join(ph2_dir, "processed_images", subset, "cropped")
+        
         else:
             self.images_dir = os.path.join(ph2_dir, "processed_images", subset, "raw")
 
@@ -523,14 +524,28 @@ class PH2Dataset(Dataset):
 
             # If it exists in our directory, append it to the dataset
             if img_name in image_names:
-                ph2_dataset_imgs.append(img_name)
-                ph2_dataset_labels.append(img_label)
+
+                # Check augmented files
+                if augmented:
+                    augmented_files = [i for i in os.listdir(os.path.join(self.images_dir, img_name, "augmented"))]
+                    augmented_files = [i for i in augmented_files if not i.startswith('.')]
+
+
+                    # Iterate through these files
+                    for aug_img in augmented_files:
+                        ph2_dataset_imgs.append(aug_img)
+                        ph2_dataset_labels.append(img_label)        
+
+                else:
+                    ph2_dataset_imgs.append(img_name)
+                    ph2_dataset_labels.append(img_label)
 
 
         # Create final variables
         self.images_names = ph2_dataset_imgs.copy()
         self.images_labels = ph2_dataset_labels.copy()
         self.cropped = cropped
+        self.augmented = augmented
 
 
         # Transforms
@@ -556,7 +571,16 @@ class PH2Dataset(Dataset):
 
         # Get images
         if self.cropped:
-            img_path = os.path.join(self.images_dir, f"{self.images_names[idx]}.png")
+
+            if self.augmented:
+                img_name = self.images_names[idx].split('_')[0]
+                img = self.images_names[idx]
+                img_path = os.path.join(self.images_dir, f"{img_name}", "augmented", img)
+            
+            else:
+                img_name = self.images_names[idx]
+                img_path = os.path.join(self.images_dir, img_name, f"{img_name}.png")
+        
         else:
             img_path = os.path.join(self.images_dir, self.images_names[idx], f"{self.images_names[idx]}_Dermoscopic_Image", f"{self.images_names[idx]}.bmp")
         

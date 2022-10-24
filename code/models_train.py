@@ -294,6 +294,7 @@ elif DATASET == "PH2":
         data_path=DATA_DIR,
         subset="train",
         cropped=True,
+        augmented=True,
         transform=train_transforms
     )
 
@@ -302,6 +303,7 @@ elif DATASET == "PH2":
         data_path=DATA_DIR,
         subset="train",
         cropped=True,
+        augmented=False,
         transform=train_push_transforms
     )
 
@@ -310,6 +312,7 @@ elif DATASET == "PH2":
         data_path=DATA_DIR,
         subset="test",
         cropped=True,
+        augmented=False,
         transform=val_transforms
     )
 

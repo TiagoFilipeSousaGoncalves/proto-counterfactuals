@@ -99,6 +99,11 @@ if __name__ == "__main__":
         STANFORDCARS_SRC_DIR = "data/stanfordcars/cars_train/images_cropped"
         augment(source_dir=STANFORDCARS_SRC_DIR)
     
+    elif args.dataset == "PH2":
+        # PH2
+        PH2_SRC_DIR = "data/ph2/processed_images/train/cropped"
+        augment(source_dir=PH2_SRC_DIR)
+    
     else:
         pass
 
