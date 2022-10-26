@@ -146,3 +146,7 @@ results/ph2
 # SLURM files
 *.err
 *.out
+
+
+# Weights and Biases
+wandb/
