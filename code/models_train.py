@@ -14,6 +14,12 @@ from torch.utils.data import DataLoader
 import torchvision
 from torch.utils.tensorboard import SummaryWriter
 
+# Weights and Biases (W&B) Imports
+import wandb
+
+# Log in to W&B Account
+wandb.login()
+
 # Fix Random Seeds
 random_seed = 42
 torch.manual_seed(random_seed)
@@ -217,6 +223,18 @@ if not os.path.isdir(results_dir):
 with open(os.path.join(results_dir, "train_params.txt"), "w") as f:
     f.write(str(args))
 
+
+
+# Set the W&B project
+wandb.init(
+    project="proto-counterfactuals", 
+    name=timestamp,
+    config={
+        "architecture": BASE_ARCHITECTURE.lower(),
+        "dataset": DATASET.lower(),
+        "train-epochs": NUM_TRAIN_EPOCHS,
+    }
+)
 
 
 # Load data
@@ -610,6 +628,20 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
 
 
+    # Log to W&B
+    wandb_tr_metrics = {
+        "loss/train":metrics_dict["run_avg_loss"],
+        "acc/train":metrics_dict['accuracy'],
+        "rec/train":metrics_dict['recall'],
+        "prec/train":metrics_dict['precision'],
+        "f1/train":metrics_dict['f1'],
+        "epoch/train":epoch
+    }
+    wandb.log(wandb_tr_metrics)
+
+
+
+
     # Validation Phase 
     print("Validation Phase")
     metrics_dict = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
@@ -648,6 +680,19 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     tbwritter.add_scalar("prec/val", metrics_dict['precision'], global_step=epoch)
     tbwritter.add_scalar("f1/val", metrics_dict['f1'], global_step=epoch)
     # tbwritter.add_scalar("auc/val", metrics_dict['auc'], global_step=epoch)
+
+
+
+    # Log to W&B
+    wandb_val_metrics = {
+        "loss/val":metrics_dict["run_avg_loss"],
+        "acc/val":metrics_dict['accuracy'],
+        "rec/val":metrics_dict['recall'],
+        "prec/val":metrics_dict['precision'],
+        "f1/val":metrics_dict['f1'],
+        "epoch/val":epoch
+    }
+    wandb.log(wandb_val_metrics)
 
 
 
@@ -760,5 +805,6 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
 
 
-# Finish statement
+# Finish statement and W&B
+wandb.finish()
 print("Finished.")
