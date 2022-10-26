@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH -p rtx2080ti_11GB
+#SBATCH -p gtx1080ti_11GB
 #SBATCH --job-name=tr_stan_rn34           # Job name
 #SBATCH -o slurm.%N.%j.out                # STDOUT
 #SBATCH -e slurm.%N.%j.err                # STDERR
