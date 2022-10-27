@@ -696,6 +696,11 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
 
 
+    # Log model's parameters and gradients to W&B
+    wandb.watch(ppnet_model)
+
+
+
     # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
     # Save checkpoint
     if metrics_dict['accuracy'] > best_accuracy:
