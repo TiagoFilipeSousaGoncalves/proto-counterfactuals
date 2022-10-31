@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH -p titanxp_12GB                   # Partition        (check w/ $sinfo)
+#SBATCH -p gtx1080ti_11GB                 # Partition
 #SBATCH --job-name=tr_cub                 # Job name
 #SBATCH -o slurm.%N.%j.out                # STDOUT
 #SBATCH -e slurm.%N.%j.err                # STDERR
