@@ -142,7 +142,7 @@ class Bottleneck(nn.Module):
 
 # Class: ResNet Features
 class ResNet_features(nn.Module):
-    
+
     # The convolutional layers of ResNet
     # The average pooling and final fully convolutional layer is removed
 
@@ -156,7 +156,7 @@ class ResNet_features(nn.Module):
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        
+
         # Comes from the first conv and the following max pool
         self.kernel_sizes = [7, 3]
         self.strides = [2, 2]
@@ -196,7 +196,7 @@ class ResNet_features(nn.Module):
             )
 
         layers = []
-        
+
         # Only the first block has downsample that is possibly not None
         layers.append(block(self.inplanes, planes, stride, downsample))
 
@@ -248,12 +248,12 @@ class ResNet_features(nn.Module):
 # Function: ResNet18 Features
 def resnet18_features(pretrained=False, **kwargs):
     # Constructs a ResNet-18 model.
-    
+
     """
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    
+
     model = ResNet_features(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
         # my_dict = model_zoo.load_url(model_urls['resnet18'], model_dir=model_dir)
@@ -268,32 +268,44 @@ def resnet18_features(pretrained=False, **kwargs):
 
 # Function: ResNet34 Features
 def resnet34_features(pretrained=False, **kwargs):
-    """Constructs a ResNet-34 model.
+    # Constructs a ResNet-34 model
+
+    """
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
+
     model = ResNet_features(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        my_dict = model_zoo.load_url(model_urls['resnet34'], model_dir=model_dir)
+        # my_dict = model_zoo.load_url(model_urls['resnet34'], model_dir=model_dir)
+        my_dict = model_zoo.load_url(model_urls['resnet34'])
         my_dict.pop('fc.weight')
         my_dict.pop('fc.bias')
         model.load_state_dict(my_dict, strict=False)
+
     return model
 
 
+
+# Function: ResNet50 Features
 def resnet50_features(pretrained=False, inat=True, **kwargs):
-    """Constructs a ResNet-50 model.
+    # Constructs a ResNet-50 model
+
+    """
     Args:
         pretrained (bool): If True, returns a pre-trained model
         inat (bool): If True, returns the version pre-trained on iNaturalist
     """
+
     model = ResNet_features(Bottleneck, [3, 4, 6, 4], **kwargs)
     if pretrained:
         if inat:
-            my_dict = torch.load(model_dir + '/' + 'BBN.iNaturalist2017.res50.90epoch.best_model.pth')
+            # my_dict = torch.load(model_dir + '/' + 'BBN.iNaturalist2017.res50.90epoch.best_model.pth')
+            my_dict = torch.load('/' + 'BBN.iNaturalist2017.res50.90epoch.best_model.pth')
         else:
-            my_dict = torch.load(model_dir + '/' + 'resnet50-0676ba61.pth')
-        
+            # my_dict = torch.load(model_dir + '/' + 'resnet50-0676ba61.pth')
+            my_dict = torch.load('/' + 'resnet50-0676ba61.pth')
+
         my_dict.pop('module.classifier.weight')
         my_dict.pop('module.classifier.bias')
         for key in list(my_dict.keys()):
@@ -303,47 +315,43 @@ def resnet50_features(pretrained=False, inat=True, **kwargs):
     return model
 
 
+
+# Function: ResNet101 Features
 def resnet101_features(pretrained=False, **kwargs):
-    """Constructs a ResNet-101 model.
+    # Constructs a ResNet-101 model
+
+    """
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
+
     model = ResNet_features(Bottleneck, [3, 4, 23, 3], **kwargs)
     if pretrained:
-        my_dict = model_zoo.load_url(model_urls['resnet101'], model_dir=model_dir)
+        # my_dict = model_zoo.load_url(model_urls['resnet101'], model_dir=model_dir)
+        my_dict = model_zoo.load_url(model_urls['resnet101'])
         my_dict.pop('fc.weight')
         my_dict.pop('fc.bias')
         model.load_state_dict(my_dict, strict=False)
+
     return model
 
 
+
+# Function: ResNet152 Features
 def resnet152_features(pretrained=False, **kwargs):
-    """Constructs a ResNet-152 model.
+    # Constructs a ResNet-152 model
+
+    """
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
+
     model = ResNet_features(Bottleneck, [3, 8, 36, 3], **kwargs)
     if pretrained:
-        my_dict = model_zoo.load_url(model_urls['resnet152'], model_dir=model_dir)
+        # my_dict = model_zoo.load_url(model_urls['resnet152'], model_dir=model_dir)
+        my_dict = model_zoo.load_url(model_urls['resnet152'])
         my_dict.pop('fc.weight')
         my_dict.pop('fc.bias')
         model.load_state_dict(my_dict, strict=False)
+
     return model
-
-
-if __name__ == '__main__':
-
-    r18_features = resnet18_features(pretrained=True)
-    print(r18_features)
-
-    r34_features = resnet34_features(pretrained=True)
-    print(r34_features)
-
-    r50_features = resnet50_features(pretrained=True)
-    print(r50_features)
-
-    r101_features = resnet101_features(pretrained=True)
-    print(r101_features)
-
-    r152_features = resnet152_features(pretrained=True)
-    print(r152_features)

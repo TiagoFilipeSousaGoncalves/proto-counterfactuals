@@ -22,7 +22,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
     # Assert mode
     assert mode in ("train", "validation", "test"), "Please provide a valid model mode (train, validation or test)."
-    
+
     # Check if we are in training mode
     if mode == "train":
         assert optimizer is not None, "If the model is in training mode, you should provide an optimizer."

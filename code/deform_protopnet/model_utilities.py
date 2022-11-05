@@ -11,10 +11,8 @@ import torch.nn.functional as F
 # Project Imports
 from model_densenet_utilities import densenet121_features, densenet161_features, densenet169_features, densenet201_features
 from model_resnet_utilities import resnet18_features, resnet34_features, resnet50_features, resnet101_features, resnet152_features
-from model_vgg_utilities import vgg11_features, vgg11_bn_features, vgg13_features, vgg13_bn_features, vgg16_features, vgg16_bn_features,\
-                         vgg19_features, vgg19_bn_features
-
-from receptive_field import compute_proto_layer_rf_info_v2
+from model_vgg_utilities import vgg11_features, vgg11_bn_features, vgg13_features, vgg13_bn_features, vgg16_features, vgg16_bn_features, vgg19_features, vgg19_bn_features
+from receptive_field_utilities import compute_proto_layer_rf_info_v2
 
 sys.path.insert(1, './Deformable-Convolution-V2-PyTorch')
 
