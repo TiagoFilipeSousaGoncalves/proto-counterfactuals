@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 # Sklearn Imports
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 # PyTorch Imports
 import torch
@@ -26,6 +26,13 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     # n_examples = 0
     # n_correct = 0
     # n_batches = 0
+
+    # Initialise lists to compute scores
+    y_true = np.empty((0), int)
+    y_pred = torch.empty(0, dtype=torch.int32, device=device)
+    
+    # Save scores after softmax for roc auc
+    y_scores = torch.empty(0, dtype=torch.float, device=device)
 
 
     # Initialise variables to save loss and cost
@@ -51,6 +58,9 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
     # Iterate through dataloader
     for _, (images, labels) in enumerate(tqdm(dataloader)):
+
+        # Concatenate lists
+        y_true = np.append(y_true, labels.numpy(), axis=0)
 
         # Move data into GPU or CPU
         images, labels = images.to(device), labels.to(device)
@@ -148,10 +158,17 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
 
             # TODO: Evaluation statistics
-            _, predicted = torch.max(marginless_logits.data, 1)
+            # _, predicted = torch.max(marginless_logits.data, 1)
             # n_examples += target.size(0)
             # n_correct += (predicted == target).sum().item()
             # n_batches += 1
+
+            # Using Softmax
+            # Apply Softmax on Logits and get the argmax to get the predicted labels
+            s_logits = torch.nn.Softmax(dim=1)(marginless_logits.data)
+            y_scores = torch.cat((y_scores, s_logits))
+            s_logits = torch.argmax(s_logits, dim=1)
+            y_pred = torch.cat((y_pred, s_logits))
 
 
             # Update losses and costs
@@ -238,12 +255,24 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
         # log('\tavg separation:\t{0}'.format(total_avg_separation_cost / n_batches))
         avg_sep_cost = total_avg_separation_cost / len(dataloader)
         metrics_dict["avg_sep_cost"] = avg_sep_cost
-    
 
-    # FIXME: Accuracy
+
+    # Accuracy, Recall, Precision, F1 and AUC
+    # Compute performance metrics
+    # Get the necessary data
+    y_pred = y_pred.cpu().detach().numpy()
+    y_scores = y_scores.cpu().detach().numpy()
+
     # log('\taccu: \t\t{0}%'.format(n_correct / n_examples * 100))
-    accuracy = n_correct / n_examples * 100
+    # accuracy = n_correct / n_examples * 100
+    accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
     metrics_dict["accuracy"] = accuracy
+    recall = recall_score(y_true=y_true, y_pred=y_pred, average='micro')
+    metrics_dict["recall"] = recall
+    precision = precision_score(y_true=y_true, y_pred=y_pred, average='micro')
+    metrics_dict["precision"] = precision
+    f1 = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
+    metrics_dict["f1"] = f1
 
     # Orthogonality loss
     # log('\torthogonality loss:\t{0}'.format(total_ortho_loss / n_batches))
@@ -273,7 +302,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
         # log('\torthogonality loss with weight:\t{0}'.format(coefs['orthogonality_loss'] * total_ortho_loss / n_batches))
         orthog_loss_weight = coefs['orthogonality_loss'] * total_ortho_loss / len(dataloader)
         metrics_dict["orthog_loss_weight"] = orthog_loss_weight
-    
+
 
     # Max offset
     # log('\tmax offset: \t{0}'.format(max_offset))
@@ -282,23 +311,85 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
 
 
-# Function: Model Train Setting
-def train(model, dataloader, optimizer, class_specific=False, coefs=None, 
-            log=print, subtractive_margin=True, use_ortho_loss=False):
-    assert(optimizer is not None)
+# TODO: Function: Print Metrics
+def print_metrics(metrics_dict, class_specific, coefs):
+
+    # Cross-entropy loss
+    ce_loss = metrics_dict["ce_loss"]
+    print('Cross-entropy loss: {0}'.format(ce_loss))
+
+    # Cluster loss
+    cluster_loss = metrics_dict["cluster_loss"]
+    print('Cluster loss: {0}'.format(cluster_loss))
+
+
+    # Separation cost and average separation cost
+    if class_specific:
+        sep_cost = metrics_dict["sep_cost"]
+        avg_sep_cost = metrics_dict["avg_sep_cost"]
+        print('Separation cost: {0}'.format(sep_cost))
+        print('Average separation cost: {0}'.format(avg_sep_cost))
+
+
+    # Accuracy, Recall, Precision, F1 and AUC
+    accuracy = metrics_dict["accuracy"]
+    recall = metrics_dict["recall"]
+    precision = metrics_dict["precision"]
+    f1 = metrics_dict["f1"]
+    print('Accuracy: {0}'.format(accuracy))
+    print('Recall: {0}'.format(recall))
+    print('Precision: {0}'.format(precision))
+    print('F1-Score: {0}'.format(f1))
+
+    # Orthogonality loss
+    orthog_loss = metrics_dict["orthog_loss"]
+    print('Orthogonality loss:\t{0}'.format(orthog_loss))
+
+    # L1
+    l1 = metrics_dict["l1"] = l1
+    print('L1: {0}'.format(l1))
     
-    log('\ttrain')
+    # Avg L2
+    avg_l2 = metrics_dict["avg_l2"]
+    print('Average L2: {0}'.format(avg_l2))
+
+
+    # Average L2 w/ weight and Orthogonality loss w/ weight
+    if coefs is not None:
+        avg_l2_weight = metrics_dict["avg_l2_weight"]
+        orthog_loss_weight = metrics_dict["orthog_loss_weight"]
+        print('Average L2 with weight: {0}'.format(avg_l2_weight))
+        print('Orthogonality loss with weight: {0}'.format(orthog_loss_weight))
+
+
+    return
+
+
+
+# Function: Model Train Setting
+def model_train(model, dataloader, device, optimizer, class_specific=False, coefs=None, subtractive_margin=True, use_ortho_loss=False):
+
+    assert optimizer is not None, "If the model is in training mode, you should provide an optimizer."
     model.train()
-    return run_model(model=model, dataloader=dataloader, optimizer=optimizer,
-                          class_specific=class_specific, coefs=coefs, log=log, 
-                          subtractive_margin=subtractive_margin, use_ortho_loss=use_ortho_loss)
+
+    return run_model(model=model, dataloader=dataloader, mode="train", device=device, optimizer=optimizer, class_specific=class_specific, coefs=coefs, subtractive_margin=subtractive_margin, use_ortho_loss=use_ortho_loss)
+
+
+
+# Function: Model Validation Setting
+def model_validation(model, dataloader, device, class_specific=False, subtractive_margin=True):
+
+    model.eval()
+
+    return run_model(model=model, dataloader=dataloader, mode="validation", device=device, optimizer=None, class_specific=class_specific, subtractive_margin=subtractive_margin)
+
 
 
 # Function: Model Test Setting
-def test(model, dataloader, class_specific=False, subtractive_margin=True):
+def model_test(model, dataloader, device, class_specific=False, subtractive_margin=True):
     model.eval()
 
-    return run_model(model=model, dataloader=dataloader, optimizer=None, class_specific=class_specific, subtractive_margin=subtractive_margin)
+    return run_model(model=model, dataloader=dataloader, mode="test", device=device, optimizer=None, class_specific=class_specific, subtractive_margin=subtractive_margin)
 
 
 
@@ -371,5 +462,3 @@ def joint(model, last_layer_fixed=True):
 
     for p in model.last_layer.parameters():
         p.requires_grad = not last_layer_fixed
-
-    # print('\tjoint')
