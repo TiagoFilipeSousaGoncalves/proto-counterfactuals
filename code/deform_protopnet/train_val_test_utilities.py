@@ -31,8 +31,8 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     # Initialise variables to save loss and cost
     total_cross_entropy = 0
     total_cluster_cost = 0
-    
-    
+
+
     # Note: Separation cost is meaningful only for class_specific
     total_separation_cost = 0
     total_avg_separation_cost = 0
