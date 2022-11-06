@@ -9,6 +9,6 @@
 
 echo "PH2 DenseNet161"
 
-python code/models_train.py --dataset PH2 --base_architecture densenet161 --batchsize 32 --num_workers 0 --gpu_id 0
+python code/models_train.py --dataset PH2 --base_architecture densenet161 --batchsize 16 --num_workers 0 --gpu_id 0
 
 echo "Finished"
