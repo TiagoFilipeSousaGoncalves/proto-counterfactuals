@@ -4,40 +4,299 @@ import shutil
 import numpy as np
 import argparse
 import re
+import datetime
 
 # PyTorch Imports
 import torch
 import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from torch.utils.tensorboard import SummaryWriter
+
+# Weights and Biases (W&B) Imports
+import wandb
+
+# Log in to W&B Account
+wandb.login()
+
+# Fix Random Seeds
+random_seed = 42
+torch.manual_seed(random_seed)
+np.random.seed(random_seed)
 
 # Project Imports
+from data_utilities import preprocess_input_function
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
 from train_val_test_utilities import model_train, model_validation, print_metrics, warm_only, warm_pre_offset, joint, last_only
 
 
 
-
-
-from preprocess import mean, std, preprocess_input_function
-
+# Command Line Interface
+# Create the parser
 parser = argparse.ArgumentParser()
-parser.add_argument('-gpuid', nargs=1, type=str, default='0') # python3 main.py -gpuid=0,1,2,3
-parser.add_argument('-m', nargs=1, type=float, default=None)
-parser.add_argument('-last_layer_fixed', nargs=1, type=str, default=None)
-parser.add_argument('-subtractive_margin', nargs=1, type=str, default=None)
-parser.add_argument('-using_deform', nargs=1, type=str, default=None)
-parser.add_argument('-topk_k', nargs=1, type=int, default=None)
-parser.add_argument('-deformable_conv_hidden_channels', nargs=1, type=int, default=None)
-parser.add_argument('-num_prototypes', nargs=1, type=int, default=None)
-parser.add_argument('-dilation', nargs=1, type=float, default=2)
-parser.add_argument('-incorrect_class_connection', nargs=1, type=float, default=0)
-parser.add_argument('-rand_seed', nargs=1, type=int, default=None)
+
+# Add the arguments
+# Data directory
+parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
+
+# Data set
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+
+# Model
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
+
+# Batch size
+parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
+
+# Image size
+parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
+
+# m 
+parser.add_argument('--m', nargs=1, type=float, default=None)
+
+# Subtractive margin
+# subtractive_margin = True
+parser.add_argument('--subtractive_margin', action="store_true", default=True)
+
+# Using deformable convolution
+parser.add_argument('--using_deform', nargs=1, type=str, default=None)
+
+# Top-K
+parser.add_argument('--topk_k', nargs=1, type=int, default=None)
+
+# Deformable Convolution Hidden Channels
+parser.add_argument('--deformable_conv_hidden_channels', nargs=1, type=int, default=None)
+
+# Number of Prototypes
+parser.add_argument('--num_prototypes', nargs=1, type=int, default=None)
+
+# Dilation
+parser.add_argument('--dilation', nargs=1, type=float, default=2)
+
+# Incorrect class connection
+parser.add_argument('--incorrect_class_connection', nargs=1, type=float, default=0)
+
+# Prototype Activation Function
+# prototype_activation_function = 'log'
+parser.add_argument('--prototype_activation_function', type=str, default='log', help="Prototype activation function.")
+
+# Add on layers type
+# add_on_layers_type = 'regular'
+parser.add_argument('--add_on_layers_type', type=str, default='regular', help="Add on layers type.")
+
+# Joint optimizer learning rates
+# joint_optimizer_lrs = {'features': 1e-4, 'add_on_layers': 3e-3, 'prototype_vectors': 3e-3, 'conv_offset': 1e-4, 'joint_last_layer_lr': 1e-5}
+parser.add_argument('--joint_optimizer_lrs', type=dict, default={'features': 1e-4, 'add_on_layers': 3e-3, 'prototype_vectors': 3e-3, 'conv_offset': 1e-4, 'joint_last_layer_lr': 1e-5}, help="Joint optimizer learning rates.")
+
+# Joint learning rate step size
+# joint_lr_step_size = 5
+parser.add_argument('--joint_lr_step_size', type=int, default=5, help="Joint learning rate step size.")
+
+# Warm optimizer learning rates
+# warm_optimizer_lrs = {'add_on_layers': 3e-3, 'prototype_vectors': 3e-3}
+parser.add_argument('--warm_optimizer_lrs', type=dict, default={'add_on_layers': 3e-3, 'prototype_vectors': 3e-3}, help="Warm optimizer learning rates.")
+
+# Warm pre-offset optimizer learning rates
+# warm_pre_offset_optimizer_lrs = {'add_on_layers': 3e-3, 'prototype_vectors': 3e-3, 'features': 1e-4}
+parser.add_argument('--warm_pre_offset_optimizer_lrs', type=dict, default={'add_on_layers': 3e-3, 'prototype_vectors': 3e-3, 'features': 1e-4}, help="Warm pre-offset optimizer learning rates.")
+
+# Warm pre-prototype optimizer learning rates
+# warm_pre_prototype_optimizer_lrs = {'add_on_layers': 3e-3, 'conv_offset': 3e-3, 'features': 1e-4}
+parser.add_argument('--warm_pre_prototype_optimizer_lrs', type=dict, default={'add_on_layers': 3e-3, 'conv_offset': 3e-3, 'features': 1e-4}, help="Warm pre-prototype optimizer learning rates")
+
+# Last layer optimizer learning rate
+# last_layer_optimizer_lr = 1e-4
+parser.add_argument('--last_layer_optimizer_lr', type=float, default=1e-4, help="Last layer optimizer learning rate.")
+
+# Last layer fixed
+# last_layer_fixed = True
+parser.add_argument('--last_layer_fixed', action="store_true", default=True)
+
+# Loss coeficients
+# coefs = {'crs_ent': 1, 'clst': -0.8, 'sep': 0.08, 'l1': 1e-2, 'offset_bias_l2': 8e-1, 'offset_weight_l2': 8e-1, 'orthogonality_loss': 0.1}
+parser.add_argument('--coefs', type=dict, default={'crs_ent': 1, 'clst': -0.8, 'sep': 0.08, 'l1': 1e-2, 'offset_bias_l2': 8e-1, 'offset_weight_l2': 8e-1, 'orthogonality_loss': 0.1}, help="Loss coeficients.")
+
+# Push start
+# push_start = 10
+parser.add_argument('--push_start', type=int, default=10, help="Push start.")
+
+# Resize
+parser.add_argument('--resize', type=str, choices=["direct_resize", "resizeshortest_randomcrop"], default="direct_resize", help="Resize data transformation")
+
+# Class Weights
+parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance")
+
+# Number of training epochs
+# num_train_epochs = 1000
+parser.add_argument('--num_train_epochs', type=int, default=300, help="Number of training epochs.")
+
+# Number of warm epochs
+# num_warm_epochs = 5
+parser.add_argument('--num_warm_epochs', type=int, default=5, help="Number of warm epochs.")
+
+# Learning rate
+parser.add_argument('--lr', type=float, default=1e-4, help="Learning rate")
+
+# Output directory
+parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
+
+# Number of workers
+parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader")
+
+# GPU ID
+parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU")
+
+# Save frequency
+parser.add_argument("--save_freq", type=int, default=10, help="Frequency (in number of epochs) to save the model")
+
+# Resume training
+parser.add_argument("--resume", action="store_true", help="Resume training")
+parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training")
+
+
+# Settings - START
+base_architecture = 'resnet50'
+img_size = 224
+
+
+
+# Full set: './datasets/CUB_200_2011/'
+# Cropped set: './datasets/cub200_cropped/'
+# Stanford dogs: './datasets/stanford_dogs/'
+data_path = './datasets/CUB_200_2011/'
+#120 classes in stanford_dogs, 200 in CUB_200_2011
+if 'stanford_dogs' in data_path:
+    num_classes = 120
+else:
+    num_classes = 200
+
+train_dir = data_path + 'train/'
+# Cropped set: train_cropped & test_cropped
+# Full set: train & test
+test_dir = data_path + 'test/'
+train_push_dir = data_path + 'train/'
+train_batch_size = 80
+test_batch_size = 100
+train_push_batch_size = 75
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+num_train_epochs = 31
+num_warm_epochs = 5
+num_secondary_warm_epochs = 5
+push_start = 20
+
+push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
+
+# Settings - END
+
+
+
+# Parse the arguments
+args = parser.parse_args()
+
+
+# Resume training
+RESUME = args.resume
+
+# Training checkpoint
+if RESUME:
+    CHECKPOINT = args.checkpoint
+
+    assert CHECKPOINT is not None, "Please specify the model checkpoint when resume is True"
+
+
+# Data directory
+DATA_DIR = args.data_dir
+
+# Dataset
+DATASET = args.dataset
+
+# Base Architecture
+BASE_ARCHITECTURE = args.base_architecture
+
+# Results Directory
+OUTPUT_DIR = args.output_dir
+
+# Number of workers (threads)
+WORKERS = args.num_workers
+
+# Number of training epochs
+NUM_TRAIN_EPOCHS = args.num_train_epochs
+
+# Number of warm epochs
+NUM_WARM_EPOCHS = args.num_warm_epochs
+
+# Push epochs
+# push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
+PUSH_EPOCHS = [i for i in range(NUM_TRAIN_EPOCHS) if i % 10 == 0]
+
+# Learning rate
+LEARNING_RATE = args.lr
+
+# Prototype activation function
+PROTOTYPE_ACTIVATION_FUNCTION = args.prototype_activation_function
+
+# Joint optimizer learning rates
+JOINT_OPTIMIZER_LRS = args.joint_optimizer_lrs
+
+# JOINT_LR_STEP_SIZE
+JOINT_LR_STEP_SIZE = args.joint_lr_step_size
+
+# WARM_OPTIMIZER_LRS
+WARM_OPTIMIZER_LRS = args.warm_optimizer_lrs
+
+# LAST_LAYER_OPTIMIZER_LR
+LAST_LAYER_OPTIMIZER_LR = args.last_layer_optimizer_lr
+
+# COEFS (weighting of different training losses)
+COEFS = args.coefs
+
+# PUSH_START
+PUSH_START = args.push_start
+
+# Batch size
+BATCH_SIZE = args.batchsize
+
+# Image size (after transforms)
+IMG_SIZE = args.img_size
+
+# Add on layers type
+ADD_ON_LAYERS_TYPE = args.add_on_layers_type
+
+# Save frquency
+SAVE_FREQ = args.save_freq
+
+# Resize (data transforms)
+RESIZE_OPT = args.resize
+
+
+# Timestamp (to save results)
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), BASE_ARCHITECTURE.lower(), timestamp)
+if not os.path.isdir(results_dir):
+    os.makedirs(results_dir)
+
+
+
+
 
 args = parser.parse_args()
 
-os.environ['CUDA_VISIBLE_DEVICES'] = args.gpuid[0]
+
 m = args.m[0]
 rand_seed = args.rand_seed[0]
 last_layer_fixed = args.last_layer_fixed[0] == 'True'
@@ -59,11 +318,7 @@ print("num_prototypes set to: {}".format(num_prototypes))
 print("incorrect_class_connection: {}".format(incorrect_class_connection))
 print("deformable_conv_hidden_channels: {}".format(deformable_conv_hidden_channels))
 
-np.random.seed(rand_seed)
-torch.manual_seed(rand_seed)
-print("Random seed: ", rand_seed)
-    
-print(os.environ['CUDA_VISIBLE_DEVICES'])
+
 
 from settings import img_size, experiment_run, base_architecture
 
