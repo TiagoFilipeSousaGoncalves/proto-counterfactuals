@@ -17,3 +17,39 @@ Test Accuracy: 0.7649292371418709
 Model weights loaded with success from results/cub2002011/densenet161/2022-09-15_16-14-45/weights/densenet161_cub2002011_best_push.pt.
 Test Accuracy: 0.7573351743182603
 Model weights loaded with success from results/cub2002011/densenet161/2022-09-15_16-14-45/weights/densenet161_cub2002011_best_push_last.pt.
+Test Accuracy: 0.7623403520883673
+Finished.
+Size of test set: 5794
+Batch size: 16
+Using device: cpu
+Model weights loaded with success from results/cub2002011/resnet34/2022-09-17_17-03-33/weights/resnet34_cub2002011_best.pt.
+Test Accuracy: 0.7887469796341042
+Model weights loaded with success from results/cub2002011/resnet34/2022-09-17_17-03-33/weights/resnet34_cub2002011_best_push.pt.
+Test Accuracy: 0.7758025543665861
+Model weights loaded with success from results/cub2002011/resnet34/2022-09-17_17-03-33/weights/resnet34_cub2002011_best_push_last.pt.
+Test Accuracy: 0.7839143942008975
+Finished.
+Size of test set: 5794
+Batch size: 16
+Using device: cpu
+Size of test set: 5794
+Batch size: 16
+Using device: cpu
+Model weights loaded with success from results/cub2002011/vgg16/2022-10-14_21-14-35/weights/vgg16_cub2002011_best.pt.
+Test Accuracy: 0.7607870210562651
+Model weights loaded with success from results/cub2002011/vgg16/2022-10-14_21-14-35/weights/vgg16_cub2002011_best_push.pt.
+Test Accuracy: 0.7373144632378322
+Model weights loaded with success from results/cub2002011/vgg16/2022-10-14_21-14-35/weights/vgg16_cub2002011_best_push_last.pt.
+Test Accuracy: 0.7537107352433552
+Finished.
+Size of test set: 5794
+Batch size: 16
+Using device: cpu
+Model weights loaded with success from results/cub2002011/vgg19/2022-10-17_08-13-40/weights/vgg19_cub2002011_best.pt.
+Test Accuracy: 0.7764929237141871
+Model weights loaded with success from results/cub2002011/vgg19/2022-10-17_08-13-40/weights/vgg19_cub2002011_best_push.pt.
+Test Accuracy: 0.7502588885053504
+Model weights loaded with success from results/cub2002011/vgg19/2022-10-17_08-13-40/weights/vgg19_cub2002011_best_push_last.pt.
+Test Accuracy: 0.7633759061097687
+Finished.
+FINISHED | CUB2002011 | TEST

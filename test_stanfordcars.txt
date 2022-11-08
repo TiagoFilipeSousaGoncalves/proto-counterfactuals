@@ -1,0 +1,33 @@
+STARTED | STANFORDCARS | TEST
+Size of test set: 8041
+Batch size: 32
+Using device: cpu
+Model weights loaded with success from results/stanfordcars/densenet121/2022-10-24_08-55-48/weights/densenet121_stanfordcars_best.pt.
+Test Accuracy: 0.8957841064544211
+Model weights loaded with success from results/stanfordcars/densenet121/2022-10-24_08-55-48/weights/densenet121_stanfordcars_best_push.pt.
+Test Accuracy: 0.891804501927621
+Model weights loaded with success from results/stanfordcars/densenet121/2022-10-24_08-55-48/weights/densenet121_stanfordcars_best_push_last.pt.
+Test Accuracy: 0.895286655888571
+Finished.
+Size of test set: 8041
+Batch size: 32
+Using device: cpu
+Size of test set: 8041
+Batch size: 32
+Using device: cpu
+Model weights loaded with success from results/stanfordcars/resnet34/2022-10-25_14-20-40/weights/resnet34_stanfordcars_best.pt.
+Test Accuracy: 0.8941673921154085
+Model weights loaded with success from results/stanfordcars/resnet34/2022-10-25_14-20-40/weights/resnet34_stanfordcars_best_push.pt.
+Test Accuracy: 0.8793682377813705
+Model weights loaded with success from results/stanfordcars/resnet34/2022-10-25_14-20-40/weights/resnet34_stanfordcars_best_push_last.pt.
+Test Accuracy: 0.8909339634373834
+Finished.
+Size of test set: 8041
+Batch size: 32
+Using device: cpu
+Size of test set: 8041
+Batch size: 32
+Using device: cpu
+Model weights loaded with success from results/stanfordcars/vgg16/2022-10-26_10-49-44/weights/vgg16_stanfordcars_best.pt.
+Test Accuracy: 0.8863325457032707
+Model weights loaded with success from results/stanfordcars/vgg16/2022-10-26_10-49-44/weights/vgg16_stanfordcars_best_push.pt.

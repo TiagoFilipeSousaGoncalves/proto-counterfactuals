@@ -1,18 +1,15 @@
 #!/bin/bash
-#SBATCH --gres=gpu:1
-#SBATCH -o job-%j.out
-#SBATCH -e job-%j.err
 
 
 
 # STANFORDCARS "densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"
-echo "STANFORDCARS"
+echo "STARTED | STANFORDCARS | TEST"
 
-python code/models_test.py --dataset STANFORDCARS --base_architecture densenet121 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint stanfordcars/densenet121/2022-08-11_16-16-36/
-python code/models_test.py --dataset STANFORDCARS --base_architecture densenet161 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint stanfordcars/densenet161/2022-08-21_00-52-17/
-python code/models_test.py --dataset STANFORDCARS --base_architecture resnet34 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint stanfordcars/resnet34/2022-08-14_13-44-35/
-python code/models_test.py --dataset STANFORDCARS --base_architecture resnet152 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint stanfordcars/resnet152/2022-08-26_10-59-27/
-python code/models_test.py --dataset STANFORDCARS --base_architecture vgg16 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint stanfordcars/vgg16/2022-09-02_13-24-39/
-python code/models_test.py --dataset STANFORDCARS --base_architecture vgg19 --batchsize 16 --num_workers 3 --gpu_id 0 --checkpoint stanfordcars/vgg19/2022-09-04_11-05-28/
+python code/models_test.py --dataset STANFORDCARS --base_architecture densenet121 --batchsize 32 --num_workers 2 --gpu_id 0 --checkpoint stanfordcars/densenet121/2022-10-24_08-55-48/
+python code/models_test.py --dataset STANFORDCARS --base_architecture densenet161 --batchsize 32 --num_workers 2 --gpu_id 0 --checkpoint stanfordcars/densenet161/
+python code/models_test.py --dataset STANFORDCARS --base_architecture resnet34 --batchsize 32 --num_workers 2 --gpu_id 0 --checkpoint stanfordcars/resnet34/2022-10-25_14-20-40/
+python code/models_test.py --dataset STANFORDCARS --base_architecture resnet152 --batchsize 32 --num_workers 2 --gpu_id 0 --checkpoint stanfordcars/resnet152/
+python code/models_test.py --dataset STANFORDCARS --base_architecture vgg16 --batchsize 32 --num_workers 2 --gpu_id 0 --checkpoint stanfordcars/vgg16/2022-10-26_10-49-44/
+python code/models_test.py --dataset STANFORDCARS --base_architecture vgg19 --batchsize 32 --num_workers 2 --gpu_id 0 --checkpoint stanfordcars/vgg19/2022-10-27_14-16-56/
 
-echo "Finished."
+echo "FINISHED | STANFORDCARS | TEST"

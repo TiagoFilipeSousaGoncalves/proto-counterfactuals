@@ -1,16 +1,17 @@
 # Imports
 import os
-import shutil
-import numpy as np
 import argparse
-import re
+import numpy as np
 import datetime
+from torchinfo import summary
+
+# Sklearn Imports
+from sklearn.utils.class_weight import compute_class_weight
 
 # PyTorch Imports
 import torch
-import torch.utils.data
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
+from torch.utils.data import DataLoader
+import torchvision
 from torch.utils.tensorboard import SummaryWriter
 
 # Weights and Biases (W&B) Imports
@@ -25,7 +26,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import preprocess_input_function
+from data_utilities import preprocess_input_function, CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
 from train_val_test_utilities import model_train, model_validation, print_metrics, warm_only, warm_pre_offset, joint, last_only
@@ -52,30 +53,30 @@ parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for tra
 # Image size
 parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
 
-# m 
-parser.add_argument('--m', nargs=1, type=float, default=None)
+# Margin
+parser.add_argument('--margin', type=float, default=None)
 
 # Subtractive margin
 # subtractive_margin = True
 parser.add_argument('--subtractive_margin', action="store_true", default=True)
 
 # Using deformable convolution
-parser.add_argument('--using_deform', nargs=1, type=str, default=None)
+parser.add_argument('--using_deform', type=str, default=None)
 
 # Top-K
-parser.add_argument('--topk_k', nargs=1, type=int, default=None)
+parser.add_argument('--topk_k', type=int, default=None)
 
 # Deformable Convolution Hidden Channels
-parser.add_argument('--deformable_conv_hidden_channels', nargs=1, type=int, default=None)
+parser.add_argument('--deformable_conv_hidden_channels', type=int, default=None)
 
 # Number of Prototypes
-parser.add_argument('--num_prototypes', nargs=1, type=int, default=None)
+parser.add_argument('--num_prototypes', type=int, default=None)
 
 # Dilation
-parser.add_argument('--dilation', nargs=1, type=float, default=2)
+parser.add_argument('--dilation', type=float, default=2)
 
 # Incorrect class connection
-parser.add_argument('--incorrect_class_connection', nargs=1, type=float, default=0)
+parser.add_argument('--incorrect_class_connection', type=float, default=0)
 
 # Prototype Activation Function
 # prototype_activation_function = 'log'
@@ -118,8 +119,8 @@ parser.add_argument('--last_layer_fixed', action="store_true", default=True)
 parser.add_argument('--coefs', type=dict, default={'crs_ent': 1, 'clst': -0.8, 'sep': 0.08, 'l1': 1e-2, 'offset_bias_l2': 8e-1, 'offset_weight_l2': 8e-1, 'orthogonality_loss': 0.1}, help="Loss coeficients.")
 
 # Push start
-# push_start = 10
-parser.add_argument('--push_start', type=int, default=10, help="Push start.")
+# push_start = 20
+parser.add_argument('--push_start', type=int, default=20, help="Push start.")
 
 # Resize
 parser.add_argument('--resize', type=str, choices=["direct_resize", "resizeshortest_randomcrop"], default="direct_resize", help="Resize data transformation")
@@ -128,12 +129,17 @@ parser.add_argument('--resize', type=str, choices=["direct_resize", "resizeshort
 parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance")
 
 # Number of training epochs
-# num_train_epochs = 1000
+# num_train_epochs = 31
 parser.add_argument('--num_train_epochs', type=int, default=300, help="Number of training epochs.")
 
 # Number of warm epochs
 # num_warm_epochs = 5
 parser.add_argument('--num_warm_epochs', type=int, default=5, help="Number of warm epochs.")
+
+# Number of secondary warm epochs
+# num_secondary_warm_epochs = 5
+parser.add_argument('--num_secondary_warm_epochs', type=int, default=5, help="Number of secondary warm epochs.")
+
 
 # Learning rate
 parser.add_argument('--lr', type=float, default=1e-4, help="Learning rate")
@@ -153,55 +159,6 @@ parser.add_argument("--save_freq", type=int, default=10, help="Frequency (in num
 # Resume training
 parser.add_argument("--resume", action="store_true", help="Resume training")
 parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training")
-
-
-# Settings - START
-base_architecture = 'resnet50'
-img_size = 224
-
-
-
-# Full set: './datasets/CUB_200_2011/'
-# Cropped set: './datasets/cub200_cropped/'
-# Stanford dogs: './datasets/stanford_dogs/'
-data_path = './datasets/CUB_200_2011/'
-#120 classes in stanford_dogs, 200 in CUB_200_2011
-if 'stanford_dogs' in data_path:
-    num_classes = 120
-else:
-    num_classes = 200
-
-train_dir = data_path + 'train/'
-# Cropped set: train_cropped & test_cropped
-# Full set: train & test
-test_dir = data_path + 'test/'
-train_push_dir = data_path + 'train/'
-train_batch_size = 80
-test_batch_size = 100
-train_push_batch_size = 75
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-num_train_epochs = 31
-num_warm_epochs = 5
-num_secondary_warm_epochs = 5
-push_start = 20
-
-push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
-
-# Settings - END
 
 
 
@@ -240,9 +197,13 @@ NUM_TRAIN_EPOCHS = args.num_train_epochs
 # Number of warm epochs
 NUM_WARM_EPOCHS = args.num_warm_epochs
 
+# Number of secondary warm epochs
+NUM_SECONDARY_WARM_EPOCHS = args.num_secondary_warm_epochs
+
 # Push epochs
 # push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
 PUSH_EPOCHS = [i for i in range(NUM_TRAIN_EPOCHS) if i % 10 == 0]
+
 
 # Learning rate
 LEARNING_RATE = args.lr
@@ -258,6 +219,9 @@ JOINT_LR_STEP_SIZE = args.joint_lr_step_size
 
 # WARM_OPTIMIZER_LRS
 WARM_OPTIMIZER_LRS = args.warm_optimizer_lrs
+
+# WARM_PRE_OFFSET_OPTIMIZER_LRS
+WARM_PRE_OFFSET_OPTIMIZER_LRS = args.warm_pre_offset_optimizer_lrs
 
 # LAST_LAYER_OPTIMIZER_LR
 LAST_LAYER_OPTIMIZER_LR = args.last_layer_optimizer_lr
@@ -277,282 +241,751 @@ IMG_SIZE = args.img_size
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
+# Last Layer Fixed
+LAST_LAYER_FIXED = args.last_layer_fixed
+
 # Save frquency
 SAVE_FREQ = args.save_freq
 
 # Resize (data transforms)
 RESIZE_OPT = args.resize
 
+# Margin
+MARGIN = args.margin
+
+# Using subtractive margin
+SUBTRACTIVE_MARGIN = args.subtractive_margin
+
+# Using deformable convolution
+USING_DEFORM = args.using_deform
+
+# TOPK_K
+TOPK_K = args.topk_k
+
+# Deformable convolutional hidden channels
+DEFORMABLE_CONV_HIDDEN_CHANNELS = args.deformable_conv_hidden_channels
+
+# Number of Prototypes
+NUM_PROTOTYPES = args.num_prototypes
+
+# Dilation
+DILATION = args.dilation
+
+# Incorrect class connection
+INCORRECT_CLASS_CONNECTION = args.incorrect_class_connection
+
+
+
+# TODO: Erase uppon review
+# Debug prints
+# print("USING DEFORMATION: ", using_deform)
+# print("Margin set to: ", m)
+# print("last_layer_fixed set to: {}".format(last_layer_fixed))
+# print("subtractive_margin set to: {}".format(subtractive_margin))
+# print("topk_k set to: {}".format(topk_k))
+# print("num_prototypes set to: {}".format(num_prototypes))
+# print("incorrect_class_connection: {}".format(incorrect_class_connection))
+# print("deformable_conv_hidden_channels: {}".format(deformable_conv_hidden_channels))
+
 
 # Timestamp (to save results)
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), BASE_ARCHITECTURE.lower(), timestamp)
+results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), "deformable-protopnet", BASE_ARCHITECTURE.lower(), timestamp)
 if not os.path.isdir(results_dir):
     os.makedirs(results_dir)
 
 
+# Save training parameters
+with open(os.path.join(results_dir, "train_params.txt"), "w") as f:
+    f.write(str(args))
 
 
 
-args = parser.parse_args()
-
-
-m = args.m[0]
-rand_seed = args.rand_seed[0]
-last_layer_fixed = args.last_layer_fixed[0] == 'True'
-subtractive_margin = args.subtractive_margin[0] == 'True'
-using_deform = args.using_deform[0] == 'True'
-topk_k = args.topk_k[0]
-deformable_conv_hidden_channels = args.deformable_conv_hidden_channels[0]
-num_prototypes = args.num_prototypes[0]
-
-dilation = args.dilation
-incorrect_class_connection = args.incorrect_class_connection[0]
-
-print("---- USING DEFORMATION: ", using_deform)
-print("Margin set to: ", m)
-print("last_layer_fixed set to: {}".format(last_layer_fixed))
-print("subtractive_margin set to: {}".format(subtractive_margin))
-print("topk_k set to: {}".format(topk_k))
-print("num_prototypes set to: {}".format(num_prototypes))
-print("incorrect_class_connection: {}".format(incorrect_class_connection))
-print("deformable_conv_hidden_channels: {}".format(deformable_conv_hidden_channels))
+# Set the W&B project
+wandb.init(
+    project="proto-counterfactuals", 
+    name=timestamp,
+    config={
+        "architecture": f"deform-{BASE_ARCHITECTURE.lower()}",
+        "dataset": DATASET.lower(),
+        "train-epochs": NUM_TRAIN_EPOCHS,
+    }
+)
 
 
 
-from settings import img_size, experiment_run, base_architecture
+# Load data
+# Mean and STD to Normalize the inputs into pretrained models
+MEAN = [0.485, 0.456, 0.406]
+STD = [0.229, 0.224, 0.225]
 
-if num_prototypes is None:
-    num_prototypes = 1200
 
-if 'resnet34' in base_architecture:
-    prototype_shape = (num_prototypes, 512, 2, 2)
-    add_on_layers_type = 'upsample'
-elif 'resnet152' in base_architecture:
-    prototype_shape = (num_prototypes, 2048, 2, 2)
-    add_on_layers_type = 'upsample'
-elif 'resnet50' in base_architecture:
-    prototype_shape = (num_prototypes, 2048, 2, 2)
-    add_on_layers_type = 'upsample'
-elif 'densenet121' in base_architecture:
-    prototype_shape = (num_prototypes, 1024, 2, 2)
-    add_on_layers_type = 'upsample'
-elif 'densenet161' in base_architecture:
-    prototype_shape = (num_prototypes, 2208, 2, 2)
-    add_on_layers_type = 'upsample'
+# Input Data Dimensions
+img_height = IMG_SIZE
+img_width = IMG_SIZE
+
+
+
+# Train Transforms (online augmentation parameters are commented, but they are from the original paper)
+train_transforms = torchvision.transforms.Compose([
+    # torchvision.transforms.RandomAffine(degrees=(-25, 25), shear=15),
+    # torchvision.transforms.RandomHorizontalFlip(),
+    torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.ToTensor(),
+    torchvision.transforms.Normalize(mean=MEAN, std=STD)
+])
+
+# Train Push Transforms (without Normalize)
+train_push_transforms = torchvision.transforms.Compose([
+    torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.ToTensor()
+])
+
+# Validation Transforms
+val_transforms = torchvision.transforms.Compose([
+    torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.RandomCrop((IMG_SIZE, IMG_SIZE)),
+    torchvision.transforms.ToTensor(),
+    torchvision.transforms.Normalize(mean=MEAN, std=STD)
+])
+
+
+# Dataset
+# CUB2002011
+if DATASET == "CUB2002011":
+    # Train Dataset
+    train_set = CUB2002011Dataset(
+        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=True,
+        transform=train_transforms
+    )
+
+    # Train Push Dataset (Prototypes)
+    train_push_set = CUB2002011Dataset(
+        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=False,
+        transform=train_push_transforms
+    )
+
+    # Validation Dataset
+    val_set = CUB2002011Dataset(
+        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=False,
+        transform=val_transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(train_set.labels_dict)
+
+
+
+# PH2
+elif DATASET == "PH2":
+    # Train Dataset
+    train_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=True,
+        transform=train_transforms
+    )
+
+    # Train Push Dataset (Prototypes)
+    train_push_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=False,
+        transform=train_push_transforms
+    )
+
+    # Validation Dataset
+    val_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=val_transforms
+    )
+
+    # Number of Classes
+    NUM_CLASSES = len(train_set.diagnosis_dict)
+
+
+
+# STANFORDCARS
+elif DATASET == "STANFORDCARS":
+    # Train Dataset
+    train_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_train",
+        augmented=True,
+        cropped=True,
+        transform=train_transforms
+    )
+
+    # Train Push Dataset (Prototypes)
+    train_push_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_train",
+        augmented=False,
+        cropped=True,
+        transform=train_push_transforms
+    )
+
+    # Validation Dataset
+    val_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_test",
+        augmented=False,
+        cropped=True,
+        transform=val_transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(train_set.class_names)
+
+
+
+# Results and Weights
+weights_dir = os.path.join(results_dir, "weights")
+if not os.path.isdir(weights_dir):
+    os.makedirs(weights_dir)
+
+
+# History Files
+history_dir = os.path.join(results_dir, "history")
+if not os.path.isdir(history_dir):
+    os.makedirs(history_dir)
+
+
+# Tensorboard
+tbwritter = SummaryWriter(log_dir=os.path.join(results_dir, "tensorboard"), flush_secs=30)
+
+
+# Choose GPU
+DEVICE = f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {DEVICE}")
+
+
+
+# Define the number of prototypes per class
+if NUM_PROTOTYPES == -1:
+    NUM_PROTOTYPES_CLASS = 1200
+
+if BASE_ARCHITECTURE.lower() == 'resnet34':
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 2, 2)
+    ADD_ON_LAYERS_TYPE = 'upsample'
+
+elif BASE_ARCHITECTURE.lower() in ('resnet50', 'resnet152'):
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 2048, 2, 2)
+    ADD_ON_LAYERS_TYPE = 'upsample'
+
+elif BASE_ARCHITECTURE.lower() == 'densenet121':
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 1024, 2, 2)
+    ADD_ON_LAYERS_TYPE = 'upsample'
+
+elif BASE_ARCHITECTURE.lower() == 'densenet161':
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 2208, 2, 2)
+    ADD_ON_LAYERS_TYPE = 'upsample'
+
 else:
-    prototype_shape = (num_prototypes, 512, 2, 2)
-    add_on_layers_type = 'upsample'
-print("Add on layers type: ", add_on_layers_type)
+    PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 2, 2)
+    ADD_ON_LAYERS_TYPE = 'upsample'
 
 
-base_architecture_type = re.match('^[a-z]*', base_architecture).group(0)
+# Debug print
+print("Add on layers type: ", ADD_ON_LAYERS_TYPE)
 
-from settings import train_dir, test_dir, train_push_dir
 
-# model_dir = './saved_models/' + base_architecture + '/' + train_dir + '/' + experiment_run + '/'
-# makedir(model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), 'settings.py'), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), base_architecture_type + '_features.py'), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), 'model.py'), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), 'train_and_test.py'), dst=model_dir)
 
-log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
-img_dir = os.path.join(model_dir, 'img')
-# makedir(img_dir)
-weight_matrix_filename = 'outputL_weights'
-prototype_img_filename_prefix = 'prototype-img'
-prototype_self_act_filename_prefix = 'prototype-self-act'
-proto_bound_boxes_filename_prefix = 'bb'
-
-from settings import train_batch_size, test_batch_size, train_push_batch_size
-
-normalize = transforms.Normalize(mean=mean,
-                                 std=std)
-
-if 'stanford_dogs' in train_dir:
-    num_classes = 120
-else:
-    num_classes = 200
-log("{} classes".format(num_classes))
-
-if 'augmented' not in train_dir:
-    print("Using online augmentation")
-    train_dataset = datasets.ImageFolder(
-        train_dir,
-        transforms.Compose([
-            transforms.RandomAffine(degrees=(-25, 25), shear=15),
-            transforms.RandomHorizontalFlip(),
-            transforms.Resize(size=(img_size, img_size)),
-            transforms.ToTensor(),
-            normalize,
-        ]))
-else:
-    train_dataset = datasets.ImageFolder(
-        train_dir,
-        transforms.Compose([
-            transforms.Resize(size=(img_size, img_size)),
-            transforms.ToTensor(),
-            normalize,
-        ]))
-train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=train_batch_size, shuffle=True,
-    num_workers=4, pin_memory=False)
-# push set
-train_push_dataset = datasets.ImageFolder(
-    train_push_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-    ]))
-train_push_loader = torch.utils.data.DataLoader(
-    train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
-    num_workers=4, pin_memory=False)
-# test set
-test_dataset = datasets.ImageFolder(
-    test_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
-test_loader = torch.utils.data.DataLoader(
-    test_dataset, batch_size=test_batch_size, shuffle=False,
-    num_workers=4, pin_memory=False)
-
-log('training set size: {0}'.format(len(train_loader.dataset)))
-log('push set size: {0}'.format(len(train_push_loader.dataset)))
-log('test set size: {0}'.format(len(test_loader.dataset)))
-log('batch size: {0}'.format(train_batch_size))
-
-# construct the model
-ppnet = model.construct_PPNet(base_architecture=base_architecture,
-                            pretrained=True, img_size=img_size,
-                            prototype_shape=prototype_shape,
-                            num_classes=num_classes, topk_k=topk_k, m=m,
-                            add_on_layers_type=add_on_layers_type,
-                            using_deform=using_deform,
-                            incorrect_class_connection=incorrect_class_connection,
-                            deformable_conv_hidden_channels=deformable_conv_hidden_channels,
-                            prototype_dilation=2)
-    
-ppnet = ppnet.cuda()
-ppnet_multi = torch.nn.DataParallel(ppnet)
+# Construct the model
+ppnet_model = construct_PPNet(
+    base_architecture=BASE_ARCHITECTURE.lower(),
+    pretrained=True,
+    img_size=IMG_SIZE,
+    prototype_shape=PROTOTYPE_SHAPE,
+    num_classes=NUM_CLASSES,
+    topk_k=TOPK_K,
+    m=MARGIN,
+    add_on_layers_type=ADD_ON_LAYERS_TYPE,
+    using_deform=USING_DEFORM,
+    incorrect_class_connection=INCORRECT_CLASS_CONNECTION,
+    deformable_conv_hidden_channels=DEFORMABLE_CONV_HIDDEN_CHANNELS,
+    prototype_dilation=2
+)
 class_specific = True
 
-# define optimizer
-from settings import joint_optimizer_lrs, joint_lr_step_size
-if 'resnet152' in base_architecture and 'stanford_dogs' in train_dir:
-    joint_optimizer_lrs['features'] = 1e-5
-joint_optimizer_specs = \
-[{'params': ppnet.features.parameters(), 'lr': joint_optimizer_lrs['features'], 'weight_decay': 1e-3}, # bias are now also being regularized
- {'params': ppnet.add_on_layers.parameters(), 'lr': joint_optimizer_lrs['add_on_layers'], 'weight_decay': 1e-3},
- {'params': ppnet.prototype_vectors, 'lr': joint_optimizer_lrs['prototype_vectors']},
- {'params': ppnet.conv_offset.parameters(), 'lr': joint_optimizer_lrs['conv_offset']},
- {'params': ppnet.last_layer.parameters(), 'lr': joint_optimizer_lrs['joint_last_layer_lr']}
+
+
+# Define optimizers
+# Joint Optimizer Specifications
+if BASE_ARCHITECTURE.lower() == 'resnet152' and DATASET == 'stanford_dogs':
+    JOINT_OPTIMIZER_LRS['features'] = 1e-5
+
+joint_optimizer_specs = [
+    {'params': ppnet_model.features.parameters(), 'lr': JOINT_OPTIMIZER_LRS['features'], 'weight_decay': 1e-3}, # bias are now also being regularized
+    {'params': ppnet_model.add_on_layers.parameters(), 'lr': JOINT_OPTIMIZER_LRS['add_on_layers'], 'weight_decay': 1e-3},
+    {'params': ppnet_model.prototype_vectors, 'lr': JOINT_OPTIMIZER_LRS['prototype_vectors']},
+    {'params': ppnet_model.conv_offset.parameters(), 'lr': JOINT_OPTIMIZER_LRS['conv_offset']},
+    {'params': ppnet_model.last_layer.parameters(), 'lr': JOINT_OPTIMIZER_LRS['joint_last_layer_lr']}
 ]
 joint_optimizer = torch.optim.Adam(joint_optimizer_specs)
-joint_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=joint_lr_step_size, gamma=0.2)
-log("joint_optimizer_lrs: ")
-log(str(joint_optimizer_lrs))
+joint_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=JOINT_LR_STEP_SIZE, gamma=0.2)
 
-from settings import warm_optimizer_lrs
-warm_optimizer_specs = \
-[{'params': ppnet.add_on_layers.parameters(), 'lr': warm_optimizer_lrs['add_on_layers'], 'weight_decay': 1e-3},
- {'params': ppnet.prototype_vectors, 'lr': warm_optimizer_lrs['prototype_vectors']},
+
+# Warm Optimizer Specifications
+warm_optimizer_specs = [
+    {'params': ppnet_model.add_on_layers.parameters(), 'lr': WARM_OPTIMIZER_LRS['add_on_layers'], 'weight_decay': 1e-3},
+    {'params': ppnet_model.prototype_vectors, 'lr': WARM_OPTIMIZER_LRS['prototype_vectors']},
 ]
 warm_optimizer = torch.optim.Adam(warm_optimizer_specs)
-log("warm_optimizer_lrs: ")
-log(str(warm_optimizer_lrs))
 
-from settings import warm_pre_offset_optimizer_lrs
-if 'resnet152' in base_architecture and 'stanford_dogs' in train_dir:
-    warm_pre_offset_optimizer_lrs['features'] = 1e-5
-warm_pre_offset_optimizer_specs = \
-[{'params': ppnet.add_on_layers.parameters(), 'lr': warm_pre_offset_optimizer_lrs['add_on_layers'], 'weight_decay': 1e-3},
- {'params': ppnet.prototype_vectors, 'lr': warm_pre_offset_optimizer_lrs['prototype_vectors']},
- {'params': ppnet.features.parameters(), 'lr': warm_pre_offset_optimizer_lrs['features'], 'weight_decay': 1e-3},
+
+# Warm Pre-Offset Optimizer Specifications
+if BASE_ARCHITECTURE.lower() == 'resnet152' and DATASET == 'stanford_dogs':
+    WARM_PRE_OFFSET_OPTIMIZER_LRS['features'] = 1e-5
+
+warm_pre_offset_optimizer_specs = [
+    {'params': ppnet_model.add_on_layers.parameters(), 'lr': WARM_PRE_OFFSET_OPTIMIZER_LRS['add_on_layers'], 'weight_decay': 1e-3},
+    {'params': ppnet_model.prototype_vectors, 'lr': WARM_PRE_OFFSET_OPTIMIZER_LRS['prototype_vectors']},
+    {'params': ppnet_model.features.parameters(), 'lr': WARM_PRE_OFFSET_OPTIMIZER_LRS['features'], 'weight_decay': 1e-3},
 ]
 warm_pre_offset_optimizer = torch.optim.Adam(warm_pre_offset_optimizer_specs)
 
-warm_lr_scheduler = None
-if 'stanford_dogs' in train_dir:
-    warm_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=5, gamma=0.1)
-    log("warm_pre_offset_optimizer_lrs: ")
-    log(str(warm_pre_offset_optimizer_lrs))
 
-from settings import last_layer_optimizer_lr
-last_layer_optimizer_specs = [{'params': ppnet.last_layer.parameters(), 'lr': last_layer_optimizer_lr}]
+# Warm Learning Rate Scheduler
+if DATASET == 'stanford_dogs':
+    warm_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=5, gamma=0.1)
+else:
+    warm_lr_scheduler = None
+
+
+# Last Layer Optimizer
+last_layer_optimizer_specs = [{'params': ppnet_model.last_layer.parameters(), 'lr': LAST_LAYER_OPTIMIZER_LR}]
 last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
 
-# weighting of different training losses
-from settings import coefs
-# number of training epochs, number of warm epochs, push start epoch, push epochs
-from settings import num_warm_epochs, num_train_epochs, push_epochs, \
-                    num_secondary_warm_epochs, push_start
 
-# train the model
-log('start training')
 
-for epoch in range(num_train_epochs):
-    log('epoch: \t{0}'.format(epoch))
+# Put model into DEVICE (CPU or GPU)
+ppnet_model = ppnet_model.to(DEVICE)
 
-    if epoch < num_warm_epochs:
-        tnt.warm_only(model=ppnet_multi, log=log, last_layer_fixed=last_layer_fixed)
-        _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=warm_optimizer,
-                    class_specific=class_specific, coefs=coefs, log=log, subtractive_margin=subtractive_margin,
-                    use_ortho_loss=False)
-    elif epoch >= num_warm_epochs and epoch - num_warm_epochs < num_secondary_warm_epochs:
-        tnt.warm_pre_offset(model=ppnet_multi, log=log, last_layer_fixed=last_layer_fixed)
-        if 'stanford_dogs' in train_dir:
+
+# Get model summary
+try:
+    model_summary = summary(ppnet_model, (1, 3, IMG_SIZE, IMG_SIZE), device=DEVICE)
+
+except:
+    model_summary = str(ppnet_model)
+
+
+# Write into file
+with open(os.path.join(results_dir, "model_summary.txt"), 'w') as f:
+    f.write(str(model_summary))
+
+
+
+# TODO: Review
+# Class weights for loss
+# if args.classweights:
+#     classes = np.array(range(NUM_CLASSES))
+#     cw = compute_class_weight('balanced', classes=classes, y=np.array(train_set.images_labels))
+#     cw = torch.from_numpy(cw).float().to(DEVICE)
+#     print(f"Using class weights {cw}")
+# else:
+#     cw = None
+
+
+
+
+# Resume training from given checkpoint
+if RESUME:
+    checkpoint = torch.load(CHECKPOINT)
+    ppnet_model.load_state_dict(checkpoint['model_state_dict'], strict=True)
+    warm_optimizer.load_state_dict(checkpoint['warm_optimizer_state_dict'])
+    joint_optimizer.load_state_dict(checkpoint['joint_optimizer_state_dict'])
+    init_epoch = checkpoint['epoch'] + 1
+    print(f"Resuming from {CHECKPOINT} at epoch {init_epoch}")
+
+else:
+    init_epoch = 0
+
+
+# Dataloaders
+# Train
+train_loader = DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=WORKERS)
+train_push_loader = DataLoader(train_push_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
+
+# Validation
+val_loader = DataLoader(dataset=val_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
+
+
+
+# we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
+print(f'Size of training set: {len(train_loader.dataset)}')
+print(f'Size of training push set: {len(train_push_loader.dataset)}')
+print(f'Size of validation set: {len(val_loader.dataset)}')
+print(f'Batch size: {BATCH_SIZE}')
+
+
+
+# Define some extra paths and directories
+# Directory for saved prototypes
+saved_prototypes_dir = os.path.join(weights_dir, 'prototypes')
+if not os.path.isdir(saved_prototypes_dir):
+    os.makedirs(saved_prototypes_dir)
+
+
+
+# Output weight matrix filename
+weight_matrix_filename = 'outputL_weights'
+
+# Prefix for prototype images
+prototype_img_filename_prefix = 'prototype-img'
+
+# Prefix for prototype self activation
+prototype_self_act_filename_prefix = 'prototype-self-act'
+
+# Prefix for prototype bouding boxes
+proto_bound_boxes_filename_prefix = 'bb'
+
+
+
+# Train model and save best weights on validation set
+# Initialise min_train and min_val loss trackers
+min_train_loss = np.inf
+min_val_loss = np.inf
+
+# Initialise losses arrays
+train_losses = np.zeros((NUM_TRAIN_EPOCHS, ))
+val_losses = np.zeros_like(train_losses)
+
+# Initialise metrics arrays
+train_metrics = np.zeros((NUM_TRAIN_EPOCHS, 5))
+val_metrics = np.zeros_like(train_metrics)
+
+# Initialise best accuracy
+best_accuracy = -np.inf
+best_accuracy_push = -np.inf
+best_accuracy_push_last = -np.inf
+
+
+
+# Go through the number of Epochs
+for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
+
+    # Epoch 
+    print(f"Epoch: {epoch+1}")
+    
+    # Training Phase
+    print("Training Phase")
+
+
+
+    # Warming Phase
+    # if epoch < num_warm_epochs:
+    if epoch < NUM_WARM_EPOCHS:
+        print("Training: Warm Phase")
+        warm_only(model=ppnet_model, last_layer_fixed=LAST_LAYER_FIXED)
+        metrics_dict = model_train(
+            model=ppnet_model, 
+            dataloader=train_loader,
+            device=DEVICE,
+            optimizer=warm_optimizer,
+            class_specific=class_specific,
+            coefs=COEFS,
+            subtractive_margin=SUBTRACTIVE_MARGIN,
+            use_ortho_loss=False
+        )
+    
+    
+    # Secondary Warming Phase
+    # elif epoch >= num_warm_epochs and epoch - num_warm_epochs < num_secondary_warm_epochs:
+    elif epoch >= NUM_WARM_EPOCHS and epoch - NUM_WARM_EPOCHS < NUM_SECONDARY_WARM_EPOCHS:
+        print("Training: Secondary Warm Phase")
+        warm_pre_offset(model=ppnet_model, last_layer_fixed=LAST_LAYER_FIXED)
+
+        if DATASET == 'stanford_dogs':
             warm_lr_scheduler.step()
-        _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=warm_pre_offset_optimizer,
-                    class_specific=class_specific, coefs=coefs, log=log, subtractive_margin=subtractive_margin,
-                    use_ortho_loss=False)
+        
+        metrics_dict = model_train(
+            model=ppnet_model,
+            dataloader=train_loader,
+            device=DEVICE,
+            optimizer=warm_pre_offset_optimizer,
+            class_specific=class_specific,
+            coefs=COEFS,
+            subtractive_margin=SUBTRACTIVE_MARGIN,
+            use_ortho_loss=False
+        )
+
+
+    # Joint Phase
     else:
-        if epoch == num_warm_epochs + num_secondary_warm_epochs:
-            ppnet_multi.module.initialize_offset_weights()
-        tnt.joint(model=ppnet_multi, log=log, last_layer_fixed=last_layer_fixed)
+        print("Training: Joint Phase")
+
+        # if epoch == num_warm_epochs + num_secondary_warm_epochs:
+        if epoch == NUM_WARM_EPOCHS + NUM_SECONDARY_WARM_EPOCHS:
+            ppnet_model.module.initialize_offset_weights()
+
+        joint(model=ppnet_model, last_layer_fixed=LAST_LAYER_FIXED)
         joint_lr_scheduler.step()
-        _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=joint_optimizer,
-                    class_specific=class_specific, coefs=coefs, log=log, subtractive_margin=subtractive_margin,
-                    use_ortho_loss=True)
 
-    accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
-                    class_specific=class_specific, log=log, subtractive_margin=subtractive_margin)
-    save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
-                                target_accu=0.70, log=log)
+        metrics_dict = model_train(
+            model=ppnet_model,
+            dataloader=train_loader,
+            device=DEVICE,
+            optimizer=joint_optimizer,
+            class_specific=class_specific,
+            coefs=COEFS,
+            subtractive_margin=SUBTRACTIVE_MARGIN,
+            use_ortho_loss=True
+        )
 
-    if (epoch == push_start and push_start < 20) or (epoch >= push_start and epoch in push_epochs):
-        push.push_prototypes(
+
+    # Print metrics
+    print_metrics(metrics_dict=metrics_dict)
+
+    # Append values to the arrays
+    # Train Loss
+    train_losses[epoch] = metrics_dict["run_avg_loss"]
+    # Save it to directory
+    fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_tr_losses.npy")
+    np.save(file=fname, arr=train_losses, allow_pickle=True)
+
+
+    # Train Metrics
+    # Accuracy
+    train_metrics[epoch, 0] = metrics_dict['accuracy']
+    # Recall
+    train_metrics[epoch, 1] = metrics_dict['recall']
+    # Precision
+    train_metrics[epoch, 2] = metrics_dict['precision']
+    # F1-Score
+    train_metrics[epoch, 3] = metrics_dict['f1']
+    # ROC AUC
+    # train_metrics[epoch, 4] = metrics_dict['auc']
+
+    # Save it to directory
+    fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_tr_metrics.npy")
+    np.save(file=fname, arr=train_metrics, allow_pickle=True)
+
+    # Plot to Tensorboard
+    tbwritter.add_scalar("loss/train", metrics_dict["run_avg_loss"], global_step=epoch)
+    tbwritter.add_scalar("acc/train", metrics_dict['accuracy'], global_step=epoch)
+    tbwritter.add_scalar("rec/train", metrics_dict['recall'], global_step=epoch)
+    tbwritter.add_scalar("prec/train", metrics_dict['precision'], global_step=epoch)
+    tbwritter.add_scalar("f1/train", metrics_dict['f1'], global_step=epoch)
+    # tbwritter.add_scalar("auc/train", metrics_dict['auc'], global_step=epoch)
+
+
+
+    # Log to W&B
+    wandb_tr_metrics = {
+        "loss/train":metrics_dict["run_avg_loss"],
+        "acc/train":metrics_dict['accuracy'],
+        "rec/train":metrics_dict['recall'],
+        "prec/train":metrics_dict['precision'],
+        "f1/train":metrics_dict['f1'],
+        "epoch/train":epoch
+    }
+    wandb.log(wandb_tr_metrics)
+
+
+
+    # Validation Phase
+    print("Validation Phase")
+    metrics_dict = model_validation(
+        model=ppnet_model,
+        dataloader=val_loader,
+        class_specific=class_specific,
+        subtractive_margin=SUBTRACTIVE_MARGIN
+    )
+
+    # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
+    
+    # Print metrics
+    print_metrics(metrics_dict=metrics_dict)
+
+    # Append values to the arrays
+    # Validation Loss
+    val_losses[epoch] = metrics_dict["run_avg_loss"]
+    # Save it to directory
+    fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_val_losses.npy")
+    np.save(file=fname, arr=val_losses, allow_pickle=True)
+
+
+    # Validation Metrics
+    # Accuracy
+    val_metrics[epoch, 0] = metrics_dict['accuracy']
+    # Recall
+    val_metrics[epoch, 1] = metrics_dict['recall']
+    # Precision
+    val_metrics[epoch, 2] = metrics_dict['precision']
+    # F1-Score
+    val_metrics[epoch, 3] = metrics_dict['f1']
+    # ROC AUC
+    # val_metrics[epoch, 4] = metrics_dict['auc']
+
+    # Save it to directory
+    fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_val_metrics.npy")
+    np.save(file=fname, arr=val_metrics, allow_pickle=True)
+
+    # Plot to Tensorboard
+    tbwritter.add_scalar("loss/val", metrics_dict["run_avg_loss"], global_step=epoch)
+    tbwritter.add_scalar("acc/val", metrics_dict['accuracy'], global_step=epoch)
+    tbwritter.add_scalar("rec/val", metrics_dict['recall'], global_step=epoch)
+    tbwritter.add_scalar("prec/val", metrics_dict['precision'], global_step=epoch)
+    tbwritter.add_scalar("f1/val", metrics_dict['f1'], global_step=epoch)
+    # tbwritter.add_scalar("auc/val", metrics_dict['auc'], global_step=epoch)
+
+
+
+    # Log to W&B
+    wandb_val_metrics = {
+        "loss/val":metrics_dict["run_avg_loss"],
+        "acc/val":metrics_dict['accuracy'],
+        "rec/val":metrics_dict['recall'],
+        "prec/val":metrics_dict['precision'],
+        "f1/val":metrics_dict['f1'],
+        "epoch/val":epoch
+    }
+    wandb.log(wandb_val_metrics)
+
+
+
+    # Log model's parameters and gradients to W&B
+    wandb.watch(ppnet_model)
+
+
+
+    # Save checkpoint
+    if metrics_dict['accuracy'] > best_accuracy:
+
+        print(f"Accuracy increased from {best_accuracy} to {metrics_dict['accuracy']}. Saving new model...")
+
+        # Model path
+        model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+        save_dict = {
+            'epoch':epoch,
+            'model_state_dict':ppnet_model.state_dict(),
+            'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+            'joint_optimizer_state_dict':joint_optimizer.state_dict(),
+            'run_avg_loss': metrics_dict["run_avg_loss"],
+        }
+        torch.save(save_dict, model_path)
+        print(f"Successfully saved at: {model_path}")
+
+        # Update best accuracy value
+        best_accuracy = metrics_dict['accuracy']
+
+
+
+    # PUSH START and PUSH EPOCHS
+    # if (epoch == push_start and push_start < 20) or (epoch >= push_start and epoch in push_epochs):
+    if (epoch == PUSH_START and PUSH_START < 20) or (epoch >= PUSH_START and epoch in PUSH_EPOCHS):
+        print("Pushing Phase")
+        push_prototypes(
             train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
-            prototype_network_parallel=ppnet_multi, # pytorch network with prototype_vectors
+            prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
             class_specific=class_specific,
             preprocess_input_function=preprocess_input_function, # normalize if needed
             prototype_layer_stride=1,
-            root_dir_for_saving_prototypes=img_dir, # if not None, prototypes will be saved here
-            epoch_number=epoch, # if not provided, prototypes saved previously will be overwritten
+            root_dir_for_saving_prototypes=saved_prototypes_dir, # if not None, prototypes will be saved here
+            epoch_number=None, # if not provided, prototypes saved previously will be overwritten
             prototype_img_filename_prefix=prototype_img_filename_prefix,
             prototype_self_act_filename_prefix=prototype_self_act_filename_prefix,
             proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
-            save_prototype_class_identity=True,
-            log=log)
-        accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
-                        class_specific=class_specific, log=log)
-        save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu,
-                                    target_accu=0.70, log=log)
+            save_prototype_class_identity=True
+        )
 
-        if not last_layer_fixed:
-            tnt.last_only(model=ppnet_multi, log=log, last_layer_fixed=last_layer_fixed)
+
+        metrics_dict = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+        print_metrics(metrics_dict=metrics_dict)
+        
+        # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70, log=log)
+        # Save checkpoint
+        if metrics_dict['accuracy'] > best_accuracy_push:
+
+            print(f"Accuracy increased from {best_accuracy_push} to {metrics_dict['accuracy']}. Saving new model...")
+
+            # Model path
+            model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
+            save_dict = {
+                'epoch':epoch,
+                'model_state_dict':ppnet_model.state_dict(),
+                'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+                'joint_optimizer_state_dict':joint_optimizer.state_dict(),
+                'run_avg_loss': metrics_dict["run_avg_loss"],
+            }
+            torch.save(save_dict, model_path)
+            print(f"Successfully saved at: {model_path}")
+
+            # Update best accuracy value
+            best_accuracy_push = metrics_dict['accuracy']
+
+
+
+
+
+        # If we intend to optimize last layer as well
+        # if not last_layer_fixed:
+        if not LAST_LAYER_FIXED:
+            print("Optimizing last layer...")
+            last_only(model=ppnet_model, last_layer_fixed=LAST_LAYER_FIXED)
+
             for i in range(20):
-                log('iteration: \t{0}'.format(i))
-                _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
-                            class_specific=class_specific, coefs=coefs, log=log, 
-                            subtractive_margin=subtractive_margin)
-                accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
-                                class_specific=class_specific, log=log)
-                save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu,
-                                            target_accu=0.70, log=log)
-logclose()
+                print(f'Step {i+1} of {20}')
 
+                print("Training")
+                metrics_dict = model_train(
+                    model=ppnet_model,
+                    dataloader=train_loader,
+                    device=DEVICE,
+                    optimizer=last_layer_optimizer,
+                    class_specific=class_specific,
+                    coefs=COEFS,
+                    subtractive_margin=SUBTRACTIVE_MARGIN
+                )
+                print_metrics(metrics_dict=metrics_dict)
+
+
+
+                print("Validation")
+                metrics_dict = model_validation(
+                    model=ppnet_model,
+                    dataloader=val_loader,
+                    device=DEVICE,
+                    class_specific=class_specific
+                )
+                print_metrics(metrics_dict=metrics_dict)
+
+                # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70, log=log)
+                # Save checkpoint
+                if metrics_dict['accuracy'] > best_accuracy_push_last:
+
+                    print(f"Accuracy increased from {best_accuracy_push_last} to {metrics_dict['accuracy']}. Saving new model...")
+
+                    # Model path
+                    model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
+                    save_dict = {
+                        'epoch':epoch,
+                        'model_state_dict':ppnet_model.state_dict(),
+                        'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+                        'joint_optimizer_state_dict':joint_optimizer.state_dict(),
+                        'run_avg_loss': metrics_dict["run_avg_loss"],
+                    }
+                    torch.save(save_dict, model_path)
+                    print(f"Successfully saved at: {model_path}")
+
+                    # Update best accuracy value
+                    best_accuracy_push_last = metrics_dict['accuracy']
+
+
+
+# Finish statement and W&B
+wandb.finish()
+print("Finished.")
