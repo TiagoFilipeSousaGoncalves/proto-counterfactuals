@@ -605,8 +605,10 @@ with open(os.path.join(results_dir, "model_summary.txt"), 'w') as f:
 if RESUME:
     checkpoint = torch.load(CHECKPOINT)
     ppnet_model.load_state_dict(checkpoint['model_state_dict'], strict=True)
-    warm_optimizer.load_state_dict(checkpoint['warm_optimizer_state_dict'])
     joint_optimizer.load_state_dict(checkpoint['joint_optimizer_state_dict'])
+    warm_optimizer.load_state_dict(checkpoint['warm_optimizer_state_dict'])
+    warm_pre_offset_optimizer.load_state_dict(checkpoint['warm_pre_offset_optimizer_state_dict'])
+    last_layer_optimizer.load_state_dict(checkpoint['last_layer_optimizer_state_dict'])
     init_epoch = checkpoint['epoch'] + 1
     print(f"Resuming from {CHECKPOINT} at epoch {init_epoch}")
 
@@ -747,7 +749,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
 
     # Print metrics
-    print_metrics(metrics_dict=metrics_dict)
+    print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
 
     # Append values to the arrays
     # Train Loss
@@ -808,7 +810,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
     
     # Print metrics
-    print_metrics(metrics_dict=metrics_dict)
+    print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
 
     # Append values to the arrays
     # Validation Loss
@@ -872,9 +874,11 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
         save_dict = {
             'epoch':epoch,
             'model_state_dict':ppnet_model.state_dict(),
-            'warm_optimizer_state_dict':warm_optimizer.state_dict(),
             'joint_optimizer_state_dict':joint_optimizer.state_dict(),
-            'run_avg_loss': metrics_dict["run_avg_loss"],
+            'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+            'warm_pre_offset_optimizer_state_dict':warm_pre_offset_optimizer.state_dict(),
+            'last_layer_optimizer_state_dict':last_layer_optimizer.state_dict(),
+            'run_avg_loss': metrics_dict["run_avg_loss"]
         }
         torch.save(save_dict, model_path)
         print(f"Successfully saved at: {model_path}")
@@ -904,7 +908,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
 
         metrics_dict = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
-        print_metrics(metrics_dict=metrics_dict)
+        print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
         
         # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70, log=log)
         # Save checkpoint
@@ -917,9 +921,11 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             save_dict = {
                 'epoch':epoch,
                 'model_state_dict':ppnet_model.state_dict(),
-                'warm_optimizer_state_dict':warm_optimizer.state_dict(),
                 'joint_optimizer_state_dict':joint_optimizer.state_dict(),
-                'run_avg_loss': metrics_dict["run_avg_loss"],
+                'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+                'warm_pre_offset_optimizer_state_dict':warm_pre_offset_optimizer.state_dict(),
+                'last_layer_optimizer_state_dict':last_layer_optimizer.state_dict(),
+                'run_avg_loss': metrics_dict["run_avg_loss"]
             }
             torch.save(save_dict, model_path)
             print(f"Successfully saved at: {model_path}")
@@ -950,7 +956,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
                     coefs=COEFS,
                     subtractive_margin=SUBTRACTIVE_MARGIN
                 )
-                print_metrics(metrics_dict=metrics_dict)
+                print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
 
 
 
@@ -961,7 +967,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
                     device=DEVICE,
                     class_specific=class_specific
                 )
-                print_metrics(metrics_dict=metrics_dict)
+                print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
 
                 # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70, log=log)
                 # Save checkpoint
@@ -974,9 +980,11 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
                     save_dict = {
                         'epoch':epoch,
                         'model_state_dict':ppnet_model.state_dict(),
-                        'warm_optimizer_state_dict':warm_optimizer.state_dict(),
                         'joint_optimizer_state_dict':joint_optimizer.state_dict(),
-                        'run_avg_loss': metrics_dict["run_avg_loss"],
+                        'warm_optimizer_state_dict':warm_optimizer.state_dict(),
+                        'warm_pre_offset_optimizer_state_dict':warm_pre_offset_optimizer.state_dict(),
+                        'last_layer_optimizer_state_dict':last_layer_optimizer.state_dict(),
+                        'run_avg_loss': metrics_dict["run_avg_loss"]
                     }
                     torch.save(save_dict, model_path)
                     print(f"Successfully saved at: {model_path}")

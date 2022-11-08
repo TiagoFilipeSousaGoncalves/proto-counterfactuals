@@ -31,3 +31,5 @@ Using device: cpu
 Model weights loaded with success from results/stanfordcars/vgg16/2022-10-26_10-49-44/weights/vgg16_stanfordcars_best.pt.
 Test Accuracy: 0.8863325457032707
 Model weights loaded with success from results/stanfordcars/vgg16/2022-10-26_10-49-44/weights/vgg16_stanfordcars_best_push.pt.
+Test Accuracy: 0.8721552045765452
+Model weights loaded with success from results/stanfordcars/vgg16/2022-10-26_10-49-44/weights/vgg16_stanfordcars_best_push_last.pt.

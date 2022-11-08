@@ -53,7 +53,11 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
         l1_mask = 1 - torch.t(model.prototype_class_identity).to(device)
         l1 = (model.last_layer.weight * l1_mask).norm(p=1)
     else:
-        l1 = model.last_layer.weight.norm(p=1) 
+        l1 = model.last_layer.weight.norm(p=1)
+    
+
+    # Total Loss
+    total_loss = 0
 
 
     # Iterate through dataloader
@@ -188,7 +192,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
 
         # Compute gradient and do SGD step
-        if mode == "train":
+        if mode in ("train", "validation"):
             if class_specific:
                 if coefs is not None:
                     total_ortho_loss += orthogonality_loss.item()
@@ -209,10 +213,16 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
                 else:
                     loss = cross_entropy + 0.8 * cluster_cost + 1e-4 * l1
 
-            # Perform backpropagation
-            optimizer.zero_grad()
-            loss.backward(retain_graph=True)
-            optimizer.step()
+
+            # Update Total Running Loss
+            total_loss += loss.item()
+
+
+            if mode == "train":
+                # Perform backpropagation
+                optimizer.zero_grad()
+                loss.backward(retain_graph=True)
+                optimizer.step()
 
 
         # FIXME: Check if we need these lines
@@ -231,6 +241,11 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
     # Create a metrics dictionary
     metrics_dict = dict()
+
+
+    # Total Epoch Loss
+    run_avg_loss = total_loss / len(dataloader)
+    metrics_dict["run_avg_loss"] = run_avg_loss
 
 
     # Cross-entropy loss
@@ -311,8 +326,12 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
 
 
-# TODO: Function: Print Metrics
+# Function: Print Metrics
 def print_metrics(metrics_dict, class_specific, coefs):
+
+    # Total loss
+    run_avg_loss = metrics_dict["run_avg_loss"]
+    print(f"Total loss: {run_avg_loss}")
 
     # Cross-entropy loss
     ce_loss = metrics_dict["ce_loss"]
