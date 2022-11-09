@@ -895,6 +895,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
         push_prototypes(
             train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
             prototype_network_parallel=ppnet_model, # pytorch network with prototype_vectors
+            device=DEVICE,
             class_specific=class_specific,
             preprocess_input_function=preprocess_input_function, # normalize if needed
             prototype_layer_stride=1,
