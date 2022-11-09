@@ -33,3 +33,16 @@ Test Accuracy: 0.8863325457032707
 Model weights loaded with success from results/stanfordcars/vgg16/2022-10-26_10-49-44/weights/vgg16_stanfordcars_best_push.pt.
 Test Accuracy: 0.8721552045765452
 Model weights loaded with success from results/stanfordcars/vgg16/2022-10-26_10-49-44/weights/vgg16_stanfordcars_best_push_last.pt.
+Test Accuracy: 0.8818554906106205
+Finished.
+Size of test set: 8041
+Batch size: 32
+Using device: cpu
+Model weights loaded with success from results/stanfordcars/vgg19/2022-10-27_14-16-56/weights/vgg19_stanfordcars_best.pt.
+Test Accuracy: 0.8955353811714961
+Model weights loaded with success from results/stanfordcars/vgg19/2022-10-27_14-16-56/weights/vgg19_stanfordcars_best_push.pt.
+Test Accuracy: 0.8852132819301082
+Model weights loaded with success from results/stanfordcars/vgg19/2022-10-27_14-16-56/weights/vgg19_stanfordcars_best_push_last.pt.
+Test Accuracy: 0.8942917547568711
+Finished.
+FINISHED | STANFORDCARS | TEST
