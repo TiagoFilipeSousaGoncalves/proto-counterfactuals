@@ -459,8 +459,8 @@ print(f"Using device: {DEVICE}")
 
 
 # Define the number of prototypes per class
-if NUM_PROTOTYPES == -1:
-    NUM_PROTOTYPES_CLASS = 1200
+# if NUM_PROTOTYPES == -1:
+NUM_PROTOTYPES_CLASS = NUM_PROTOTYPES
 
 if BASE_ARCHITECTURE.lower() == 'resnet34':
     PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 2, 2)
