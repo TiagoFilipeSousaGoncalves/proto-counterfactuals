@@ -548,6 +548,14 @@ class PH2Dataset(Dataset):
         self.augmented = augmented
 
 
+        # Labels Dictionary
+        labels_dict = dict()
+        for img, label in zip(ph2_dataset_imgs.copy(), ph2_dataset_labels.copy()):
+            labels_dict[img] = label
+        
+        self.labels_dict = labels_dict
+        
+
         # Transforms
         self.transform = transform
 

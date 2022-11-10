@@ -166,6 +166,9 @@ elif DATASET == "PH2":
     # Number of Classes
     NUM_CLASSES = len(test_set.diagnosis_dict)
 
+    # Labels dictionary
+    labels_dict = test_set.labels_dict.copy()
+
 
 # STANFORDCARS
 elif DATASET == "STANFORDCARS":
