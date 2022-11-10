@@ -7,6 +7,7 @@ import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 
 # Project Imports
 from model_densenet_utilities import densenet121_features, densenet161_features, densenet169_features, densenet201_features
@@ -14,9 +15,10 @@ from model_resnet_utilities import resnet18_features, resnet34_features, resnet5
 from model_vgg_utilities import vgg11_features, vgg11_bn_features, vgg13_features, vgg13_bn_features, vgg16_features, vgg16_bn_features, vgg19_features, vgg19_bn_features
 from receptive_field_utilities import compute_proto_layer_rf_info_v2
 
-sys.path.insert(1, './Deformable-Convolution-V2-PyTorch')
 
-from functions.norm_preserve_deform_conv_func import NormPreserveDeformConvFunction
+# FIXME: Understand if we can use the PyTorch version of the deformable convolution
+# sys.path.insert(1, './Deformable-Convolution-V2-PyTorch')
+# from functions.norm_preserve_deform_conv_func import NormPreserveDeformConvFunction
 
 
 
@@ -146,6 +148,9 @@ class PPNet(nn.Module):
         # Deformable Convolution
         self.deformable_conv_out_channels = 2 * self.prototype_shape[-1] * self.prototype_shape[-2]
         self.deformable_conv_hidden_channels = deformable_conv_hidden_channels
+        
+        # TODO: Initialise a DeformConv2d layer
+        # self.deform_conv2d = torchvision.ops.DeformConv2d(in_channels=)
 
         # Do not make this just a tensor, since it will not be moved automatically to gpu
         self.ones = nn.Parameter(torch.ones(self.prototype_shape), requires_grad=False)
@@ -263,20 +268,34 @@ class PPNet(nn.Module):
         # Compute offsets for this input
         offset = self.conv_offset(x_normalized)
 
+
+        # Using deformable convolution
         if self.using_deform:
-            activations_dot = NormPreserveDeformConvFunction.apply(
-                x_normalized,
-                offset,
-                normalized_prototypes,
-                # torch.zeros(self.prototype_shape[0]).cuda(), #bias
-                torch.zeros(self.prototype_shape[0]).to(device=self.device), #bias
-                (1, 1), #stride
-                self.prototype_padding, #padding
-                prototype_dilation, #dilation
-                1, #groups
-                1, #deformable_groups
-                1, #im2col_step
-                True #zero_padding
+            # TODO: Verifiy the behaviour of the official PyTorch Implementation
+            # activations_dot = NormPreserveDeformConvFunction.apply(
+            #     x_normalized,
+            #     offset,
+            #     normalized_prototypes,
+            #     # torch.zeros(self.prototype_shape[0]).cuda(), #bias
+            #     torch.zeros(self.prototype_shape[0]).to(device=self.device), #bias
+            #     (1, 1), #stride
+            #     self.prototype_padding, #padding
+            #     prototype_dilation, #dilation
+            #     1, #groups
+            #     1, #deformable_groups
+            #     1, #im2col_step
+            #     True #zero_padding
+            # )
+
+            # FIXME: Check if this works
+            activations_dot = torchvision.ops.deform_conv2d(
+                input=x_normalized,
+                offset=offset,
+                weight=normalized_prototypes,
+                bias=torch.zeros(self.prototype_shape[0]).to(device=self.device),
+                stride=(1, 1),
+                padding=self.prototype_padding,
+                dilation=prototype_dilation,
             )
 
         else:
