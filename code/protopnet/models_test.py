@@ -142,6 +142,7 @@ elif DATASET == "PH2":
         data_path=DATA_DIR,
         subset="test",
         cropped=True,
+        augmented=False,
         transform=test_transforms
     )
 
