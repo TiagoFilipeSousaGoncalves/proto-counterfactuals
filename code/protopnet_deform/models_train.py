@@ -45,7 +45,7 @@ parser.add_argument('--data_dir', type=str, default="data", help="Directory of t
 parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
 
 # Model
-parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet50", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, densenet161, resnet34, resnet50, resnet152, vgg16, vgg19.')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
@@ -53,34 +53,30 @@ parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for tra
 # Image size
 parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
 
-# Margin
-parser.add_argument('--margin', type=float, default=None)
+# Margin (default=0.1)
+parser.add_argument('--margin', type=float, default=0.1)
 
 # Subtractive margin
-# subtractive_margin = True
-parser.add_argument('--subtractive_margin', action="store_true", default=True)
+# subtractive_margin = True (default: True)
+parser.add_argument('--subtractive_margin', action="store_true")
 
-# Using deformable convolution
-parser.add_argument('--using_deform', type=str, default=None)
+# Using deformable convolution (default: True)
+parser.add_argument('--using_deform', action="store_true")
 
-# Top-K
-parser.add_argument('--topk_k', type=int, default=None)
+# Top-K (default=1)
+parser.add_argument('--topk_k', type=int, default=1)
 
-# Deformable Convolution Hidden Channels
-parser.add_argument('--deformable_conv_hidden_channels', type=int, default=None)
+# Deformable Convolution Hidden Channels (default=128)
+parser.add_argument('--deformable_conv_hidden_channels', type=int, default=128)
 
-# Number of Prototypes
-parser.add_argument('--num_prototypes', type=int, default=None)
+# Number of Prototypes (default=1200)
+parser.add_argument('--num_prototypes', type=int, default=1200)
 
 # Dilation
 parser.add_argument('--dilation', type=float, default=2)
 
-# Incorrect class connection
-parser.add_argument('--incorrect_class_connection', type=float, default=0)
-
-# Prototype Activation Function
-# prototype_activation_function = 'log'
-parser.add_argument('--prototype_activation_function', type=str, default='log', help="Prototype activation function.")
+# Incorrect class connection (default=-0.5)
+parser.add_argument('--incorrect_class_connection', type=float, default=-0.5)
 
 # Add on layers type
 # add_on_layers_type = 'regular'
@@ -111,8 +107,8 @@ parser.add_argument('--warm_pre_prototype_optimizer_lrs', type=dict, default={'a
 parser.add_argument('--last_layer_optimizer_lr', type=float, default=1e-4, help="Last layer optimizer learning rate.")
 
 # Last layer fixed
-# last_layer_fixed = True
-parser.add_argument('--last_layer_fixed', action="store_true", default=True)
+# last_layer_fixed = True (default: True)
+parser.add_argument('--last_layer_fixed', action="store_true")
 
 # Loss coeficients
 # coefs = {'crs_ent': 1, 'clst': -0.8, 'sep': 0.08, 'l1': 1e-2, 'offset_bias_l2': 8e-1, 'offset_weight_l2': 8e-1, 'orthogonality_loss': 0.1}
@@ -122,10 +118,7 @@ parser.add_argument('--coefs', type=dict, default={'crs_ent': 1, 'clst': -0.8, '
 # push_start = 20
 parser.add_argument('--push_start', type=int, default=20, help="Push start.")
 
-# Resize
-parser.add_argument('--resize', type=str, choices=["direct_resize", "resizeshortest_randomcrop"], default="direct_resize", help="Resize data transformation")
-
-# Class Weights
+# Class Weights (default: False)
 parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance")
 
 # Number of training epochs
@@ -139,7 +132,6 @@ parser.add_argument('--num_warm_epochs', type=int, default=5, help="Number of wa
 # Number of secondary warm epochs
 # num_secondary_warm_epochs = 5
 parser.add_argument('--num_secondary_warm_epochs', type=int, default=5, help="Number of secondary warm epochs.")
-
 
 # Learning rate
 parser.add_argument('--lr', type=float, default=1e-4, help="Learning rate")
@@ -156,7 +148,7 @@ parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU"
 # Save frequency
 parser.add_argument("--save_freq", type=int, default=10, help="Frequency (in number of epochs) to save the model")
 
-# Resume training
+# Resume training (default: False)
 parser.add_argument("--resume", action="store_true", help="Resume training")
 parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training")
 
@@ -208,9 +200,6 @@ PUSH_EPOCHS = [i for i in range(NUM_TRAIN_EPOCHS) if i % 10 == 0]
 # Learning rate
 LEARNING_RATE = args.lr
 
-# Prototype activation function
-PROTOTYPE_ACTIVATION_FUNCTION = args.prototype_activation_function
-
 # Joint optimizer learning rates
 JOINT_OPTIMIZER_LRS = args.joint_optimizer_lrs
 
@@ -246,9 +235,6 @@ LAST_LAYER_FIXED = args.last_layer_fixed
 
 # Save frquency
 SAVE_FREQ = args.save_freq
-
-# Resize (data transforms)
-RESIZE_OPT = args.resize
 
 # Margin
 MARGIN = args.margin
@@ -504,6 +490,7 @@ print("Add on layers type: ", ADD_ON_LAYERS_TYPE)
 
 # Construct the model
 ppnet_model = construct_PPNet(
+    device=DEVICE,
     base_architecture=BASE_ARCHITECTURE.lower(),
     pretrained=True,
     img_size=IMG_SIZE,
@@ -702,8 +689,8 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
             subtractive_margin=SUBTRACTIVE_MARGIN,
             use_ortho_loss=False
         )
-    
-    
+
+
     # Secondary Warming Phase
     # elif epoch >= num_warm_epochs and epoch - num_warm_epochs < num_secondary_warm_epochs:
     elif epoch >= NUM_WARM_EPOCHS and epoch - NUM_WARM_EPOCHS < NUM_SECONDARY_WARM_EPOCHS:
@@ -803,6 +790,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     metrics_dict = model_validation(
         model=ppnet_model,
         dataloader=val_loader,
+        device=DEVICE,
         class_specific=class_specific,
         subtractive_margin=SUBTRACTIVE_MARGIN
     )
