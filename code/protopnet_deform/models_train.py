@@ -718,7 +718,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
         # if epoch == num_warm_epochs + num_secondary_warm_epochs:
         if epoch == NUM_WARM_EPOCHS + NUM_SECONDARY_WARM_EPOCHS:
-            ppnet_model.module.initialize_offset_weights()
+            ppnet_model.initialize_offset_weights()
 
         joint(model=ppnet_model, last_layer_fixed=LAST_LAYER_FIXED)
         joint_lr_scheduler.step()

@@ -266,7 +266,7 @@ def update_prototypes_on_batch(search_batch_input,
             with torch.no_grad():
                 # offsets, input_normalized = get_deformation_info(torch.Tensor(protoL_input_).cuda(), prototype_network_parallel)
                 offsets, input_normalized = get_deformation_info(torch.Tensor(protoL_input_).to(device), prototype_network_parallel, device=device)
-                # offset_filters = prototype_network_parallel.module.conv_offset.weight
+                # offset_filters = prototype_network_parallel.conv_offset.weight
                 padding_type = 'zero'
                 dilation = prototype_network_parallel.prototype_dilation
                 padding_size = prototype_network_parallel.prototype_padding
@@ -352,7 +352,7 @@ def save_projected_prototype_images(prototype_network_parallel,
                     continue
 
                 # Target_class is the class of the class_specific prototype
-                target_class = torch.argmax(prototype_network_parallel.module.prototype_class_identity[j]).item()
+                target_class = torch.argmax(prototype_network_parallel.prototype_class_identity[j]).item()
 
                 # If there is not images of the target_class from this batch, we go on to the next prototype
                 if len(class_to_img_index_dict[target_class]) == 0:

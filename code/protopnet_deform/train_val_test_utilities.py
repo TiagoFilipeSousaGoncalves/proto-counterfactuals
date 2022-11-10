@@ -30,7 +30,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     # Initialise lists to compute scores
     y_true = np.empty((0), int)
     y_pred = torch.empty(0, dtype=torch.int32, device=device)
-    
+
     # Save scores after softmax for roc auc
     y_scores = torch.empty(0, dtype=torch.float, device=device)
 
@@ -81,7 +81,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
         with grad_req:
 
             # Note: nn.Module has implemented __call__() function so no need to call .forward
-            prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,labels]).to(device)
+            prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,labels]).to(device)
             prototypes_of_wrong_class = 1 - prototypes_of_correct_class
 
 
@@ -113,7 +113,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
                 epsilon_val = model.epsilon_val
 
                 # Number of epsilon channels
-                n_eps_channels = model.module.n_eps_channels
+                n_eps_channels = model.n_eps_channels
 
                 # Pass convolutional features into x
                 x = conv_features
@@ -295,10 +295,10 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     metrics_dict["orthog_loss"] = orthog_loss
 
     # L1
-    # log('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
+    # log('\tl1: \t\t{0}'.format(model.last_layer.weight.norm(p=1).item()))
     l1 = model.last_layer.weight.norm(p=1).item()
     metrics_dict["l1"] = l1
-    
+
     # Avg L2
     # log('\tavg l2: \t\t{0}'.format(total_l2 / n_batches))
     avg_l2 = total_l2 / len(dataloader)
