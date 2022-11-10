@@ -149,6 +149,11 @@ if DATASET == "CUB2002011":
 
 # PH2
 elif DATASET == "PH2":
+
+    # Get image directories
+    data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "test", "cropped")
+    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+
     # Test Dataset
     test_set = PH2Dataset(
         data_path=DATA_DIR,
