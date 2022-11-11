@@ -327,7 +327,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
 
 # Function: Print Metrics
-def print_metrics(metrics_dict, class_specific, coefs):
+def print_metrics(metrics_dict, class_specific, coefs=None):
 
     # Total loss
     run_avg_loss = metrics_dict["run_avg_loss"]

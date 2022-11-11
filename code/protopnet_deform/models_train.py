@@ -798,7 +798,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)
     
     # Print metrics
-    print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
+    print_metrics(metrics_dict=metrics_dict, class_specific=class_specific)
 
     # Append values to the arrays
     # Validation Loss
@@ -897,7 +897,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
 
         metrics_dict = model_validation(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
-        print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
+        print_metrics(metrics_dict=metrics_dict, class_specific=class_specific)
         
         # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu, target_accu=0.70, log=log)
         # Save checkpoint
@@ -956,7 +956,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
                     device=DEVICE,
                     class_specific=class_specific
                 )
-                print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
+                print_metrics(metrics_dict=metrics_dict, class_specific=class_specific)
 
                 # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70, log=log)
                 # Save checkpoint
