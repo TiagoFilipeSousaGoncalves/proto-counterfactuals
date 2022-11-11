@@ -365,7 +365,7 @@ def print_metrics(metrics_dict, class_specific, coefs):
     print('Orthogonality loss:\t{0}'.format(orthog_loss))
 
     # L1
-    l1 = metrics_dict["l1"] = l1
+    l1 = metrics_dict["l1"]
     print('L1: {0}'.format(l1))
     
     # Avg L2
