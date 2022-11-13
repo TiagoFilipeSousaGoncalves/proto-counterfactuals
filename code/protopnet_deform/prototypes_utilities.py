@@ -116,12 +116,13 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
         start_index_of_search_batch = push_iter * search_batch_size
 
         update_prototypes_on_batch(
-            search_batch_input,
-            start_index_of_search_batch,
-            prototype_network_parallel,
-            global_max_proto_act,
-            global_max_fmap_patches,
-            proto_bound_boxes,
+            search_batch_input=search_batch_input,
+            start_index_of_search_batch=start_index_of_search_batch,
+            prototype_network_parallel=prototype_network_parallel,
+            device=device,
+            global_max_proto_act=global_max_proto_act,
+            global_max_fmap_patches=global_max_fmap_patches,
+            proto_bound_boxes=proto_bound_boxes,
             class_specific=class_specific,
             search_y=search_y,
             num_classes=num_classes,
