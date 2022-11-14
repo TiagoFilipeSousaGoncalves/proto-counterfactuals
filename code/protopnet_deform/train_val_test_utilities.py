@@ -117,8 +117,8 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
                 # Pass convolutional features into x
                 x = conv_features
-                epsilon_channel_x = torch.ones(x.shape[0], n_eps_channels, x.shape[2], x.shape[3]) * epsilon_val
-                epsilon_channel_x = epsilon_channel_x.to(device)
+                epsilon_channel_x = torch.ones([x.shape[0], n_eps_channels, x.shape[2], x.shape[3]], device=device) * epsilon_val
+                # epsilon_channel_x = epsilon_channel_x.to(device)
                 x = torch.cat((x, epsilon_channel_x), -3)
 
                 # Input vector length
