@@ -15,6 +15,6 @@ echo "CUB2002011 | START"
 
 # Deformable-ProtoPNet
 echo "Deformable-ProtoPNet | DenseNet121"
-python code/protopnet_deform/models_train.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 64 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+python code/protopnet_deform/models_train.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 32 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
 
 echo "CUB2002011 | FINISHED"
