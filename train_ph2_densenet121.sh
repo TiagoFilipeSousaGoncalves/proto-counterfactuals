@@ -9,6 +9,12 @@
 
 echo "PH2 DenseNet121"
 
-python code/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 64 --num_workers 0 --gpu_id 0
+# ProtoPNet
+# echo "ProtoPNet | DenseNet121"
+# python code/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 64 --num_workers 0 --gpu_id 0
 
-echo "Finished"
+# Deformable-ProtoPNet
+echo "Deformable-ProtoPNet | DenseNet121"
+python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 64 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+
+echo "PH2 | FINISHED"
