@@ -74,39 +74,12 @@ parser.add_argument('--incorrect_class_connection', type=float, default=-0.5)
 # add_on_layers_type = 'regular'
 parser.add_argument('--add_on_layers_type', type=str, default='regular', help="Add on layers type.")
 
-# Joint optimizer learning rates
-# joint_optimizer_lrs = {'features': 1e-4, 'add_on_layers': 3e-3, 'prototype_vectors': 3e-3, 'conv_offset': 1e-4, 'joint_last_layer_lr': 1e-5}
-parser.add_argument('--joint_optimizer_lrs', type=dict, default={'features': 1e-4, 'add_on_layers': 3e-3, 'prototype_vectors': 3e-3, 'conv_offset': 1e-4, 'joint_last_layer_lr': 1e-5}, help="Joint optimizer learning rates.")
-
-# Joint learning rate step size
-# joint_lr_step_size = 5
-parser.add_argument('--joint_lr_step_size', type=int, default=5, help="Joint learning rate step size.")
-
-# Warm optimizer learning rates
-# warm_optimizer_lrs = {'add_on_layers': 3e-3, 'prototype_vectors': 3e-3}
-parser.add_argument('--warm_optimizer_lrs', type=dict, default={'add_on_layers': 3e-3, 'prototype_vectors': 3e-3}, help="Warm optimizer learning rates.")
-
-# Warm pre-offset optimizer learning rates
-# warm_pre_offset_optimizer_lrs = {'add_on_layers': 3e-3, 'prototype_vectors': 3e-3, 'features': 1e-4}
-parser.add_argument('--warm_pre_offset_optimizer_lrs', type=dict, default={'add_on_layers': 3e-3, 'prototype_vectors': 3e-3, 'features': 1e-4}, help="Warm pre-offset optimizer learning rates.")
-
-# Warm pre-prototype optimizer learning rates
-# warm_pre_prototype_optimizer_lrs = {'add_on_layers': 3e-3, 'conv_offset': 3e-3, 'features': 1e-4}
-parser.add_argument('--warm_pre_prototype_optimizer_lrs', type=dict, default={'add_on_layers': 3e-3, 'conv_offset': 3e-3, 'features': 1e-4}, help="Warm pre-prototype optimizer learning rates")
-
-# Last layer optimizer learning rate
-# last_layer_optimizer_lr = 1e-4
-parser.add_argument('--last_layer_optimizer_lr', type=float, default=1e-4, help="Last layer optimizer learning rate.")
-
 # Last layer fixed
 # last_layer_fixed = True (default: True)
 parser.add_argument('--last_layer_fixed', action="store_true")
 
 # Class Weights (default: False)
 parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance")
-
-# Learning rate
-parser.add_argument('--lr', type=float, default=1e-4, help="Learning rate")
 
 # Output directory
 parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
@@ -117,11 +90,7 @@ parser.add_argument("--num_workers", type=int, default=0, help="Number of worker
 # GPU ID
 parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU")
 
-# Save frequency
-parser.add_argument("--save_freq", type=int, default=10, help="Frequency (in number of epochs) to save the model")
-
-# Resume training (default: False)
-parser.add_argument("--resume", action="store_true", help="Resume training")
+# Checkpoint
 parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training")
 
 
@@ -130,14 +99,9 @@ parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint fro
 args = parser.parse_args()
 
 
-# Resume training
-RESUME = args.resume
 
-# Training checkpoint
-if RESUME:
-    CHECKPOINT = args.checkpoint
-
-    assert CHECKPOINT is not None, "Please specify the model checkpoint when resume is True"
+# Read checkpoint
+CHECKPOINT = args.checkpoint
 
 
 # Data directory
@@ -155,44 +119,6 @@ OUTPUT_DIR = args.output_dir
 # Number of workers (threads)
 WORKERS = args.num_workers
 
-# Number of training epochs
-NUM_TRAIN_EPOCHS = args.num_train_epochs
-
-# Number of warm epochs
-NUM_WARM_EPOCHS = args.num_warm_epochs
-
-# Number of secondary warm epochs
-NUM_SECONDARY_WARM_EPOCHS = args.num_secondary_warm_epochs
-
-# Push epochs
-# push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
-PUSH_EPOCHS = [i for i in range(NUM_TRAIN_EPOCHS) if i % 10 == 0]
-
-
-# Learning rate
-LEARNING_RATE = args.lr
-
-# Joint optimizer learning rates
-JOINT_OPTIMIZER_LRS = args.joint_optimizer_lrs
-
-# JOINT_LR_STEP_SIZE
-JOINT_LR_STEP_SIZE = args.joint_lr_step_size
-
-# WARM_OPTIMIZER_LRS
-WARM_OPTIMIZER_LRS = args.warm_optimizer_lrs
-
-# WARM_PRE_OFFSET_OPTIMIZER_LRS
-WARM_PRE_OFFSET_OPTIMIZER_LRS = args.warm_pre_offset_optimizer_lrs
-
-# LAST_LAYER_OPTIMIZER_LR
-LAST_LAYER_OPTIMIZER_LR = args.last_layer_optimizer_lr
-
-# COEFS (weighting of different training losses)
-COEFS = args.coefs
-
-# PUSH_START
-PUSH_START = args.push_start
-
 # Batch size
 BATCH_SIZE = args.batchsize
 
@@ -204,9 +130,6 @@ ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
 # Last Layer Fixed
 LAST_LAYER_FIXED = args.last_layer_fixed
-
-# Save frquency
-SAVE_FREQ = args.save_freq
 
 # Margin
 MARGIN = args.margin

@@ -1,2 +1,8 @@
 STARTED | CUB2002011 | TEST
 CUB2002011 | Deformable ProtoPNet
+Size of test set: 5794
+Batch size: 16
+Using device: cpu
+Add on layers type:  upsample
+prototype_shape is actually:  (1200, 1024, 2, 2)
+Model weights loaded with success from results/cub2002011/deformable-protopnet/densenet121/2022-11-14_11-19-59/weights/densenet121_cub2002011_best.pt.
