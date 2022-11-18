@@ -15,6 +15,6 @@ echo "PH2 | STARTED"
 
 # Deformable-ProtoPNet
 echo "Deformable-ProtoPNet | DenseNet161"
-python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture densenet161 --batchsize 32 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture densenet161 --batchsize 16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
 
 echo "PH2 | FINISHED"
