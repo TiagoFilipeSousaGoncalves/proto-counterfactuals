@@ -7,7 +7,7 @@
 
 
 
-echo "PH2 DenseNet121"
+echo "PH2 | STARTED"
 
 # ProtoPNet
 # echo "ProtoPNet | DenseNet121"
