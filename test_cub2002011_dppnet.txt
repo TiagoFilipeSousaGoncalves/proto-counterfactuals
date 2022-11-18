@@ -6,3 +6,5 @@ Using device: cpu
 Add on layers type:  upsample
 prototype_shape is actually:  (1200, 1024, 2, 2)
 Model weights loaded with success from results/cub2002011/deformable-protopnet/densenet121/2022-11-14_11-19-59/weights/densenet121_cub2002011_best.pt.
+Test Accuracy: 0.7739040386606835
+Model weights loaded with success from results/cub2002011/deformable-protopnet/densenet121/2022-11-14_11-19-59/weights/densenet121_cub2002011_best_push.pt.
