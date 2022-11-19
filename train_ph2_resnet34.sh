@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH -p gtx1080ti                      # Partition
+#SBATCH -p rtx2080ti_11GB                 # Partition
 #SBATCH --job-name=ph2_r34                # Job name
 #SBATCH -o slurm.%N.%j.out                # STDOUT
 #SBATCH -e slurm.%N.%j.err                # STDERR
