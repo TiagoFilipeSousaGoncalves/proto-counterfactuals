@@ -7,8 +7,14 @@
 
 
 
-echo "PH2 VGG19"
+echo "PH2 | STARTED"
 
-python code/models_train.py --dataset PH2 --base_architecture vgg19 --batchsize 32 --num_workers 0 --gpu_id 0
+# ProtoPNet
+# echo "ProtoPNet | VGG19"
+# python code/models_train.py --dataset PH2 --base_architecture vgg19 --batchsize 32 --num_workers 0 --gpu_id 0
 
-echo "Finished"
+# Deformable-ProtoPNet
+echo "Deformable-ProtoPNet | VGG19"
+python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture vgg19 --batchsize 16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+
+echo "PH2 | FINISHED"

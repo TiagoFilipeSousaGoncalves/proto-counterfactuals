@@ -7,8 +7,14 @@
 
 
 
-echo "PH2 ResNet152"
+echo "PH2 | STARTED"
 
-python code/models_train.py --dataset PH2 --base_architecture resnet152 --batchsize 16 --num_workers 0 --gpu_id 0
+# ProtoPNet
+# echo "ProtoPNet | ResNet152"
+# python code/models_train.py --dataset PH2 --base_architecture resnet152 --batchsize 16 --num_workers 0 --gpu_id 0
 
-echo "Finished"
+# Deformable-ProtoPNet
+echo "Deformable-ProtoPNet | DenseNet161"
+python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture resnet152 --batchsize 16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+
+echo "PH2 | FINISHED"
