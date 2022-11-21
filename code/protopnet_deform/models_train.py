@@ -956,7 +956,7 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
                     device=DEVICE,
                     class_specific=class_specific
                 )
-                print_metrics(metrics_dict=metrics_dict, class_specific=class_specific)
+                print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
 
                 # save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu, target_accu=0.70, log=log)
                 # Save checkpoint
