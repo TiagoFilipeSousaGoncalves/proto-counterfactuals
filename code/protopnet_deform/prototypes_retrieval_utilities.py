@@ -14,7 +14,7 @@ import torchvision.datasets as datasets
 from torch.autograd import Variable
 
 # Project Imports
-from data_utilities import save_preprocessed_img, save_prototype, save_prototype_box, save_deform_info
+from data_utilities import save_preprocessed_img, save_prototype, save_prototype_box, save_deform_info, imsave_with_bbox
 from helpers import makedir, find_high_activation_crop
 import train_and_test as tnt
 from log import create_logger
@@ -229,139 +229,148 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
         
         
         # Add some important information to the report
-        log('prototype index: {0}'.format(sorted_indices_act[-i].item()))
-        log('prototype class identity: {0}'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
+        report.write('Prototype index: {0}\n'.format(sorted_indices_act[-i].item()))
+        report.write('Prototype class identity: {0}\n'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
         if prototype_max_connection[sorted_indices_act[-i].item()] != prototype_img_identity[sorted_indices_act[-i].item()]:
-            log('prototype connection identity: {0}'.format(prototype_max_connection[sorted_indices_act[-i].item()]))
-        log('activation value (similarity score): {0}'.format(array_act[-i]))
-        log('last layer connection with predicted class: {0}'.format(ppnet.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
+            report.write('Prototype connection identity: {0}\n'.format(prototype_max_connection[sorted_indices_act[-i].item()]))
+        report.write('Activation value (similarity score): {0}\n'.format(array_act[-i]))
+        report.write('Last layer connection with predicted class: {0}\n'.format(ppnet.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
         
+
+        # Get activation pattern and upsampled activation pattern
         activation_pattern = prototype_activation_patterns[idx][sorted_indices_act[-i].item()].detach().cpu().numpy()
-        upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size),
-                                                interpolation=cv2.INTER_CUBIC)
+        upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
         
+        # FIXME:Save deformable-prototype information
+        save_deform_info(
+            model=ppnet_model,
+            offsets=offsets,
+            input=original_img,
+            activations=activation_pattern,
+            save_dir=os.path.join(save_analysis_path, 'most_activated_prototypes'),
+            prototype_img_filename_prefix='top-%d_activated_prototype_' % i,
+            proto_index=sorted_indices_act[-i].item(),
+            prototype_layer_stride=None # FIXME
+        )
 
-        save_deform_info(model=ppnet, offsets=offsets, 
+        # Show the most highly activated patch of the image by this prototype
+        high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
+        high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
+        report.write('Most highly activated patch of the chosen image by this prototype:\n')
+        plt.imsave(
+            os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_by_top-%d_prototype.png' % i),
+            high_act_patch
+        )
+
+        report.write('Most highly activated patch by this prototype shown in the original image:\n')
+        imsave_with_bbox(
+            fname=os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % i),
+            img_rgb=original_img,
+            bbox_height_start=high_act_patch_indices[0],
+            bbox_height_end=high_act_patch_indices[1],
+            bbox_width_start=high_act_patch_indices[2],
+            bbox_width_end=high_act_patch_indices[3],
+            color=(0, 255, 255)
+        )
+
+
+        # Show the image overlayed with prototype activation map
+        rescaled_activation_pattern = upsampled_activation_pattern - np.amin(upsampled_activation_pattern)
+        rescaled_activation_pattern = rescaled_activation_pattern / np.amax(rescaled_activation_pattern)
+        heatmap = cv2.applyColorMap(np.uint8(255*rescaled_activation_pattern), cv2.COLORMAP_JET)
+        heatmap = np.float32(heatmap) / 255
+        heatmap = heatmap[...,::-1]
+        overlayed_img = 0.5 * original_img + 0.3 * heatmap
+        report.write('Prototype activation map of the chosen image:\n')
+        # plt.axis('off')
+        plt.imsave(os.path.join(save_analysis_path, 'most_activated_prototypes', 'prototype_activation_map_by_top-%d_prototype.png' % i), overlayed_img)
+        # log('--------------------------------------------------------------')
+        report.write("\n")
+    
+
+    # Close report
+    report.close()
+
+    # FIXME
+    return test_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident
+
+
+
+# Get prototypes from top-K classes
+def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_info, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls):
+    ##### PROTOTYPES FROM TOP-k CLASSES
+    k = 2
+    log('Prototypes from top-%d classes:' % k)
+    topk_logits, topk_classes = torch.topk(logits[idx], k=k)
+    for i,c in enumerate(topk_classes.detach().cpu().numpy()):
+        makedir(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)))
+
+        log('top %d predicted class: %d' % (i+1, c))
+        log('logit of the class: %f' % topk_logits[i])
+        class_prototype_indices = np.nonzero(ppnet.prototype_class_identity.detach().cpu().numpy()[:, c])[0]
+        class_prototype_activations = prototype_activations[idx][class_prototype_indices]
+        _, sorted_indices_cls_act = torch.sort(class_prototype_activations)
+
+        prototype_cnt = 1
+        for j in reversed(sorted_indices_cls_act.detach().cpu().numpy()):
+            prototype_index = class_prototype_indices[j]
+
+            save_prototype_box(os.path.join(save_analysis_path, 'most_activated_prototypes',
+                                        'top-%d_activated_prototype_with_box.png' % (i+1)),
+                        start_epoch_number, sorted_indices_act[-i].item())
+            log('prototype index: {0}'.format(prototype_index))
+            log('prototype class identity: {0}'.format(prototype_img_identity[prototype_index]))
+            if prototype_max_connection[prototype_index] != prototype_img_identity[prototype_index]:
+                log('prototype connection identity: {0}'.format(prototype_max_connection[prototype_index]))
+            log('activation value (similarity score): {0}'.format(prototype_activations[idx][prototype_index]))
+            log('last layer connection: {0}'.format(ppnet.last_layer.weight[c][prototype_index]))
+            
+            activation_pattern = prototype_activation_patterns[idx][prototype_index].detach().cpu().numpy()
+            upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size),
+                                                    interpolation=cv2.INTER_CUBIC)
+
+            save_deform_info(model=ppnet, offsets=offsets, 
                             input=original_img, activations=activation_pattern,
-                            save_dir=os.path.join(save_analysis_path, 'most_activated_prototypes'),
-                            prototype_img_filename_prefix='top-%d_activated_prototype_' % i,
-                            proto_index=sorted_indices_act[-i].item())
+                            save_dir=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)),
+                            prototype_img_filename_prefix='top-%d_activated_prototype_' % prototype_cnt,
+                            proto_index=prototype_index)
+            
+            # show the most highly activated patch of the image by this prototype
+            high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
+            high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1],
+                                        high_act_patch_indices[2]:high_act_patch_indices[3], :]
+            log('most highly activated patch of the chosen image by this prototype:')
+            plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
+                                    'most_highly_activated_patch_by_top-%d_prototype.png' % prototype_cnt),
+                    high_act_patch)
+            log('most highly activated patch by this prototype shown in the original image:')
+            imsave_with_bbox(fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
+                                                'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % prototype_cnt),
+                            img_rgb=original_img,
+                            bbox_height_start=high_act_patch_indices[0],
+                            bbox_height_end=high_act_patch_indices[1],
+                            bbox_width_start=high_act_patch_indices[2],
+                            bbox_width_end=high_act_patch_indices[3], color=(0, 255, 255))
+            
+            # show the image overlayed with prototype activation map
+            rescaled_activation_pattern = upsampled_activation_pattern - np.amin(upsampled_activation_pattern)
+            rescaled_activation_pattern = rescaled_activation_pattern / np.amax(rescaled_activation_pattern)
+            heatmap = cv2.applyColorMap(np.uint8(255*rescaled_activation_pattern), cv2.COLORMAP_JET)
+            heatmap = np.float32(heatmap) / 255
+            heatmap = heatmap[...,::-1]
+            overlayed_img = 0.5 * original_img + 0.3 * heatmap
+            log('prototype activation map of the chosen image:')
+            plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
+                                    'prototype_activation_map_by_top-%d_prototype.png' % prototype_cnt),
+                    overlayed_img)
+            log('--------------------------------------------------------------')
+            prototype_cnt += 1
+        log('***************************************************************')
 
-        # show the most highly activated patch of the image by this prototype
-        high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
-        high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1],
-                                    high_act_patch_indices[2]:high_act_patch_indices[3], :]
-        log('most highly activated patch of the chosen image by this prototype:')
-        plt.imsave(os.path.join(save_analysis_path, 'most_activated_prototypes',
-                                'most_highly_activated_patch_by_top-%d_prototype.png' % i),
-                high_act_patch)
-        log('most highly activated patch by this prototype shown in the original image:')
-        imsave_with_bbox(fname=os.path.join(save_analysis_path, 'most_activated_prototypes',
-                                'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % i),
-                        img_rgb=original_img,
-                        bbox_height_start=high_act_patch_indices[0],
-                        bbox_height_end=high_act_patch_indices[1],
-                        bbox_width_start=high_act_patch_indices[2],
-                        bbox_width_end=high_act_patch_indices[3], color=(0, 255, 255))
-        
-        # show the image overlayed with prototype activation map
-        rescaled_activation_pattern = upsampled_activation_pattern - np.amin(upsampled_activation_pattern)
-        rescaled_activation_pattern = rescaled_activation_pattern / np.amax(rescaled_activation_pattern)
-        heatmap = cv2.applyColorMap(np.uint8(255*rescaled_activation_pattern), cv2.COLORMAP_JET)
-        heatmap = np.float32(heatmap) / 255
-        heatmap = heatmap[...,::-1]
-        overlayed_img = 0.5 * original_img + 0.3 * heatmap
-        log('prototype activation map of the chosen image:')
-        #plt.axis('off')
-        plt.imsave(os.path.join(save_analysis_path, 'most_activated_prototypes',
-                                'prototype_activation_map_by_top-%d_prototype.png' % i),
-                overlayed_img)
-        log('--------------------------------------------------------------')
+    if predicted_cls == correct_cls:
+        log('Prediction is correct.')
+    else:
+        log('Prediction is wrong.')
 
-
-
-
-
-
-
-
-
-
-
-
-##### PROTOTYPES FROM TOP-k CLASSES
-k = 2
-log('Prototypes from top-%d classes:' % k)
-topk_logits, topk_classes = torch.topk(logits[idx], k=k)
-for i,c in enumerate(topk_classes.detach().cpu().numpy()):
-    makedir(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)))
-
-    log('top %d predicted class: %d' % (i+1, c))
-    log('logit of the class: %f' % topk_logits[i])
-    class_prototype_indices = np.nonzero(ppnet.prototype_class_identity.detach().cpu().numpy()[:, c])[0]
-    class_prototype_activations = prototype_activations[idx][class_prototype_indices]
-    _, sorted_indices_cls_act = torch.sort(class_prototype_activations)
-
-    prototype_cnt = 1
-    for j in reversed(sorted_indices_cls_act.detach().cpu().numpy()):
-        prototype_index = class_prototype_indices[j]
-
-        save_prototype_box(os.path.join(save_analysis_path, 'most_activated_prototypes',
-                                    'top-%d_activated_prototype_with_box.png' % (i+1)),
-                    start_epoch_number, sorted_indices_act[-i].item())
-        log('prototype index: {0}'.format(prototype_index))
-        log('prototype class identity: {0}'.format(prototype_img_identity[prototype_index]))
-        if prototype_max_connection[prototype_index] != prototype_img_identity[prototype_index]:
-            log('prototype connection identity: {0}'.format(prototype_max_connection[prototype_index]))
-        log('activation value (similarity score): {0}'.format(prototype_activations[idx][prototype_index]))
-        log('last layer connection: {0}'.format(ppnet.last_layer.weight[c][prototype_index]))
-        
-        activation_pattern = prototype_activation_patterns[idx][prototype_index].detach().cpu().numpy()
-        upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size),
-                                                  interpolation=cv2.INTER_CUBIC)
-
-        save_deform_info(model=ppnet, offsets=offsets, 
-                        input=original_img, activations=activation_pattern,
-                        save_dir=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)),
-                        prototype_img_filename_prefix='top-%d_activated_prototype_' % prototype_cnt,
-                        proto_index=prototype_index)
-        
-        # show the most highly activated patch of the image by this prototype
-        high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
-        high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1],
-                                      high_act_patch_indices[2]:high_act_patch_indices[3], :]
-        log('most highly activated patch of the chosen image by this prototype:')
-        plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
-                                'most_highly_activated_patch_by_top-%d_prototype.png' % prototype_cnt),
-                   high_act_patch)
-        log('most highly activated patch by this prototype shown in the original image:')
-        imsave_with_bbox(fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
-                                            'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % prototype_cnt),
-                         img_rgb=original_img,
-                         bbox_height_start=high_act_patch_indices[0],
-                         bbox_height_end=high_act_patch_indices[1],
-                         bbox_width_start=high_act_patch_indices[2],
-                         bbox_width_end=high_act_patch_indices[3], color=(0, 255, 255))
-        
-        # show the image overlayed with prototype activation map
-        rescaled_activation_pattern = upsampled_activation_pattern - np.amin(upsampled_activation_pattern)
-        rescaled_activation_pattern = rescaled_activation_pattern / np.amax(rescaled_activation_pattern)
-        heatmap = cv2.applyColorMap(np.uint8(255*rescaled_activation_pattern), cv2.COLORMAP_JET)
-        heatmap = np.float32(heatmap) / 255
-        heatmap = heatmap[...,::-1]
-        overlayed_img = 0.5 * original_img + 0.3 * heatmap
-        log('prototype activation map of the chosen image:')
-        plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
-                                'prototype_activation_map_by_top-%d_prototype.png' % prototype_cnt),
-                   overlayed_img)
-        log('--------------------------------------------------------------')
-        prototype_cnt += 1
-    log('***************************************************************')
-
-if predicted_cls == correct_cls:
-    log('Prediction is correct.')
-else:
-    log('Prediction is wrong.')
-
-logclose()
+    logclose()
 

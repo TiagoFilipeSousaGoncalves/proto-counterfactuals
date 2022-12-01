@@ -150,3 +150,6 @@ results/ph2
 
 # Weights and Biases
 wandb/
+
+# VS Code
+.vscode/
