@@ -1,6 +1,5 @@
 # Imports
 import os
-import re
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
@@ -8,110 +7,12 @@ from PIL import Image
 
 # PyTorch Imports
 import torch
-import torch.utils.data
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 from torch.autograd import Variable
+import torch.utils.data
 
 # Project Imports
 from data_utilities import save_preprocessed_img, save_prototype, save_prototype_box, save_deform_info, imsave_with_bbox
-from helpers import makedir, find_high_activation_crop
-import train_and_test as tnt
-from log import create_logger
-
-from push import get_deformation_info
-import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-gpuid', nargs=1, type=str, default='0')
-parser.add_argument('-modeldir', nargs=1, type=str)
-parser.add_argument('-model', nargs=1, type=str)
-parser.add_argument('-imgdir', nargs=1, type=str)
-parser.add_argument('-img', nargs=1, type=str)
-parser.add_argument('-imgclass', nargs=1, type=int, default=-1)
-args = parser.parse_args()
-
-prototype_layer_stride = 1
-
-os.environ['CUDA_VISIBLE_DEVICES'] = args.gpuid[0]
-
-# specify the test image to be analyzed
-test_image_dir = args.imgdir[0] #'./local_analysis/Painted_Bunting_Class15_0081/'
-test_image_name = args.img[0] #'Painted_Bunting_0081_15230.jpg'
-test_image_label = args.imgclass[0] #15
-
-test_image_path = os.path.join(test_image_name)
-
-# load the model
-check_test_accu = False
-
-load_model_dir = args.modeldir[0] #'./saved_models/vgg19/003/'
-load_model_name = args.model[0] #'10_18push0.7822.pth'
-
-model_base_architecture = load_model_dir.split('/')[2]
-experiment_run = '/'.join(load_model_dir.split('/')[3:])
-
-save_analysis_path = os.path.join('./saved_visualizations', model_base_architecture,
-                                  experiment_run, load_model_name, test_image_name[:-4])
-print("path: ",save_analysis_path)
-makedir(save_analysis_path)
-
-log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
-
-load_model_path = os.path.join(load_model_dir, load_model_name)
-epoch_number_str = re.search(r'\d+', load_model_name).group(0)
-start_epoch_number = int(epoch_number_str)
-if start_epoch_number == 0:
-    start_epoch_number = 30
-    epoch_number_str = '30'
-
-log('load model from ' + load_model_path)
-log('model base architecture: ' + model_base_architecture)
-log('experiment run: ' + experiment_run)
-
-ppnet = torch.load(load_model_path)
-ppnet = ppnet.cuda()
-ppnet_multi = torch.nn.DataParallel(ppnet)
-
-img_size = ppnet_multi.module.img_size
-prototype_shape = ppnet.prototype_shape
-
-class_specific = True
-
-normalize = transforms.Normalize(mean=mean,
-                                 std=std)
-
-# load the test data and check test accuracy
-from settings import test_dir
-if "stanford_dogs" in load_model_path:
-    test_dir = './datasets/stanford_dogs/test/'
-if check_test_accu:
-    test_batch_size = 100
-
-    test_dataset = datasets.ImageFolder(
-        test_dir,
-        transforms.Compose([
-            transforms.Resize(size=(img_size, img_size)),
-            transforms.ToTensor(),
-            normalize,
-        ]))
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=test_batch_size, shuffle=True,
-        num_workers=4, pin_memory=False)
-    log('test set size: {0}'.format(len(test_loader.dataset)))
-
-    accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
-                    class_specific=class_specific, log=print)
-
-
-# load the test image and forward it through the network
-test_transforms = transforms.Compose([
-transforms.Resize((img_size,img_size)),
-transforms.ToTensor(),
-normalize
-])
-
-
+from prototypes_utilities import find_high_activation_crop, get_deformation_info
 
 
 
@@ -139,9 +40,13 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
     # Confirm prototype connects most strongly to its own class
-    prototype_max_connection = torch.argmax(ppnet.last_layer.weight, dim=0)
+    prototype_max_connection = torch.argmax(ppnet_model.last_layer.weight, dim=0)
     prototype_max_connection = prototype_max_connection.cpu().numpy()
-    if np.sum(prototype_max_connection == prototype_img_identity) == ppnet.num_prototypes:
+
+    # Number of prototypes that connect to their classe identities:
+    nr_prototypes_cls_ident = np.sum(prototype_max_connection == prototype_img_identity)
+
+    if np.sum(prototype_max_connection == prototype_img_identity) == ppnet_model.num_prototypes:
         report.write('All prototypes connect most strongly to their respective classes.\n')
     else:
         report.write('WARNING: Not all prototypes connect most strongly to their respective classes.\n')
@@ -162,7 +67,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
     # Get offsets
-    offsets, _ = get_deformation_info(conv_output, ppnet_model)
+    offsets, _ = get_deformation_info(conv_output, ppnet_model, device)
     offsets = offsets.detach()
 
 
@@ -234,14 +139,14 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
         if prototype_max_connection[sorted_indices_act[-i].item()] != prototype_img_identity[sorted_indices_act[-i].item()]:
             report.write('Prototype connection identity: {0}\n'.format(prototype_max_connection[sorted_indices_act[-i].item()]))
         report.write('Activation value (similarity score): {0}\n'.format(array_act[-i]))
-        report.write('Last layer connection with predicted class: {0}\n'.format(ppnet.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
+        report.write('Last layer connection with predicted class: {0}\n'.format(ppnet_model.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
         
 
         # Get activation pattern and upsampled activation pattern
         activation_pattern = prototype_activation_patterns[idx][sorted_indices_act[-i].item()].detach().cpu().numpy()
         upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
         
-        # FIXME:Save deformable-prototype information
+        # Save deformable-prototype information
         save_deform_info(
             model=ppnet_model,
             offsets=offsets,
@@ -250,7 +155,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
             save_dir=os.path.join(save_analysis_path, 'most_activated_prototypes'),
             prototype_img_filename_prefix='top-%d_activated_prototype_' % i,
             proto_index=sorted_indices_act[-i].item(),
-            prototype_layer_stride=None # FIXME
+            prototype_layer_stride=1
         )
 
         # Show the most highly activated patch of the image by this prototype
@@ -291,23 +196,26 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     # Close report
     report.close()
 
-    # FIXME
     return test_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident
 
 
 
-# Get prototypes from top-K classes
-def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_info, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls):
-    ##### PROTOTYPES FROM TOP-k CLASSES
+# Function: Get prototypes from top-K classes
+def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_info, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls, offsets):
+    
+    # Get prototypes from top-K classes
     k = 2
-    log('Prototypes from top-%d classes:' % k)
+    print('Prototypes from top-%d classes:' % k)
+
     topk_logits, topk_classes = torch.topk(logits[idx], k=k)
     for i,c in enumerate(topk_classes.detach().cpu().numpy()):
-        makedir(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)))
+        if not os.path.isdir(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1))):
+            os.makedirs(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)))
 
-        log('top %d predicted class: %d' % (i+1, c))
-        log('logit of the class: %f' % topk_logits[i])
-        class_prototype_indices = np.nonzero(ppnet.prototype_class_identity.detach().cpu().numpy()[:, c])[0]
+
+        print('Top %d predicted class: %d' % (i+1, c))
+        print('Logit of the class: %f' % topk_logits[i])
+        class_prototype_indices = np.nonzero(ppnet_model.prototype_class_identity.detach().cpu().numpy()[:, c])[0]
         class_prototype_activations = prototype_activations[idx][class_prototype_indices]
         _, sorted_indices_cls_act = torch.sort(class_prototype_activations)
 
@@ -315,62 +223,72 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
         for j in reversed(sorted_indices_cls_act.detach().cpu().numpy()):
             prototype_index = class_prototype_indices[j]
 
-            save_prototype_box(os.path.join(save_analysis_path, 'most_activated_prototypes',
-                                        'top-%d_activated_prototype_with_box.png' % (i+1)),
-                        start_epoch_number, sorted_indices_act[-i].item())
-            log('prototype index: {0}'.format(prototype_index))
-            log('prototype class identity: {0}'.format(prototype_img_identity[prototype_index]))
+            save_prototype_box(
+                fname=None, #FIXME
+                load_img_dir=os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_with_box.png' % (i+1)),
+                index=sorted_indices_act[-i].item()
+            )
+            
+            
+            print('Prototype index: {0}'.format(prototype_index))
+            print('Prototype class identity: {0}'.format(prototype_img_identity[prototype_index]))
             if prototype_max_connection[prototype_index] != prototype_img_identity[prototype_index]:
-                log('prototype connection identity: {0}'.format(prototype_max_connection[prototype_index]))
-            log('activation value (similarity score): {0}'.format(prototype_activations[idx][prototype_index]))
-            log('last layer connection: {0}'.format(ppnet.last_layer.weight[c][prototype_index]))
+                print('Prototype connection identity: {0}'.format(prototype_max_connection[prototype_index]))
+            print('Activation value (similarity score): {0}'.format(prototype_activations[idx][prototype_index]))
+            print('Last layer connection: {0}'.format(ppnet_model.last_layer.weight[c][prototype_index]))
             
-            activation_pattern = prototype_activation_patterns[idx][prototype_index].detach().cpu().numpy()
-            upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size),
-                                                    interpolation=cv2.INTER_CUBIC)
 
-            save_deform_info(model=ppnet, offsets=offsets, 
-                            input=original_img, activations=activation_pattern,
-                            save_dir=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)),
-                            prototype_img_filename_prefix='top-%d_activated_prototype_' % prototype_cnt,
-                            proto_index=prototype_index)
+            # Get activation pattern and upsampled activation pattern
+            activation_pattern = prototype_activation_patterns[idx][prototype_index].detach().cpu().numpy()
+            upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
+
+
+            # Save information related to the deformable prototype(s)
+            save_deform_info(
+                model=ppnet_model,
+                offsets=offsets,
+                input=original_img, activations=activation_pattern,
+                save_dir=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)),
+                prototype_img_filename_prefix='top-%d_activated_prototype_' % prototype_cnt,
+                proto_index=prototype_index,
+                prototype_layer_stride=1
+            )
             
-            # show the most highly activated patch of the image by this prototype
+            # Show the most highly activated patch of the image by this prototype
             high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
-            high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1],
-                                        high_act_patch_indices[2]:high_act_patch_indices[3], :]
-            log('most highly activated patch of the chosen image by this prototype:')
-            plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
-                                    'most_highly_activated_patch_by_top-%d_prototype.png' % prototype_cnt),
-                    high_act_patch)
-            log('most highly activated patch by this prototype shown in the original image:')
-            imsave_with_bbox(fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
-                                                'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % prototype_cnt),
-                            img_rgb=original_img,
-                            bbox_height_start=high_act_patch_indices[0],
-                            bbox_height_end=high_act_patch_indices[1],
-                            bbox_width_start=high_act_patch_indices[2],
-                            bbox_width_end=high_act_patch_indices[3], color=(0, 255, 255))
+            high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
+            print('Most highly activated patch of the chosen image by this prototype:')
+            plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'most_highly_activated_patch_by_top-%d_prototype.png' % prototype_cnt), high_act_patch)
+            print('Most highly activated patch by this prototype shown in the original image:')
+            imsave_with_bbox(
+                fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % prototype_cnt),
+                img_rgb=original_img,
+                bbox_height_start=high_act_patch_indices[0],
+                bbox_height_end=high_act_patch_indices[1],
+                bbox_width_start=high_act_patch_indices[2],
+                bbox_width_end=high_act_patch_indices[3],
+                color=(0, 255, 255)
+            )
             
-            # show the image overlayed with prototype activation map
+            # Show the image overlayed with prototype activation map
             rescaled_activation_pattern = upsampled_activation_pattern - np.amin(upsampled_activation_pattern)
             rescaled_activation_pattern = rescaled_activation_pattern / np.amax(rescaled_activation_pattern)
             heatmap = cv2.applyColorMap(np.uint8(255*rescaled_activation_pattern), cv2.COLORMAP_JET)
             heatmap = np.float32(heatmap) / 255
             heatmap = heatmap[...,::-1]
             overlayed_img = 0.5 * original_img + 0.3 * heatmap
-            log('prototype activation map of the chosen image:')
-            plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1),
-                                    'prototype_activation_map_by_top-%d_prototype.png' % prototype_cnt),
-                    overlayed_img)
-            log('--------------------------------------------------------------')
+            print('prototype activation map of the chosen image:')
+            plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'prototype_activation_map_by_top-%d_prototype.png' % prototype_cnt), overlayed_img)
+
+            # Update prototype counter
             prototype_cnt += 1
-        log('***************************************************************')
 
+
+    # Log the result of predictions
     if predicted_cls == correct_cls:
-        log('Prediction is correct.')
+        print('Prediction is correct.')
     else:
-        log('Prediction is wrong.')
+        print('Prediction is wrong.')
 
-    logclose()
 
+    return

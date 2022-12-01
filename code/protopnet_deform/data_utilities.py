@@ -148,7 +148,7 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_wi
 
 
 # Function: Save deformable prototype information
-def save_deform_info(model, offsets, input, activations, save_dir, prototype_img_filename_prefix, proto_index, prototype_layer_stride):
+def save_deform_info(model, offsets, input, activations, save_dir, prototype_img_filename_prefix, proto_index, prototype_layer_stride=1):
     
     # Get prototype shape
     prototype_shape = model.prototype_shape
