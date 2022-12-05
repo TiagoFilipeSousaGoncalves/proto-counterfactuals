@@ -99,6 +99,10 @@ parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint fro
 parser.add_argument("--compute_metrics", action="store_true", help="Compute metrics on a specific data subset.")
 
 
+# TODO: Erase uppon review
+# prototype_layer_stride = 1
+
+
 
 # Parse the arguments
 args = parser.parse_args()
@@ -336,6 +340,13 @@ model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATAS
 model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 
 
+# Load model weights
+model_weights = torch.load(model_path_push_last, map_location=DEVICE)
+ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
+print(f"Model weights loaded with success from: {model_path_push_last}.")
+
+
+
 
 
 # Create a local analysis path
@@ -419,5 +430,4 @@ analysis_df.to_csv(path_or_buf=os.path.join(save_analysis_path, "analysis.csv"))
 
 
 
-prototype_layer_stride = 1
 

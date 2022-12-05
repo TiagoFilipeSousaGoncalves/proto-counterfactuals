@@ -201,11 +201,15 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
 # Function: Get prototypes from top-K classes
-def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_info, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls, offsets):
+def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls, offsets):
     
     # Get prototypes from top-K classes
     k = 2
     print('Prototypes from top-%d classes:' % k)
+
+
+    # Get sorted indices activations
+    _, sorted_indices_act = torch.sort(prototype_activations[idx])
 
     topk_logits, topk_classes = torch.topk(logits[idx], k=k)
     for i,c in enumerate(topk_classes.detach().cpu().numpy()):
@@ -223,9 +227,17 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
         for j in reversed(sorted_indices_cls_act.detach().cpu().numpy()):
             prototype_index = class_prototype_indices[j]
 
+
+            # TODO: Erase uppon review
+            # save_prototype_box(
+            #     fname=None, #FIXME
+            #     load_img_dir=os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_with_box.png' % (i+1)),
+            #     index=sorted_indices_act[-i].item()
+            # )
+            prototype_w_bbox_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_with_box.png' % i)
             save_prototype_box(
-                fname=None, #FIXME
-                load_img_dir=os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_with_box.png' % (i+1)),
+                fname=prototype_w_bbox_fname,
+                load_img_dir=saved_prototypes_dir,
                 index=sorted_indices_act[-i].item()
             )
             

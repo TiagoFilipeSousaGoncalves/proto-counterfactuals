@@ -319,7 +319,7 @@ def save_projected_prototype_images(prototype_network_parallel,
                                     prototype_self_act_filename_prefix,
                                     prototype_img_filename_prefix,
                                     image_indices,
-                                    prototype_layer_stride):
+                                    prototype_layer_stride=1):
 
     n_prototypes = prototype_network_parallel.num_prototypes
 

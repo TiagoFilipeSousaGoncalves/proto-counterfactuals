@@ -94,7 +94,7 @@ parser.add_argument("--classweights", action="store_true", help="Weight loss wit
 
 # Number of training epochs
 # num_train_epochs = 1000
-parser.add_argument('--num_train_epochs', type=int, default=300, help="Number of training epochs.")
+parser.add_argument('--num_train_epochs', type=int, default=50, help="Number of training epochs.")
 
 # Number of warm epochs
 # num_warm_epochs = 5
@@ -214,7 +214,7 @@ RESIZE_OPT = args.resize
 
 # Timestamp (to save results)
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), BASE_ARCHITECTURE.lower(), timestamp)
+results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), "protopnet", BASE_ARCHITECTURE.lower(), timestamp)
 if not os.path.isdir(results_dir):
     os.makedirs(results_dir)
 

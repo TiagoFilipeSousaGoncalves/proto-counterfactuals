@@ -123,7 +123,7 @@ parser.add_argument("--classweights", action="store_true", help="Weight loss wit
 
 # Number of training epochs
 # num_train_epochs = 31
-parser.add_argument('--num_train_epochs', type=int, default=300, help="Number of training epochs.")
+parser.add_argument('--num_train_epochs', type=int, default=50, help="Number of training epochs.")
 
 # Number of warm epochs
 # num_warm_epochs = 5
