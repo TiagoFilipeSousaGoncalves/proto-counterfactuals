@@ -11,7 +11,7 @@ echo "CUB2002011 | START"
 
 # ProtoPNet
 echo "ProtoPNet | DenseNet121"
-python code/protopnet/models_train.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 32 --num_workers 3 --gpu_id 0
+python code/protopnet/models_train.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 32 --num_workers 0 --gpu_id 0
 
 # Deformable-ProtoPNet
 # echo "Deformable-ProtoPNet | DenseNet121"
