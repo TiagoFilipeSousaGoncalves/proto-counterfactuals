@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH -p gtx1080ti_11GB                   # Partition
+#SBATCH -p rtx2080ti_11GB                   # Partition
 #SBATCH --job-name=cub_d121_dppnet          # Job name
 #SBATCH -o slurm.%N.%j.out                  # STDOUT
 #SBATCH -e slurm.%N.%j.err                  # STDERR
