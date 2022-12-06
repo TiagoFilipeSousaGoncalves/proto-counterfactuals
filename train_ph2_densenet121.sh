@@ -11,7 +11,7 @@ echo "PH2 | STARTED"
 
 # ProtoPNet
 echo "ProtoPNet | DenseNet121"
-python code/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0
+python code/protopnet/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0
 
 # Deformable-ProtoPNet
 # echo "Deformable-ProtoPNet | DenseNet121"
