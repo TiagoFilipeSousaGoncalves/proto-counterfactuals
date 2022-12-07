@@ -6,7 +6,7 @@
 
 echo "Submitting jobs"
 
-sbatch train_ph2_densenet121.sh 
+# sbatch train_ph2_densenet121.sh 
 sbatch train_ph2_densenet161.sh
 sbatch train_ph2_resnet34.sh 
 sbatch train_ph2_resnet152.sh
