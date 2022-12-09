@@ -188,12 +188,12 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
                 optimizer.step()
 
 
-        # TODO: Is this necessary?
-        # del images
-        # del labels
-        # del logits
-        # del predicted
-        # del min_distances
+        # Remove variables from memory
+        del images
+        del labels
+        del logits
+        del s_logits
+        del min_distances
 
 
     # Some log prints

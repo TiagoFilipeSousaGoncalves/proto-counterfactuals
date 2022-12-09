@@ -1,5 +1,6 @@
-# Source: https://github.com/cfchen-duke/ProtoPNet/blob/master/local_analysis.py
-# Note: Finding the nearest prototypes to a test image
+# Note: Provide an input image, get the nearest counterfactual and compare prototypes
+
+
 
 # Imports
 import os
@@ -32,7 +33,7 @@ parser.add_argument('--data_dir', type=str, default="data", help="Directory of t
 parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
 
 # Model
-parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
+parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, densenet161, resnet34, resnet152, vgg16, vgg19.')
 
 # Batch size
 parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation.")
@@ -63,6 +64,9 @@ parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint tha
 
 # Compute metrics on test
 parser.add_argument("--compute_metrics", action="store_true", help="Compute metrics on a specific data subset.")
+
+# Generate test images' features
+parser.add_argument("--generate_img_features", action="store_true", help="Generate features for the retrieval.")
 
 
 
@@ -103,6 +107,9 @@ ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 # Compute metrics on data subset
 COMPUTE_METRICS = args.compute_metrics
 
+# Generate features on the test set
+GENERATE_FEATURES = args.generate_img_features
+
 
 
 # Get the directory of results
@@ -117,7 +124,7 @@ STD = [0.229, 0.224, 0.225]
 
 
 # Test Transforms
-test_transforms = torchvision.transforms.Compose([
+transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
@@ -128,31 +135,65 @@ test_transforms = torchvision.transforms.Compose([
 # CUB2002011
 if DATASET == "CUB2002011":
 
-    # Get image directories
-    data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
-    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = CUB2002011Dataset(
+        data_path=train_data_path,
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=False,
+        transform=transforms
+    )
+
+    # Get train labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
 
     # Test Dataset
     test_set = CUB2002011Dataset(
-        data_path=data_path,
+        data_path=test_data_path,
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
         augmented=False,
-        transform=test_transforms
+        transform=transforms
     )
+
+    # Get test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
 
     # Number of classes
     NUM_CLASSES = len(test_set.labels_dict)
 
-    # Labels dictionary
-    labels_dict = test_set.labels_dict.copy()
 
 
 # PH2
 elif DATASET == "PH2":
 
-    # Get image directories
-    data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "test", "cropped")
-    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "train", "cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+    # Get train Labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "test", "cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
 
     # Test Dataset
     test_set = PH2Dataset(
@@ -160,18 +201,34 @@ elif DATASET == "PH2":
         subset="test",
         cropped=True,
         augmented=False,
-        transform=test_transforms
+        transform=transforms
     )
 
-    # Number of Classes
-    NUM_CLASSES = len(test_set.diagnosis_dict)
+    # Get test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
 
-    # Labels dictionary
-    labels_dict = test_set.labels_dict.copy()
+    # Number of classes
+    NUM_CLASSES = len(test_set.diagnosis_dict)
 
 
 # STANFORDCARS
 elif DATASET == "STANFORDCARS":
+
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_train", "images_cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Test Dataset
+    test_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_test",
+        augmented=False,
+        cropped=True,
+        transform=transforms
+    )
+
+    # Test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
 
     # Get image directories
     data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_test", "images_cropped")
@@ -183,14 +240,15 @@ elif DATASET == "STANFORDCARS":
         cars_subset="cars_test",
         augmented=False,
         cropped=True,
-        transform=test_transforms
+        transform=transforms
     )
+
+    # Test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
+
 
     # Number of classes
     NUM_CLASSES = len(test_set.class_names)
-
-    # Labels dictionary
-    labels_dict = test_set.labels_dict.copy()
 
 
 
