@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-#SBATCH -p gtx1080ti_11GB                   # Partition
-#SBATCH --job-name=cub_d121_ppnet           # Job name
+#SBATCH -p titanxp_12GB                     # Partition
+#SBATCH --job-name=cub_d121                 # Job name
 #SBATCH -o slurm.%N.%j.out                  # STDOUT
 #SBATCH -e slurm.%N.%j.err                  # STDERR
 
