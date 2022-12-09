@@ -151,7 +151,7 @@ if DATASET == "CUB2002011":
     train_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
-        augmented=True,
+        augmented=False,
         transform=train_transforms
     )
 
@@ -174,6 +174,7 @@ elif DATASET == "PH2":
         data_path=DATA_DIR,
         subset="train",
         cropped=True,
+        augmented=False,
         transform=train_transforms
     )
 
@@ -182,6 +183,7 @@ elif DATASET == "PH2":
         data_path=DATA_DIR,
         subset="test",
         cropped=True,
+        augmented=False,
         transform=test_transforms
     )
 
@@ -195,7 +197,7 @@ elif DATASET == "STANFORDCARS":
     train_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_train",
-        augmented=True,
+        augmented=False,
         cropped=True,
         transform=train_transforms
     )
@@ -267,7 +269,7 @@ ppnet_model = ppnet_model.to(DEVICE)
 
 
 # Load model weights
-model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 model_weights = torch.load(model_path, map_location=DEVICE)
 ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
 print("Model weights loaded with success.")
