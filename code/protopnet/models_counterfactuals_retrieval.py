@@ -13,10 +13,9 @@ import torchvision
 import torch.utils.data
 
 # Project Imports
-from data_utilities import save_preprocessed_img, save_prototype, save_prototype_self_activation, save_prototype_original_img_with_bbox, imsave_with_bbox, CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
-from prototypes_retrieval_utilities import retrieve_image_prototypes, get_prototypes_from_topk_classes
-from prototypes_utilities import find_high_activation_crop
+from prototypes_retrieval_utilities import retrieve_image_prototypes
 from train_val_test_utilities import model_test
 
 
@@ -218,21 +217,22 @@ elif DATASET == "STANFORDCARS":
     train_data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_train", "images_cropped")
     train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
 
-    # Test Dataset
-    test_set = STANFORDCARSDataset(
+    # Train Dataset
+    train_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
-        cars_subset="cars_test",
+        cars_subset="cars_train",
         augmented=False,
         cropped=True,
         transform=transforms
     )
 
-    # Test labels dictionary
-    test_labels_dict = test_set.labels_dict.copy()
+    # Train labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
 
-    # Get image directories
-    data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_test", "images_cropped")
-    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_test", "images_cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
 
     # Test Dataset
     test_set = STANFORDCARSDataset(
@@ -277,9 +277,6 @@ test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SIZ
 # Weights
 weights_dir = os.path.join(results_dir, "weights")
 
-# Prototypes
-load_img_dir = os.path.join(weights_dir, 'prototypes')
-
 
 # Choose GPU
 DEVICE = f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu"
@@ -306,9 +303,9 @@ class_specific = True
 # Put model into DEVICE (CPU or GPU)
 ppnet_model = ppnet_model.to(DEVICE)
 
-# Load model weights
-model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
-model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
+# Load model weights (we load the weights that correspond to the last stage of training)
+# model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+# model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
 model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 model_weights = torch.load(model_path_push_last, map_location=DEVICE)
 ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
@@ -337,13 +334,30 @@ if COMPUTE_METRICS:
 
 
 
+# Generate images features (we will need these for the retrieval)
+if GENERATE_FEATURES:
+
+    # Go through all image directories
+    for image_dir in test_img_directories:
+
+        # Get images in this directory
+        image_names = [i for i in os.listdir(os.path.join(test_data_path, image_dir)) if not i.startswith('.')]
+        image_names = [i for i in image_names if not os.path.isdir(os.path.join(test_data_path, i))]
+
+        # Go through all images in a single directory
+        for image_name in image_names:
+
+            # Get image label
+            image_label = labels_dict[image_dir]
+
+
+
 # Analysis .CSV
 analysis_dict = {
-    "Image Filename":list(),
-    "Ground-Truth Label":list(),
-    "Predicted Label":list(),
-    "Number Prototypes Connected Class Identity":list(),
-    "Top-10 Activated Prototypes":list()
+    "Image":list(),
+    "Image Label":list(),
+    "Nearest Counterfactual":list(),
+    "Nearest Counterfactual Label":list(),
 }
 
 
