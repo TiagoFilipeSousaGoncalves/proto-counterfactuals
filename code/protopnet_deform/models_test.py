@@ -300,20 +300,26 @@ ppnet_model = ppnet_model.to(DEVICE)
 # Load model weights
 model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
 model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
-model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
+
+if not LAST_LAYER_FIXED:
+    model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
+else:
+    model_path_push_last = None
 
 
 # Iterate through these model weights types
 for model_fname in [model_path, model_path_push, model_path_push_last]:
-    model_weights = torch.load(model_fname, map_location=DEVICE)
-    ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
-    print(f"Model weights loaded with success from {model_fname}.")
+
+    if model_fname is not None:
+        model_weights = torch.load(model_fname, map_location=DEVICE)
+        ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
+        print(f"Model weights loaded with success from {model_fname}.")
 
 
-    # Get performance metrics
-    metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
-    test_accuracy = metrics_dict["accuracy"]
-    print(f"Test Accuracy: {test_accuracy}")
+        # Get performance metrics
+        metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+        test_accuracy = metrics_dict["accuracy"]
+        print(f"Test Accuracy: {test_accuracy}")
 
 
 
