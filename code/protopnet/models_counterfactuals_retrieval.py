@@ -6,16 +6,18 @@
 import os
 import argparse
 import pandas as pd
+import numpy as np
 
 # PyTorch Imports
 import torch
-import torchvision
 import torch.utils.data
+from torch.autograd import Variable
+import torchvision
 
 # Project Imports
 from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from image_retrieval_utilities import generate_image_features, get_image_counterfactual
 from model_utilities import construct_PPNet
-from prototypes_retrieval_utilities import retrieve_image_prototypes
 from train_val_test_utilities import model_test
 
 
@@ -278,6 +280,12 @@ test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SIZ
 weights_dir = os.path.join(results_dir, "weights")
 
 
+# Features 
+features_dir = os.path.join(results_dir, "features", "test")
+if not os.path.isdir(features_dir):
+    os.makedirs(features_dir)
+
+
 # Choose GPU
 DEVICE = f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {DEVICE}")
@@ -348,7 +356,33 @@ if GENERATE_FEATURES:
         for image_name in image_names:
 
             # Get image label
-            image_label = labels_dict[image_dir]
+            image_label = test_labels_dict[image_dir]
+
+            # Generate test image path
+            test_img_path = os.path.join(test_data_path, image_dir, image_name)
+
+
+            # Generate features
+            conv_features = generate_image_features(
+                image_path=test_img_path,
+                ppnet_model=ppnet_model,
+                device=DEVICE,
+                transforms=transforms
+            )
+
+
+            # Convert feature vector to NumPy
+            conv_features = conv_features.detach().cpu().numpy()
+
+            # Save this into disk
+            conv_features_fname = image_name.split('.')[0] + '.npy'
+            conv_features_fpath = os.path.join(features_dir, conv_features_fname)
+            np.save(
+                file=conv_features_fpath,
+                arr=conv_features,
+                allow_pickle=True,
+                fix_imports=True
+            )
 
 
 
@@ -361,38 +395,25 @@ analysis_dict = {
 }
 
 
+
 # Go through all image directories
-for image_dir in image_directories:
+for image_dir in test_img_directories:
 
     # Get images in this directory
-    image_names = [i for i in os.listdir(os.path.join(data_path, image_dir)) if not i.startswith('.')]
-    image_names = [i for i in image_names if not os.path.isdir(os.path.join(data_path, i))]
+    image_names = [i for i in os.listdir(os.path.join(test_data_path, image_dir)) if not i.startswith('.')]
+    image_names = [i for i in image_names if not os.path.isdir(os.path.join(test_data_path, i))]
 
     # Go through all images in a single directory
     for image_name in image_names:
 
         # Get image label
-        image_label = labels_dict[image_dir]
+        image_label = test_labels_dict[image_dir]
 
-        # Create image analysis path
-        image_analysis_path = os.path.join(save_analysis_path, image_dir, image_name.split('.')[0])
-        if not os.path.isdir(image_analysis_path):
-            os.makedirs(image_analysis_path)
+        # Generate test image path
+        test_img_path = os.path.join(test_data_path, image_dir, image_name)
 
-        # Analyse this image
-        img_fname, gt_label, pred_label, nr_prototypes_cls_ident, topk_proto_cls_ident = retrieve_image_prototypes(
-            save_analysis_path=image_analysis_path,
-            weights_dir=weights_dir,
-            load_img_dir=load_img_dir,
-            ppnet_model=ppnet_model,
-            device=DEVICE,
-            test_transforms=test_transforms,
-            test_image_dir=os.path.join(data_path, image_dir),
-            test_image_name=image_name,
-            test_image_label=image_label,
-            norm_params={"mean":MEAN, "std":STD},
-            img_size=IMG_SIZE
-        )
+
+        
 
 
         # Add information to our data dictionary
