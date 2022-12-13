@@ -35,9 +35,6 @@ parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011",
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, densenet161, resnet34, resnet152, vgg16, vgg19.')
 
-# Batch size
-parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation.")
-
 # Image size
 # img_size = 224
 parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms.")
@@ -94,9 +91,6 @@ WORKERS = args.num_workers
 
 # Prototype activation function
 PROTOTYPE_ACTIVATION_FUNCTION = args.prototype_activation_function
-
-# Batch size
-BATCH_SIZE = args.batchsize
 
 # Image size (after transforms)
 IMG_SIZE = args.img_size
@@ -268,11 +262,6 @@ elif BASE_ARCHITECTURE.lower() in ("resnet34"):
 # For ResNet-152, we used 512 as the number of channels in a prototype
 elif BASE_ARCHITECTURE.lower() in ("resnet152"):
     PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 1, 1)
-
-
-
-# Create Test DataLoader
-test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 
 
 # Weights
