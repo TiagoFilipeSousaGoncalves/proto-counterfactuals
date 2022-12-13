@@ -95,9 +95,6 @@ IMG_SIZE = args.img_size
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
-# Compute metrics on data subset
-COMPUTE_METRICS = args.compute_metrics
-
 # Generate features on the test set
 GENERATE_FEATURES = args.generate_img_features
 
