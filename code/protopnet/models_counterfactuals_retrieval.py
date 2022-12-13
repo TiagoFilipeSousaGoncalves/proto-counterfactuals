@@ -11,7 +11,6 @@ import numpy as np
 # PyTorch Imports
 import torch
 import torch.utils.data
-from torch.autograd import Variable
 import torchvision
 
 # Project Imports
@@ -321,7 +320,7 @@ print(f"Model weights loaded with success from: {model_path_push_last}.")
 
 
 # Create a local analysis path
-save_analysis_path = os.path.join(results_dir, "analysis", "local")
+save_analysis_path = os.path.join(results_dir, "analysis", "image-retrieval")
 if not os.path.isdir(save_analysis_path):
     os.makedirs(save_analysis_path)
 
@@ -413,15 +412,59 @@ for image_dir in test_img_directories:
         test_img_path = os.path.join(test_data_path, image_dir, image_name)
 
 
-        
+        # Get image counterfactual
+        label_pred, counterfactual_pred = get_image_counterfactual(
+            image_path=test_img_path,
+            ppnet_model=ppnet_model,
+            device=DEVICE,
+            transforms=transforms
+        )
+
+
+        # Check if the predicted label is equal to the ground-truth label
+        if int(image_label) == int(label_pred):
+
+            # Then we check for counterfactuals
+            test_img_fts = np.load(os.path.join(features_dir, image_name.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+
+            # Create lists to append temporary values
+            counter_imgs_fnames = list()
+            distances = list()
+            
+            
+            # Iterate again through the database
+            for counterfact_dir in test_img_directories:
+
+                # Get images in this directory
+                ctf_names = [i for i in os.listdir(os.path.join(test_data_path, counterfact_dir)) if not i.startswith('.')]
+                ctf_names = [i for i in image_names if not os.path.isdir(os.path.join(test_data_path, i))]
+
+                # Get label of the counterfactual first
+                ctf_label = test_labels_dict[counterfact_dir]
+
+                # We only evaluate in such cases
+                if int(ctf_label) == int(counterfactual_pred):
+                    for ctf_fname in ctf_names:
+
+                        # Load the features of the counterfactual
+                        ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+
+                        # Compute the Euclidean Distance (L2-norm) between these feature vectors
+                        distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
+
+
+                        # Append these to lists
+                        counter_imgs_fnames.append(ctf_fname)
+                        distances.append(distance_img_ctf)
+    
 
 
         # Add information to our data dictionary
-        analysis_dict["Image Filename"].append(img_fname)
-        analysis_dict["Ground-Truth Label"].append(gt_label)
-        analysis_dict["Predicted Label"].append(pred_label)
-        analysis_dict["Number Prototypes Connected Class Identity"].append(nr_prototypes_cls_ident)
-        analysis_dict["Top-10 Activated Prototypes"].append(topk_proto_cls_ident)
+        analysis_dict["Image"].append(image_name)
+        analysis_dict["Image Label"].append(int(image_label))
+        analysis_dict["Nearest Counterfactual"].append(counter_imgs_fnames[np.argmin(distances)])
+        analysis_dict["Nearest Counterfactual Label"].append(int(counterfactual_pred))
+
 
 
 # Save data dictionary into a .CSV
