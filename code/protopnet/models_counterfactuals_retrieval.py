@@ -434,11 +434,11 @@ for image_dir in test_img_directories:
     
 
 
-        # Add information to our data dictionary
-        analysis_dict["Image"].append(image_name)
-        analysis_dict["Image Label"].append(int(image_label))
-        analysis_dict["Nearest Counterfactual"].append(counter_imgs_fnames[np.argmin(distances)])
-        analysis_dict["Nearest Counterfactual Label"].append(int(counterfactual_pred))
+            # Add information to our data dictionary
+            analysis_dict["Image"].append(image_name)
+            analysis_dict["Image Label"].append(int(image_label))
+            analysis_dict["Nearest Counterfactual"].append(counter_imgs_fnames[np.argmin(distances)])
+            analysis_dict["Nearest Counterfactual Label"].append(int(counterfactual_pred))
 
 
 

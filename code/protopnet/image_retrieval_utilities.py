@@ -22,14 +22,14 @@ def get_image_counterfactual(image_path, ppnet_model, device, transforms):
     s_logits = torch.nn.Softmax(dim=1)(logits)
     sorted_indices = torch.argsort(s_logits, dim=1)
     idx_max = torch.argmax(s_logits, dim=1)
-    print(sorted_indices)
+    # print(sorted_indices[0])
 
     # Get prediction and counterfactual
-    label_pred = sorted_indices[-1]
-    print(idx_max)
-    counterfactual_pred = sorted_indices[-2]
-    print(counterfactual_pred)
-
+    label_pred = sorted_indices[0][-1].item()
+    # print(label_pred, idx_max[0].item())
+    counterfactual_pred = sorted_indices[0][-2].item()
+    # print(counterfactual_pred)
+    
 
 
     return label_pred, counterfactual_pred
