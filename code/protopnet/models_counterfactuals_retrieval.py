@@ -59,9 +59,6 @@ parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU.
 # Get checkpoint
 parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint that contains weights and model parameters.")
 
-# Compute metrics on test
-parser.add_argument("--compute_metrics", action="store_true", help="Compute metrics on a specific data subset.")
-
 # Generate test images' features
 parser.add_argument("--generate_img_features", action="store_true", help="Generate features for the retrieval.")
 
@@ -319,14 +316,6 @@ prototype_shape = ppnet_model.prototype_shape
 
 # Get max distance
 max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
-
-
-# Get model performance metrics
-# accu = tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=print)
-if COMPUTE_METRICS:
-    metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
-    test_accuracy = metrics_dict["accuracy"]
-    print(f"Accuracy on test: {test_accuracy}.")
 
 
 

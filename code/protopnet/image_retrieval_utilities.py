@@ -25,9 +25,10 @@ def get_image_counterfactual(image_path, ppnet_model, device, transforms):
     print(sorted_indices)
 
     # Get prediction and counterfactual
-    label_pred = sorted_indices[-1].item()
+    label_pred = sorted_indices[-1]
     print(idx_max)
-    counterfactual_pred = sorted_indices[-2].item()
+    counterfactual_pred = sorted_indices[-2]
+    print(counterfactual_pred)
 
 
 
