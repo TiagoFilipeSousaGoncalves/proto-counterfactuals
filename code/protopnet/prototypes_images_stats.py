@@ -31,7 +31,7 @@ proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join("results", CHECKPOI
 
 
 # Get rows where ground-truth is equal to the predicted label
-proto_stats_pr_df = proto_stats_df.copy()[["Image Filename", "Ground-Truth Label", "Predicted Label", "Number Prototypes Connected Class Identity", "Top-10 Activated Prototypes"]][proto_stats_df["Ground-Truth Label"]==proto_stats_df["Predicted Label"]]
+proto_stats_pr_df = proto_stats_df.copy()[["Image Filename", "Ground-Truth Label", "Predicted Label", "Number of Prototypes Connected to the Class Identity", "Top-10 Prototypes Class Identities"]][proto_stats_df["Ground-Truth Label"]==proto_stats_df["Predicted Label"]]
 # print(proto_stats_pr_df.head())
 
 
@@ -51,7 +51,7 @@ for index, row in proto_stats_pr_df.iterrows():
     label = row["Ground-Truth Label"]
 
     # Get the cls identity of top-k most activated prototypes
-    top_k_proto = row["Top-10 Activated Prototypes"]
+    top_k_proto = row["Top-10 Prototypes Class Identities"]
 
     # Apply a processing to this string
     top_k_proto = top_k_proto.split('[')[1]

@@ -17,7 +17,6 @@ import torchvision
 from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
 from image_retrieval_utilities import generate_image_features, get_image_counterfactual
 from model_utilities import construct_PPNet
-from train_val_test_utilities import model_test
 
 
 
@@ -412,7 +411,7 @@ for image_dir in test_img_directories:
 
                 # Get images in this directory
                 ctf_names = [i for i in os.listdir(os.path.join(test_data_path, counterfact_dir)) if not i.startswith('.')]
-                ctf_names = [i for i in image_names if not os.path.isdir(os.path.join(test_data_path, i))]
+                ctf_names = [i for i in ctf_names if not os.path.isdir(os.path.join(test_data_path, i))]
 
                 # Get label of the counterfactual first
                 ctf_label = test_labels_dict[counterfact_dir]

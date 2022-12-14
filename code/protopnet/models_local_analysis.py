@@ -12,11 +12,9 @@ import torchvision
 import torch.utils.data
 
 # Project Imports
-from data_utilities import save_preprocessed_img, save_prototype, save_prototype_self_activation, save_prototype_original_img_with_bbox, imsave_with_bbox, CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
-from prototypes_retrieval_utilities import retrieve_image_prototypes, get_prototypes_from_topk_classes
-from prototypes_utilities import find_high_activation_crop
-from train_val_test_utilities import model_test
+from prototypes_retrieval_utilities import retrieve_image_prototypes
 
 
 
@@ -33,9 +31,6 @@ parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011",
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
-
-# Batch size
-parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation.")
 
 # Image size
 # img_size = 224
@@ -60,9 +55,6 @@ parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU.
 
 # Get checkpoint
 parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint that contains weights and model parameters.")
-
-# Compute metrics on test
-parser.add_argument("--compute_metrics", action="store_true", help="Compute metrics on a specific data subset.")
 
 
 
@@ -91,18 +83,11 @@ WORKERS = args.num_workers
 # Prototype activation function
 PROTOTYPE_ACTIVATION_FUNCTION = args.prototype_activation_function
 
-# Batch size
-BATCH_SIZE = args.batchsize
-
 # Image size (after transforms)
 IMG_SIZE = args.img_size
 
 # Add on layers type
 ADD_ON_LAYERS_TYPE = args.add_on_layers_type
-
-# Compute metrics on data subset
-COMPUTE_METRICS = args.compute_metrics
-
 
 
 # Get the directory of results
@@ -211,11 +196,6 @@ elif BASE_ARCHITECTURE.lower() in ("resnet152"):
     PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 1, 1)
 
 
-
-# Create Test DataLoader
-test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
-
-
 # Weights
 weights_dir = os.path.join(results_dir, "weights")
 
@@ -248,9 +228,9 @@ class_specific = True
 # Put model into DEVICE (CPU or GPU)
 ppnet_model = ppnet_model.to(DEVICE)
 
-# Load model weights
-model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
-model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
+# Load model weights (we should read the last optimised layer)
+# model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
+# model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
 model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 model_weights = torch.load(model_path_push_last, map_location=DEVICE)
 ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
@@ -270,22 +250,14 @@ prototype_shape = ppnet_model.prototype_shape
 max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
 
 
-# Get model performance metrics
-# accu = tnt.test(model=ppnet_multi, dataloader=test_loader, class_specific=class_specific, log=print)
-if COMPUTE_METRICS:
-    metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
-    test_accuracy = metrics_dict["accuracy"]
-    print(f"Accuracy on test: {test_accuracy}.")
-
-
 
 # Analysis .CSV
 analysis_dict = {
     "Image Filename":list(),
     "Ground-Truth Label":list(),
     "Predicted Label":list(),
-    "Number Prototypes Connected Class Identity":list(),
-    "Top-10 Activated Prototypes":list()
+    "Number of Prototypes Connected to the Class Identity":list(),
+    "Top-10 Prototypes Class Identities":list()
 }
 
 
@@ -327,8 +299,8 @@ for image_dir in image_directories:
         analysis_dict["Image Filename"].append(img_fname)
         analysis_dict["Ground-Truth Label"].append(gt_label)
         analysis_dict["Predicted Label"].append(pred_label)
-        analysis_dict["Number Prototypes Connected Class Identity"].append(nr_prototypes_cls_ident)
-        analysis_dict["Top-10 Activated Prototypes"].append(topk_proto_cls_ident)
+        analysis_dict["Number of Prototypes Connected to the Class Identity"].append(nr_prototypes_cls_ident)
+        analysis_dict["Top-10 Prototypes Class Identities"].append(topk_proto_cls_ident)
 
 
 # Save data dictionary into a .CSV

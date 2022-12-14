@@ -15,7 +15,7 @@ import torch.utils.data
 
 
 # Project Imports
-from data_utilities import save_preprocessed_img, save_prototype, save_prototype_self_activation, save_prototype_original_img_with_bbox, imsave_with_bbox
+from data_utilities import undo_preprocess, save_prototype, save_prototype_self_activation, save_prototype_original_img_with_bbox, imsave_with_bbox
 from prototypes_utilities import find_high_activation_crop
 
 
@@ -30,13 +30,10 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     # Specify the test image to be analyzed
     test_image_path = os.path.join(test_image_dir, test_image_name)
 
-
-
-    # Sanity check: Confirm prototype class identity
-    # TODO: load_img_dir = os.path.join(load_model_dir, 'img')
+    # Get the directory of the saved prototypes
     saved_prototypes_dir = os.path.join(weights_dir, 'prototypes')
 
-    # TODO: prototype_info = np.load(os.path.join(load_img_dir, 'epoch-'+epoch_number_str, 'bb'+epoch_number_str+'.npy'))
+    # Get prototype information and confirm prototype class identity
     prototype_info = np.load(os.path.join(saved_prototypes_dir, 'bb.npy'))
     prototype_img_identity = prototype_info[:, -1]
 
@@ -80,7 +77,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
     # Run inference with ppnet
     logits, min_distances = ppnet_model(images_test)
-    conv_output, distances = ppnet_model.push_forward(images_test)
+    _, distances = ppnet_model.push_forward(images_test)
     prototype_activations = ppnet_model.distance_2_similarity(min_distances)
     prototype_activation_patterns = ppnet_model.distance_2_similarity(distances)
     if ppnet_model.prototype_activation_function == 'linear':
@@ -97,9 +94,9 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
     # Get prediction and ground-truth labels
-    idx = 0
-    predicted_cls = tables[idx][0]
-    correct_cls = tables[idx][1]
+    # idx = 0
+    predicted_cls = tables[0][0]
+    correct_cls = tables[0][1]
 
     
     # Append information to the report
@@ -110,25 +107,29 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     
     
     # Save original image
-    original_img = save_preprocessed_img(
-        fname=os.path.join(save_analysis_path, 'original_img.png'),
-        preprocessed_imgs=images_test,
-        mean=norm_params["mean"],
-        std=norm_params["std"],
-        index=idx
-    )
+    # original_img = save_preprocessed_img(
+    #     fname=os.path.join(save_analysis_path, 'original_img.png'),
+    #     preprocessed_imgs=images_test,
+    #     mean=norm_params["mean"],
+    #     std=norm_params["std"],
+    #     index=0
+    # )
 
+    # Get original image
+    original_img = undo_preprocess(images_test, norm_params["mean"], norm_params["std"])
+    original_img = original_img[0]
+    original_img = original_img.detach().cpu().numpy()
+    original_img = np.transpose(original_img, (1,2,0))
 
 
     # Get most activated (nearest) K prototypes of this image
-    # TODO: makedir(os.path.join(save_analysis_path, 'most_activated_prototypes'))
     if not os.path.isdir(os.path.join(save_analysis_path, 'most_activated_prototypes')):
         os.makedirs(os.path.join(save_analysis_path, 'most_activated_prototypes'))
 
     # Append information to the report
     # print('Most activated 10 prototypes of this image:')
     report.write(f'Most activated {most_k_activated} prototypes of this image:\n')
-    array_act, sorted_indices_act = torch.sort(prototype_activations[idx])
+    array_act, sorted_indices_act = torch.sort(prototype_activations[0])
 
 
     # Create a list of the identitities of the top-K most activated prototypes
@@ -203,7 +204,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
         # Get activation pattern and upsampled activation pattern
-        activation_pattern = prototype_activation_patterns[idx][sorted_indices_act[-i].item()].detach().cpu().numpy()
+        activation_pattern = prototype_activation_patterns[0][sorted_indices_act[-i].item()].detach().cpu().numpy()
         upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
 
         # Show the most highly activated patch of the image by this prototype
@@ -226,7 +227,8 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
             bbox_height_start=high_act_patch_indices[0],
             bbox_height_end=high_act_patch_indices[1],
             bbox_width_start=high_act_patch_indices[2],
-            bbox_width_end=high_act_patch_indices[3], color=(0, 255, 255)
+            bbox_width_end=high_act_patch_indices[3],
+            color=(0, 255, 255)
         )
 
 
@@ -254,7 +256,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
 
-# Get prototypes from top-K classes
+# FIXME: Get prototypes from top-K classes
 def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_info, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls):
 
     # Get prototypes from top-K classes

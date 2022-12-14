@@ -92,7 +92,7 @@ def save_preprocessed_img(fname, preprocessed_imgs, mean, std, index=0):
     img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
     undo_preprocessed_img = undo_preprocess_input_function(x=img_copy, mean=mean, std=std)
     
-    print('Image index {0} in batch'.format(index))
+    # print('Image index {0} in batch'.format(index))
     
     undo_preprocessed_img = undo_preprocessed_img[0]
     undo_preprocessed_img = undo_preprocessed_img.detach().cpu().numpy()
