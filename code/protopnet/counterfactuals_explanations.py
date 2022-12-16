@@ -101,14 +101,7 @@ for index, row in image_retrieval_df.iterrows():
 
 
 
-    # Explanation
-    print("Why?")
-    print(f'Class Identities of the Prototypes Activated by Query Image: {proto_stats_df[proto_stats_df["Image Filename"]==query_img_fname]["Top-10 Prototypes Class Identities"].values}')
-    print(f'Class Identities of the Prototypes Activated by Counterfactual Image: {proto_stats_df[proto_stats_df["Image Filename"]==counterfact_img_fname]["Top-10 Prototypes Class Identities"].values}')
-
-
-
-    # Four axes, returned as a 2-d array
+    # Plot Query Image and its Counterfactual
     fig, (ax1, ax2) = plt.subplots(1, 2)
 
     # Query Image
@@ -124,3 +117,44 @@ for index, row in image_retrieval_df.iterrows():
 
 
     plt.show(block=True)
+
+
+
+    # Read the query image prototypes
+    query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_fname.split('.')[0], query_img_fname.split('.')[0], "most_activated_prototypes")
+    query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_in_original_pimg.png") for i in range(10) if i in os.listdir(query_img_prototypes_path)]
+    query_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in query_img_prototypes]
+    
+    # Get the query image prototypes class identities
+    # print("Why?")
+    cls_ids_query_img = proto_stats_df[proto_stats_df["Image Filename"]==query_img_fname]["Top-10 Prototypes Class Identities"]
+    cls_ids_query_img = cls_ids_query_img.split('[')[1]
+    cls_ids_query_img = cls_ids_query_img.split(']')[0]
+    cls_ids_query_img = [i for i in cls_ids_query_img.split(',')]
+    # print(f'Class Identities of the Prototypes Activated by Query Image: {cls_ids_query_img}')
+    
+    
+    
+
+    # Read the counterfactual image prototypes
+    counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_fname.split('.')[0], counterfact_img_fname.split('.')[0], "most_activated_prototypes")
+    counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_in_original_pimg.png") for i in range(10) if i in os.listdir(counterfact_img_prototypes_path)]
+    counterfact_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in counterfact_img_prototypes]
+    
+    # Get the query image prototypes class identities
+    cls_ids_counterfact_img = proto_stats_df[proto_stats_df["Image Filename"]==counterfact_img_fname]["Top-10 Prototypes Class Identities"]
+    cls_ids_counterfact_img = cls_ids_counterfact_img.split('[')[1]
+    cls_ids_counterfact_img = cls_ids_counterfact_img.split(']')[0]
+    cls_ids_counterfact_img = [i for i in cls_ids_counterfact_img.split(',')]
+    # print(f'Class Identities of the Prototypes Activated by Counterfactual Image: {cls_ids_counterfact_img}')
+
+
+
+    # Plot the prototypes
+    fig, axs = plt.subplots(10, 2, figsize=(10, 2), constrained_layout=True)
+    
+    
+    
+    for ax, markevery in zip(axs.flat, cases):
+        ax.set_title(f'markevery={markevery}')
+        ax.plot(x, y, 'o', ls='-', ms=4, markevery=markevery)
