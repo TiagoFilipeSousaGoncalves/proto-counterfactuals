@@ -75,7 +75,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     tables = []
     for i in range(logits.size(0)):
         tables.append((torch.argmax(logits, dim=1)[i].item(), labels_test[i].item()))
-        report.write(str(i) + ' ' + str(tables[-1] + '\n'))
+        report.write(str(i) + ' ' + str(tables[-1]) + '\n')
 
 
     # Get prediction and ground-truth labels
