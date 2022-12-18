@@ -204,7 +204,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls, offsets):
     
     # Get prototypes from top-K classes
-    k = 2
+    # k = 2
     print('Prototypes from top-%d classes:' % k)
 
 

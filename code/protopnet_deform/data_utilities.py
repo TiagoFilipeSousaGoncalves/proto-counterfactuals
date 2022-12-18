@@ -81,7 +81,7 @@ def undo_preprocess_input_function(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.
 
 
 # Function: Save preprocessed image(s)
-def save_preprocessed_img(fname, preprocessed_imgs, index=0):
+def save_preprocessed_img(fname, preprocessed_imgs, index=0, save_img=False):
     
     # Make a copy of the image
     img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
@@ -97,8 +97,9 @@ def save_preprocessed_img(fname, preprocessed_imgs, index=0):
     undo_preprocessed_img = undo_preprocessed_img.detach().cpu().numpy()
     undo_preprocessed_img = np.transpose(undo_preprocessed_img, [1,2,0])
 
-    # Save image    
-    plt.imsave(fname, undo_preprocessed_img)
+    # Save image
+    if save_img:
+        plt.imsave(fname, undo_preprocessed_img)
 
 
     return undo_preprocessed_img
