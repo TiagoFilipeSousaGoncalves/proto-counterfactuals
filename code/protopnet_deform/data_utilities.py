@@ -269,7 +269,7 @@ def save_deform_info(model, offsets, input, activations, save_dir, prototype_img
 
 
 
-#  Dataset
+# Dataset
 # STANFORDCARSDataset: Dataset Class
 class STANFORDCARSDataset(Dataset):
     def __init__(self, data_path, cars_subset, augmented, cropped=True, transform=None):
@@ -637,6 +637,14 @@ class PH2Dataset(Dataset):
         self.cropped = cropped
         self.augmented = augmented
 
+
+        # Labels Dictionary
+        labels_dict = dict()
+        for img, label in zip(ph2_dataset_imgs.copy(), ph2_dataset_labels.copy()):
+            labels_dict[img] = label
+        
+        self.labels_dict = labels_dict
+        
 
         # Transforms
         self.transform = transform

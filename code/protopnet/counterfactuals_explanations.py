@@ -81,6 +81,12 @@ proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join("results", CHECKPOI
 
 
 
+# Create a new directory to save the results from this analysis
+counterfact_exp_dir = os.path.join("results", CHECKPOINT, "analysis", "counterfac-exp")
+if not os.path.isdir(counterfact_exp_dir):
+    os.makedirs(counterfact_exp_dir)
+
+
 # Iterate through the rows of the image_retrieval_df
 for index, row in image_retrieval_df.iterrows():
 
@@ -102,32 +108,41 @@ for index, row in image_retrieval_df.iterrows():
 
 
     # Plot Query Image and its Counterfactual
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout=True)
 
     # Query Image
     ax1.imshow(query_img, cmap="gray")
-    ax1.set_title(f'Query Image (Label {query_img_label})')
+    ax1.set_title(f'Query: {query_img_fname} ({query_img_label})')
     ax1.axis("off")
 
 
     # Counterfactual
     ax2.imshow(counterfact_img, cmap="gray")
-    ax2.set_title(f'Counterfactual (Label {counterfact_label})')
+    ax2.set_title(f'Counterfactual: {counterfact_img_fname} ({counterfact_label})')
     ax2.axis("off")
 
 
-    plt.show(block=True)
+    # Create a directory to save results
+    save_path = os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
+    
+    
+    # Save results
+    # plt.show(block=True)
+    plt.savefig(fname=os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0], "query_vs_cntf_global.png"))
+    plt.close()
 
 
 
     # Read the query image prototypes
     query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_fname.split('.')[0], query_img_fname.split('.')[0], "most_activated_prototypes")
-    query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_in_original_pimg.png") for i in range(10) if i in os.listdir(query_img_prototypes_path)]
+    query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_in_original_pimg.png") for i in range(10)]
     query_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in query_img_prototypes]
     
     # Get the query image prototypes class identities
     # print("Why?")
-    cls_ids_query_img = proto_stats_df[proto_stats_df["Image Filename"]==query_img_fname]["Top-10 Prototypes Class Identities"]
+    cls_ids_query_img = proto_stats_df[proto_stats_df["Image Filename"]==query_img_fname]["Top-10 Prototypes Class Identities"].values[0]
     cls_ids_query_img = cls_ids_query_img.split('[')[1]
     cls_ids_query_img = cls_ids_query_img.split(']')[0]
     cls_ids_query_img = [i for i in cls_ids_query_img.split(',')]
@@ -138,11 +153,11 @@ for index, row in image_retrieval_df.iterrows():
 
     # Read the counterfactual image prototypes
     counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_fname.split('.')[0], counterfact_img_fname.split('.')[0], "most_activated_prototypes")
-    counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_in_original_pimg.png") for i in range(10) if i in os.listdir(counterfact_img_prototypes_path)]
+    counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_in_original_pimg.png") for i in range(10)]
     counterfact_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in counterfact_img_prototypes]
     
     # Get the query image prototypes class identities
-    cls_ids_counterfact_img = proto_stats_df[proto_stats_df["Image Filename"]==counterfact_img_fname]["Top-10 Prototypes Class Identities"]
+    cls_ids_counterfact_img = proto_stats_df[proto_stats_df["Image Filename"]==counterfact_img_fname]["Top-10 Prototypes Class Identities"].values[0]
     cls_ids_counterfact_img = cls_ids_counterfact_img.split('[')[1]
     cls_ids_counterfact_img = cls_ids_counterfact_img.split(']')[0]
     cls_ids_counterfact_img = [i for i in cls_ids_counterfact_img.split(',')]
@@ -151,10 +166,28 @@ for index, row in image_retrieval_df.iterrows():
 
 
     # Plot the prototypes
-    fig, axs = plt.subplots(10, 2, figsize=(10, 2), constrained_layout=True)
+    for l in range(10):
+        
+        # Create subfigures 
+        fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout=True)
+
+        # Plot the query image prototypes in the first column
+        ax1.set_title(f"{cls_ids_query_img[l]}")
+        ax1.axis("off")
+        ax1.imshow(query_img_prototypes[l])
+
+
+        # Plot the counterfactual image prototypes in the second column
+        ax2.set_title(f"{cls_ids_counterfact_img[l]}")
+        ax2.axis("off")
+        ax2.imshow(counterfact_img_prototypes[l])
     
-    
-    
-    for ax, markevery in zip(axs.flat, cases):
-        ax.set_title(f'markevery={markevery}')
-        ax.plot(x, y, 'o', ls='-', ms=4, markevery=markevery)
+
+        # Save figure
+        plt.savefig(fname=os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0], f"query_vs_cntf_proto_{l+1}.png"))
+        plt.close()
+
+
+        # FIXME: Extra
+        if "query_vs_cntf_proto.png" in os.listdir(os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])):
+            os.remove(os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0], "query_vs_cntf_proto.png"))

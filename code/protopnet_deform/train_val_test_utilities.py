@@ -481,3 +481,22 @@ def joint(model, last_layer_fixed=True):
 
     for p in model.last_layer.parameters():
         p.requires_grad = not last_layer_fixed
+
+
+
+# Function: Get model predictions (i.e., inference)
+def model_predict(model, in_data):
+
+    # Get the logits with the model in inference mode
+    logits, _ = model(in_data, is_train=False, prototypes_of_wrong_class=None)
+
+    # Using Softmax: Apply softmax on logits to get the predicted scores
+    s_logits = torch.nn.Softmax(dim=1)(logits)
+    predicted_scores = s_logits.cpu().detach().numpy()
+
+    # Get predicted label using argmax
+    s_label = torch.argmax(s_logits, dim=1)
+    predicted_label = s_label.cpu().detach().numpy()
+
+
+    return predicted_label, predicted_scores

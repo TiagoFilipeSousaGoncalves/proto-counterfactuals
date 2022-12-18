@@ -435,9 +435,8 @@ def joint(model):
 def model_predict(model, in_data):
 
 
-    # Get the logits and the minimum distances with the model in inference mode
-    logits, min_distances = model(in_data)
-
+    # Get the logits with the model in inference mode
+    logits, _ = model(in_data)
 
     # Using Softmax: Apply softmax on logits to get the predicted scores
     s_logits = torch.nn.Softmax(dim=1)(logits)
