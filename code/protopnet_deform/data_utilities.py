@@ -109,9 +109,12 @@ def save_preprocessed_img(fname, preprocessed_imgs, index=0, save_img=False):
 # Function: Save image prototypes
 def save_prototype(fname, load_img_dir, index):
     
-    # Open an image file and save it
-    p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img'+str(index)+'.png'))
-    plt.imsave(fname, p_img)
+    try:
+        # Open an image file and save it
+        p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img'+str(index)+'.png'))
+        plt.imsave(fname, p_img)
+    except:
+        pass
 
     return
     
@@ -120,9 +123,12 @@ def save_prototype(fname, load_img_dir, index):
 # Function: Save prototype bbox
 def save_prototype_box(fname, load_img_dir, index):
     
-    # Open an image file and save it
-    p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img-with_box'+str(index)+'.png'))
-    plt.imsave(fname, p_img)
+    try:
+        # Open an image file and save it
+        p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img-with_box'+str(index)+'.png'))
+        plt.imsave(fname, p_img)
+    except:
+        pass
 
     return
     
@@ -131,18 +137,22 @@ def save_prototype_box(fname, load_img_dir, index):
 # Function: Save image with a bounding-box
 def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_width_start, bbox_width_end, color=(0, 255, 255)):
     
-    # Convert RGB to BGR with OpenCV
-    img_bgr_uint8 = cv2.cvtColor(np.uint8(255*img_rgb), cv2.COLOR_RGB2BGR)
-    
-    # Draw rectangle around bbox
-    cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
-    
-    # Convert into RGB and type float
-    img_rgb_uint8 = img_bgr_uint8[...,::-1]
-    img_rgb_float = np.float32(img_rgb_uint8) / 255
-    
-    # Save image
-    plt.imsave(fname, img_rgb_float)
+
+    try:
+        # Convert RGB to BGR with OpenCV
+        img_bgr_uint8 = cv2.cvtColor(np.uint8(255*img_rgb), cv2.COLOR_RGB2BGR)
+        
+        # Draw rectangle around bbox
+        cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
+        
+        # Convert into RGB and type float
+        img_rgb_uint8 = img_bgr_uint8[...,::-1]
+        img_rgb_float = np.float32(img_rgb_uint8) / 255
+        
+        # Save image
+        plt.imsave(fname, img_rgb_float)
+    except:
+        pass
 
 
     return
