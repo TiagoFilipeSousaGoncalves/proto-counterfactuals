@@ -258,6 +258,12 @@ elif DATASET == "STANFORDCARS":
     labels_dict = test_set.labels_dict.copy()
 
 
+# PAPILA
+elif DATASET == "PAPILA":
+
+    pass
+
+
 
 # Test DataLoader
 test_loader = DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)

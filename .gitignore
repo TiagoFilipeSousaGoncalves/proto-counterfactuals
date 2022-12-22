@@ -131,12 +131,8 @@ dmypy.json
 
 # Directories
 # code/ProtoPNet-master/
-data/cub2002011
-data/stanfordcars
-data/ph2
-results/cub2002011
-results/stanfordcars
-results/ph2
+data
+results
 
 
 # macOS files

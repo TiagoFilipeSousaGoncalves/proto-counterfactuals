@@ -705,3 +705,9 @@ class PH2Dataset(Dataset):
             image = self.transform(image)
 
         return image, label
+
+
+
+# PAPILADataset: Dataset Class
+class PAPILADataset(Dataset):
+    pass
