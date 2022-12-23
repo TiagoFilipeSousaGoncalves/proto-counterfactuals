@@ -628,7 +628,7 @@ class PAPILADataset(Dataset):
 
         # Select if you want the cropped version or not
         if cropped:
-            self.images_dir = os.path.join(papila_dir, "processed", "rois", "splits", subset)
+            self.images_dir = os.path.join(papila_dir, "processed", "splits", subset)
         
         else:
             pass
