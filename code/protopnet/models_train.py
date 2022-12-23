@@ -26,7 +26,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import preprocess_input_function, CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import preprocess_input_function, CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from prototypes_utilities import push_prototypes
 from train_val_test_utilities import model_train, model_validation, last_only, warm_only, joint, print_metrics
@@ -42,7 +42,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
@@ -302,6 +302,40 @@ if DATASET == "CUB2002011":
 
     # Number of classes
     NUM_CLASSES = len(train_set.labels_dict)
+
+
+
+# PAPILA
+elif DATASET == "PAPILA":
+    # Train Dataset
+    train_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=True,
+        transform=train_transforms
+    )
+
+    # Train Push Dataset (Prototypes)
+    train_push_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=False,
+        transform=train_push_transforms
+    )
+
+    # Validation Dataset
+    val_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=val_transforms
+    )
+
+    # Number of Classes
+    NUM_CLASSES = len(np.unique(train_set.images_labels))
 
 
 
