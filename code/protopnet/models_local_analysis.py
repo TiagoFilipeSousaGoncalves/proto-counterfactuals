@@ -4,6 +4,7 @@
 # Imports
 import os
 import argparse
+import numpy as np
 import pandas as pd
 
 # PyTorch Imports
@@ -12,7 +13,7 @@ import torchvision
 import torch.utils.data
 
 # Project Imports
-from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from prototypes_retrieval_utilities import retrieve_image_prototypes
 
@@ -27,7 +28,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
@@ -127,6 +128,29 @@ if DATASET == "CUB2002011":
 
     # Number of classes
     NUM_CLASSES = len(test_set.labels_dict)
+
+    # Labels dictionary
+    labels_dict = test_set.labels_dict.copy()
+
+
+# PAPILA
+elif DATASET == "PAPILA":
+
+    # Get image directories
+    data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
+    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+
+    # Test Dataset
+    test_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=test_transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(np.unique(test_set.images_labels))
 
     # Labels dictionary
     labels_dict = test_set.labels_dict.copy()
