@@ -16,7 +16,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from train_val_test_utilities import model_predict
 
@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
@@ -124,7 +124,8 @@ test_transforms = torchvision.transforms.Compose([
 # Dataset
 # CUB2002011
 if DATASET == "CUB2002011":
-    # Test
+    
+    # Test Dataset
     test_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
@@ -136,10 +137,26 @@ if DATASET == "CUB2002011":
     NUM_CLASSES = len(test_set.labels_dict)
 
 
+# PAPILA
+elif DATASET == "PAPILA":
+
+    # Test Dataset
+    test_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=test_transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(np.unique(test_set.images_labels))
+
 
 # PH2
 elif DATASET == "PH2":
-    # Test
+    
+    # Test Dataset
     test_set = PH2Dataset(
         data_path=DATA_DIR,
         subset="test",
