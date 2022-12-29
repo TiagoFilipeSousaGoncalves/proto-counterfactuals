@@ -51,3 +51,28 @@ def generate_image_features(image_path, ppnet_model, device, transforms):
 
 
     return conv_output
+
+
+
+# Function: Generate image prediction
+def get_image_prediction(image_path, ppnet_model, device, transforms):
+
+    # Load the image and labels
+    img_pil = Image.open(image_path).convert('RGB')
+    img_tensor = transforms(img_pil)
+    img_variable = Variable(img_tensor.unsqueeze(0))
+    images_test = img_variable.to(device)
+
+    # Run inference with ppnet
+    logits, _ = ppnet_model(images_test)
+    s_logits = torch.nn.Softmax(dim=1)(logits)
+    sorted_indices = torch.argsort(s_logits, dim=1)
+    
+
+    # Get prediction
+    label_pred = sorted_indices[0][-1].item()
+    
+    
+
+
+    return label_pred

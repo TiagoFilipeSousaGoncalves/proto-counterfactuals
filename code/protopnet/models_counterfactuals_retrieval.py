@@ -14,8 +14,8 @@ import torch.utils.data
 import torchvision
 
 # Project Imports
-from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
-from image_retrieval_utilities import generate_image_features, get_image_counterfactual
+from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
+from image_retrieval_utilities import generate_image_features, get_image_counterfactual, get_image_prediction
 from model_utilities import construct_PPNet
 
 
@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, densenet161, resnet34, resnet152, vgg16, vgg19.')
@@ -155,6 +155,44 @@ if DATASET == "CUB2002011":
 
     # Number of classes
     NUM_CLASSES = len(test_set.labels_dict)
+
+
+
+# PAPILA
+elif DATASET == "PAPILA":
+
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "train")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+
+    # Get image directories
+    test_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
+
+    # Test Dataset
+    test_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(np.unique(test_set.images_labels))
+
+    # Labels dictionary
+    labels_dict = test_set.labels_dict.copy()
 
 
 
@@ -420,23 +458,40 @@ for image_dir in test_img_directories:
                 if int(ctf_label) == int(counterfactual_pred):
                     for ctf_fname in ctf_names:
 
-                        # Load the features of the counterfactual
-                        ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+                        # Get the prediction of the model on this counterfactual
+                        ctf_prediction = get_image_prediction(
+                            image_path=os.path.join(test_data_path, counterfact_dir, ctf_fname),
+                            ppnet_model=ppnet_model,
+                            device=DEVICE,
+                            transforms=transforms
+                        )
 
-                        # Compute the Euclidean Distance (L2-norm) between these feature vectors
-                        distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
+
+                        # Only compute the distances to cases where both the ground-truth and the predicted label(s) of the counterfactual match
+                        if int(ctf_prediction) == int(ctf_label):
+                            # Load the features of the counterfactual
+                            ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+
+                            # Compute the Euclidean Distance (L2-norm) between these feature vectors
+                            distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
 
 
-                        # Append these to lists
-                        counter_imgs_fnames.append(ctf_fname)
-                        distances.append(distance_img_ctf)
+                            # Append these to lists
+                            counter_imgs_fnames.append(ctf_fname)
+                            distances.append(distance_img_ctf)
     
 
 
             # Add information to our data dictionary
             analysis_dict["Image"].append(image_name)
             analysis_dict["Image Label"].append(int(image_label))
-            analysis_dict["Nearest Counterfactual"].append(counter_imgs_fnames[np.argmin(distances)])
+
+            # We must be sure that we found at least one valid counterfactual
+            if len(distances) > 0:
+                analysis_dict["Nearest Counterfactual"].append(counter_imgs_fnames[np.argmin(distances)])
+            else:
+                analysis_dict["Nearest Counterfactual"].append("N/A")
+            
             analysis_dict["Nearest Counterfactual Label"].append(int(counterfactual_pred))
 
 
