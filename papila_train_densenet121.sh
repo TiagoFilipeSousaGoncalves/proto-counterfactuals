@@ -9,7 +9,7 @@
 
 echo "PAPILA | Started | Training"
 
-model="ppnet"
+model="dppnet"
 
 if [ $model == "ppnet" ]
 then
