@@ -165,6 +165,7 @@ elif DATASET == "PAPILA":
     train_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "train")
     train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
 
+
     # Train Dataset
     train_set = PAPILADataset(
         data_path=DATA_DIR,
@@ -358,46 +359,50 @@ max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
 
 
 # Generate images features (we will need these for the retrieval)
+# Note: We generate features for the entire database
 if GENERATE_FEATURES:
 
-    # Go through all image directories
-    for image_dir in test_img_directories:
+    for directory, data_path, labels_dict in zip([train_img_directories, test_img_directories], [train_data_path, test_data_path], [train_labels_dict, test_labels_dict]):
 
-        # Get images in this directory
-        image_names = [i for i in os.listdir(os.path.join(test_data_path, image_dir)) if not i.startswith('.')]
-        image_names = [i for i in image_names if not os.path.isdir(os.path.join(test_data_path, i))]
+        # Go through all image directories
+        for image_dir in directory:
 
-        # Go through all images in a single directory
-        for image_name in image_names:
+            # Get images in this directory
+            image_names = [i for i in os.listdir(os.path.join(data_path, image_dir)) if not i.startswith('.')]
+            image_names = [i for i in image_names if i != "augmented"]
+            image_names = [i for i in image_names if not os.path.isdir(os.path.join(data_path, i))]
 
-            # Get image label
-            image_label = test_labels_dict[image_dir]
+            # Go through all images in a single directory
+            for image_name in image_names:
 
-            # Generate test image path
-            test_img_path = os.path.join(test_data_path, image_dir, image_name)
+                # Get image label
+                image_label = labels_dict[image_dir]
 
-
-            # Generate features
-            conv_features = generate_image_features(
-                image_path=test_img_path,
-                ppnet_model=ppnet_model,
-                device=DEVICE,
-                transforms=transforms
-            )
+                # Generate test image path
+                image_path = os.path.join(data_path, image_dir, image_name)
 
 
-            # Convert feature vector to NumPy
-            conv_features = conv_features.detach().cpu().numpy()
+                # Generate features
+                conv_features = generate_image_features(
+                    image_path=image_path,
+                    ppnet_model=ppnet_model,
+                    device=DEVICE,
+                    transforms=transforms
+                )
 
-            # Save this into disk
-            conv_features_fname = image_name.split('.')[0] + '.npy'
-            conv_features_fpath = os.path.join(features_dir, conv_features_fname)
-            np.save(
-                file=conv_features_fpath,
-                arr=conv_features,
-                allow_pickle=True,
-                fix_imports=True
-            )
+
+                # Convert feature vector to NumPy
+                conv_features = conv_features.detach().cpu().numpy()
+
+                # Save this into disk
+                conv_features_fname = image_name.split('.')[0] + '.npy'
+                conv_features_fpath = os.path.join(features_dir, conv_features_fname)
+                np.save(
+                    file=conv_features_fpath,
+                    arr=conv_features,
+                    allow_pickle=True,
+                    fix_imports=True
+                )
 
 
 
@@ -411,7 +416,8 @@ analysis_dict = {
 
 
 
-# Go through all image directories
+# Query Image: Here, we will only use the images of the test set as query images
+# Go through all test image directories
 for image_dir in test_img_directories:
 
     # Get images in this directory
@@ -448,41 +454,43 @@ for image_dir in test_img_directories:
             distances = list()
             
             
-            # Iterate again through the database
-            for counterfact_dir in test_img_directories:
+            # Iterate again through ALL images of the database
+            for ctf_directory, ctf_data_path, ctf_labels_dict in zip([train_img_directories, test_img_directories], [train_data_path, test_data_path], [train_labels_dict, test_labels_dict]):
+                for counterfact_dir in ctf_directory:
 
-                # Get images in this directory
-                ctf_names = [i for i in os.listdir(os.path.join(test_data_path, counterfact_dir)) if not i.startswith('.')]
-                ctf_names = [i for i in ctf_names if not os.path.isdir(os.path.join(test_data_path, i))]
+                    # Get images in this directory
+                    ctf_names = [i for i in os.listdir(os.path.join(ctf_data_path, counterfact_dir)) if not i.startswith('.')]
+                    ctf_names = [i for i in ctf_names if i != "augmented"]
+                    ctf_names = [i for i in ctf_names if not os.path.isdir(os.path.join(ctf_data_path, i))]
 
-                # Get label of the counterfactual first
-                ctf_label = test_labels_dict[counterfact_dir]
+                    # Get label of the counterfactual first
+                    ctf_label = ctf_labels_dict[counterfact_dir]
 
-                # We only evaluate in such cases
-                if int(ctf_label) == int(counterfactual_pred):
-                    for ctf_fname in ctf_names:
+                    # We only evaluate in such cases
+                    if int(ctf_label) == int(counterfactual_pred):
+                        for ctf_fname in ctf_names:
 
-                        # Get the prediction of the model on this counterfactual
-                        ctf_prediction = get_image_prediction(
-                            image_path=os.path.join(test_data_path, counterfact_dir, ctf_fname),
-                            ppnet_model=ppnet_model,
-                            device=DEVICE,
-                            transforms=transforms
-                        )
-
-
-                        # Only compute the distances to cases where both the ground-truth and the predicted label(s) of the counterfactual match
-                        if int(ctf_prediction) == int(ctf_label):
-                            # Load the features of the counterfactual
-                            ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
-
-                            # Compute the Euclidean Distance (L2-norm) between these feature vectors
-                            distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
+                            # Get the prediction of the model on this counterfactual
+                            ctf_prediction = get_image_prediction(
+                                image_path=os.path.join(ctf_data_path, counterfact_dir, ctf_fname),
+                                ppnet_model=ppnet_model,
+                                device=DEVICE,
+                                transforms=transforms
+                            )
 
 
-                            # Append these to lists
-                            counter_imgs_fnames.append(ctf_fname)
-                            distances.append(distance_img_ctf)
+                            # Only compute the distances to cases where both the ground-truth and the predicted label(s) of the counterfactual match
+                            if int(ctf_prediction) == int(ctf_label):
+                                # Load the features of the counterfactual
+                                ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+
+                                # Compute the Euclidean Distance (L2-norm) between these feature vectors
+                                distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
+
+
+                                # Append these to lists
+                                counter_imgs_fnames.append(ctf_fname)
+                                distances.append(distance_img_ctf)
     
 
 

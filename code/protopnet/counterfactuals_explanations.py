@@ -98,6 +98,9 @@ if not os.path.isdir(counterfact_exp_dir):
 
 
 # Open file to append errors
+if os.path.exists(os.path.join(counterfact_exp_dir, "err_report.txt")):
+    os.remove(os.path.join(counterfact_exp_dir, "err_report.txt"))
+
 err_report = open(os.path.join(counterfact_exp_dir, "err_report.txt"), "at")
 
 # Iterate through the rows of the image_retrieval_df

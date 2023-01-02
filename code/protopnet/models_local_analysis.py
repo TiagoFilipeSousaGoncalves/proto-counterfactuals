@@ -102,8 +102,8 @@ STD = [0.229, 0.224, 0.225]
 
 
 
-# Test Transforms
-test_transforms = torchvision.transforms.Compose([
+# Transforms
+transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
@@ -114,31 +114,67 @@ test_transforms = torchvision.transforms.Compose([
 # CUB2002011
 if DATASET == "CUB2002011":
 
-    # Get image directories
-    data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
-    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = CUB2002011Dataset(
+        data_path=train_data_path,
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=False,
+        transform=transforms
+    )
+
+    # Get train labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
 
     # Test Dataset
     test_set = CUB2002011Dataset(
-        data_path=data_path,
+        data_path=test_data_path,
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
         augmented=False,
-        transform=test_transforms
+        transform=transforms
     )
+
+    # Get test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
 
     # Number of classes
     NUM_CLASSES = len(test_set.labels_dict)
 
-    # Labels dictionary
-    labels_dict = test_set.labels_dict.copy()
 
 
 # PAPILA
 elif DATASET == "PAPILA":
 
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "train")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+
+    # Train Dataset
+    train_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+
+    # Get train Labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
     # Get image directories
-    data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
-    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+    test_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
 
     # Test Dataset
     test_set = PAPILADataset(
@@ -146,22 +182,40 @@ elif DATASET == "PAPILA":
         subset="test",
         cropped=True,
         augmented=False,
-        transform=test_transforms
+        transform=transforms
     )
 
     # Number of classes
     NUM_CLASSES = len(np.unique(test_set.images_labels))
 
     # Labels dictionary
-    labels_dict = test_set.labels_dict.copy()
+    test_labels_dict = test_set.labels_dict.copy()
+
 
 
 # PH2
 elif DATASET == "PH2":
 
-    # Get image directories
-    data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "test", "cropped")
-    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "train", "cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+    # Get train Labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "test", "cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
 
     # Test Dataset
     test_set = PH2Dataset(
@@ -169,22 +223,39 @@ elif DATASET == "PH2":
         subset="test",
         cropped=True,
         augmented=False,
-        transform=test_transforms
+        transform=transforms
     )
 
-    # Number of Classes
-    NUM_CLASSES = len(test_set.diagnosis_dict)
+    # Get test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
 
-    # Labels dictionary
-    labels_dict = test_set.labels_dict.copy()
+    # Number of classes
+    NUM_CLASSES = len(test_set.diagnosis_dict)
 
 
 # STANFORDCARS
 elif DATASET == "STANFORDCARS":
 
-    # Get image directories
-    data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_test", "images_cropped")
-    image_directories = [f for f in os.listdir(data_path) if not f.startswith('.')]
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_train", "images_cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_train",
+        augmented=False,
+        cropped=True,
+        transform=transforms
+    )
+
+    # Train labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_test", "images_cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
 
     # Test Dataset
     test_set = STANFORDCARSDataset(
@@ -192,14 +263,15 @@ elif DATASET == "STANFORDCARS":
         cars_subset="cars_test",
         augmented=False,
         cropped=True,
-        transform=test_transforms
+        transform=transforms
     )
+
+    # Test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
+
 
     # Number of classes
     NUM_CLASSES = len(test_set.class_names)
-
-    # Labels dictionary
-    labels_dict = test_set.labels_dict.copy()
 
 
 
@@ -286,45 +358,47 @@ analysis_dict = {
 
 
 # Go through all image directories
-for image_dir in image_directories:
+for image_directories, data_path, labels_dict in zip([train_img_directories, test_img_directories], [train_data_path, test_data_path], [train_labels_dict, test_labels_dict]):
+    for image_dir in image_directories:
 
-    # Get images in this directory
-    image_names = [i for i in os.listdir(os.path.join(data_path, image_dir)) if not i.startswith('.')]
-    image_names = [i for i in image_names if not os.path.isdir(os.path.join(data_path, i))]
+        # Get images in this directory
+        image_names = [i for i in os.listdir(os.path.join(data_path, image_dir)) if not i.startswith('.')]
+        image_names = [i for i in image_names if i != "augmented"]
+        image_names = [i for i in image_names if not os.path.isdir(os.path.join(data_path, i))]
 
-    # Go through all images in a single directory
-    for image_name in image_names:
+        # Go through all images in a single directory
+        for image_name in image_names:
 
-        # Get image label
-        image_label = labels_dict[image_dir]
+            # Get image label
+            image_label = labels_dict[image_dir]
 
-        # Create image analysis path
-        image_analysis_path = os.path.join(save_analysis_path, image_dir, image_name.split('.')[0])
-        if not os.path.isdir(image_analysis_path):
-            os.makedirs(image_analysis_path)
+            # Create image analysis path
+            image_analysis_path = os.path.join(save_analysis_path, image_dir, image_name.split('.')[0])
+            if not os.path.isdir(image_analysis_path):
+                os.makedirs(image_analysis_path)
 
-        # Analyse this image
-        img_fname, gt_label, pred_label, nr_prototypes_cls_ident, topk_proto_cls_ident = retrieve_image_prototypes(
-            save_analysis_path=image_analysis_path,
-            weights_dir=weights_dir,
-            load_img_dir=load_img_dir,
-            ppnet_model=ppnet_model,
-            device=DEVICE,
-            test_transforms=test_transforms,
-            test_image_dir=os.path.join(data_path, image_dir),
-            test_image_name=image_name,
-            test_image_label=image_label,
-            norm_params={"mean":MEAN, "std":STD},
-            img_size=IMG_SIZE
-        )
+            # Analyse this image
+            img_fname, gt_label, pred_label, nr_prototypes_cls_ident, topk_proto_cls_ident = retrieve_image_prototypes(
+                save_analysis_path=image_analysis_path,
+                weights_dir=weights_dir,
+                load_img_dir=load_img_dir,
+                ppnet_model=ppnet_model,
+                device=DEVICE,
+                test_transforms=transforms,
+                test_image_dir=os.path.join(data_path, image_dir),
+                test_image_name=image_name,
+                test_image_label=image_label,
+                norm_params={"mean":MEAN, "std":STD},
+                img_size=IMG_SIZE
+            )
 
 
-        # Add information to our data dictionary
-        analysis_dict["Image Filename"].append(img_fname)
-        analysis_dict["Ground-Truth Label"].append(gt_label)
-        analysis_dict["Predicted Label"].append(pred_label)
-        analysis_dict["Number of Prototypes Connected to the Class Identity"].append(nr_prototypes_cls_ident)
-        analysis_dict["Top-10 Prototypes Class Identities"].append(topk_proto_cls_ident)
+            # Add information to our data dictionary
+            analysis_dict["Image Filename"].append(img_fname)
+            analysis_dict["Ground-Truth Label"].append(gt_label)
+            analysis_dict["Predicted Label"].append(pred_label)
+            analysis_dict["Number of Prototypes Connected to the Class Identity"].append(nr_prototypes_cls_ident)
+            analysis_dict["Top-10 Prototypes Class Identities"].append(topk_proto_cls_ident)
 
 
 # Save data dictionary into a .CSV

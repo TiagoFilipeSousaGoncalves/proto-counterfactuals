@@ -25,6 +25,9 @@ from prototypes_utilities import find_high_activation_crop
 def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, norm_params, img_size, most_k_activated=10):
 
     # Open a file to save a small report w/ .TXT extension
+    if os.path.exists(os.path.join(save_analysis_path, "report.txt")):
+        os.remove(os.path.join(save_analysis_path, "report.txt"))
+
     report = open(os.path.join(save_analysis_path, "report.txt"), "at")
 
     # Specify the test image to be analyzed
