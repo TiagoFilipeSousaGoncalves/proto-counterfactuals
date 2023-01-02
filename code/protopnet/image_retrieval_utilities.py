@@ -71,8 +71,6 @@ def get_image_prediction(image_path, ppnet_model, device, transforms):
 
     # Get prediction
     label_pred = sorted_indices[0][-1].item()
-    
-    
 
 
     return label_pred
