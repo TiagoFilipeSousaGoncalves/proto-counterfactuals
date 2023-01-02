@@ -175,6 +175,10 @@ elif DATASET == "PAPILA":
     )
 
 
+    # Get train Labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
     # Get image directories
     test_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
     test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
@@ -192,7 +196,7 @@ elif DATASET == "PAPILA":
     NUM_CLASSES = len(np.unique(test_set.images_labels))
 
     # Labels dictionary
-    labels_dict = test_set.labels_dict.copy()
+    test_labels_dict = test_set.labels_dict.copy()
 
 
 

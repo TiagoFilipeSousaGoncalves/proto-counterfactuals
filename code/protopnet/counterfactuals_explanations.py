@@ -17,8 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
-
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Checkpoint
 parser.add_argument('--checkpoint', type=str, default="data", help="Path to the model checkpoint.")
@@ -50,6 +49,16 @@ if DATASET == "CUB2002011":
 
     # Get test image path
     test_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
+
+
+# PAPILA
+elif DATASET == "PAPILA":
+
+    # Get train image path
+    train_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "train")
+
+    # Get test image path
+    test_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
 
 
 # PH2
