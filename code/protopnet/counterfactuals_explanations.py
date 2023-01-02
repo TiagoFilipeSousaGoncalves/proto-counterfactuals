@@ -98,10 +98,9 @@ for index, row in image_retrieval_df.iterrows():
     query_img = np.array(query_img)
 
 
-    # Get counterfactual
-    counterfact_img_fname = row["Nearest Counterfactual"]
-    if counterfact_img_fname != "N/A":
-
+    # Get counterfactual (not all images of all models have counterfactuals)
+    try:
+        counterfact_img_fname = row["Nearest Counterfactual"]
         counterfact_label = row["Nearest Counterfactual Label"]
         counterfact_img = Image.open(os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)).convert("RGB")
         counterfact_img = counterfact_img.resize((224, 224))
@@ -194,7 +193,7 @@ for index, row in image_retrieval_df.iterrows():
             if "query_vs_cntf_proto.png" in os.listdir(os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])):
                 os.remove(os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0], "query_vs_cntf_proto.png"))
 
-    else:
+    except:
         print(f"Proper counterfactual not available for {query_img_fname}")
 
 

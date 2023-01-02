@@ -2,10 +2,13 @@
 
 
 
-# PH2 "densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"
 echo "Started | PH2 | Counterfactual Explanations"
 
-if [ $1 == "ppnet" ]
+
+model="ppnet"
+
+
+if [ $model == "ppnet" ]
 then
     echo "PH2 | ProtoPNet"
     python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/densenet121/2022-12-06_15-51-53/
@@ -14,7 +17,7 @@ then
     python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/resnet152/2022-12-07_00-40-00/
     python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/vgg16/2022-12-07_00-42-57/
     python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/vgg19/2022-12-07_02-48-40/
-elif [ $1 == 'dppnet' ]
+elif [ $model == 'dppnet' ]
 then
     echo "PH2 | Deformable ProtoPNet"
     python code/protopnet_deform/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/densenet121/2022-12-06_18-16-44/
