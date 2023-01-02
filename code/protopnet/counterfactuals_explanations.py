@@ -87,6 +87,10 @@ if not os.path.isdir(counterfact_exp_dir):
     os.makedirs(counterfact_exp_dir)
 
 
+
+# Open file to append errors
+err_report = open(os.path.join(counterfact_exp_dir, "err_report.txt"), "at")
+
 # Iterate through the rows of the image_retrieval_df
 for index, row in image_retrieval_df.iterrows():
 
@@ -194,8 +198,11 @@ for index, row in image_retrieval_df.iterrows():
                 os.remove(os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0], "query_vs_cntf_proto.png"))
 
     except:
-        print(f"Proper counterfactual not available for {query_img_fname}")
+        err_report.write(f"Proper counterfactual not available for {query_img_fname}\n")
 
 
+
+# Close error report
+err_report.close()
 
 print("Finished.")
