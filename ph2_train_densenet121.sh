@@ -7,14 +7,20 @@
 
 
 
-echo "PH2 | STARTED"
+echo "Started | PH2 | Training"
 
-# ProtoPNet
-# echo "ProtoPNet | DenseNet121"
-# python code/protopnet/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0
+model="dppnet"
 
-# Deformable-ProtoPNet
-echo "Deformable-ProtoPNet | DenseNet121"
-python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+if [ $model == "ppnet" ]
+then
+    echo "PH2 | ProtoPNet DenseNet121"
+    python code/protopnet/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0
+elif [ $model == 'dppnet' ]
+then
+    echo "PH2 | Deformable-ProtoPNet DenseNet121"
+    python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture densenet121 --batchsize 16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+else
+    echo "Error"
+fi
 
-echo "PH2 | FINISHED"
+echo "Finished | PH2 | Training"
