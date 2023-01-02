@@ -9,7 +9,7 @@
 
 echo "Started | CUB2002011 | Training"
 
-model="ppnet"
+model="dppnet"
 
 if [ $model == "ppnet" ]
 then
@@ -18,7 +18,7 @@ then
 elif [ $model == 'dppnet' ]
 then
     echo "CUB200211 | Deformable-ProtoPNet ResNet34"
-    python code/protopnet_deform/models_train.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 128 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+    python code/protopnet_deform/models_train.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 64 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
 else
     echo "Error"
 fi
