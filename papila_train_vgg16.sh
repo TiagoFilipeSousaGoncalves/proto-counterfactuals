@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH -p teslav100_32GB                 # Partition
+#SBATCH -p titanxp_12GB                 # Partition
 #SBATCH --job-name=pap_v16                # Job name
 #SBATCH -o slurm.%N.%j.out                # STDOUT
 #SBATCH -e slurm.%N.%j.err                # STDERR
