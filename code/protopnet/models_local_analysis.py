@@ -403,7 +403,15 @@ for image_directories, data_path, labels_dict in zip([train_img_directories, tes
 
 # Save data dictionary into a .CSV
 analysis_df = pd.DataFrame.from_dict(data=analysis_dict)
-analysis_df.to_csv(path_or_buf=os.path.join(save_analysis_path, "analysis.csv"))
+
+# Check if old analysis.csv file exists
+csv_path = os.path.join(save_analysis_path, "analysis.csv")
+if os.path.exists(csv_path):
+    os.remove(csv_path)
+
+
+# Save new file
+analysis_df.to_csv(path_or_buf=csv_path)
 
 
 

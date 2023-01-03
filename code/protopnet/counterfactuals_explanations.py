@@ -118,7 +118,8 @@ for index, row in image_retrieval_df.iterrows():
     try:
         counterfact_img_fname = row["Nearest Counterfactual"]
         counterfact_label = row["Nearest Counterfactual Label"]
-        counterfact_img = Image.open(os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)).convert("RGB")
+        counterfact_img_path = os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname) if os.path.exists(os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)) else os.path.join(train_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)
+        counterfact_img = Image.open(counterfact_img_path).convert("RGB")
         counterfact_img = counterfact_img.resize((224, 224))
         counterfact_img = np.array(counterfact_img)
 

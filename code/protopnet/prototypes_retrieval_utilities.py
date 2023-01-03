@@ -76,7 +76,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     img_tensor = test_transforms(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
     images_test = img_variable.to(device)
-    labels_test = torch.tensor([test_image_label])
+    # labels_test = torch.tensor([test_image_label])
 
     # Run inference with ppnet
     logits, min_distances = ppnet_model(images_test)
@@ -89,17 +89,31 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
     # Create tables of predictions and ground-truth
-    tables = []
-    for i in range(logits.size(0)):
-        tables.append((torch.argmax(logits, dim=1)[i].item(), labels_test[i].item()))
+    # tables = []
+    # for i in range(logits.size(0)):
+        # tables.append((torch.argmax(logits, dim=1)[i].item(), labels_test[i].item()))
         # print(str(i) + ' ' + str(tables[-1]))
-        report.write(f"{str(i)}, {str(tables[-1])}\n")
-
-
+        # report.write(f"{str(i)}, {str(tables[-1])}\n")
+    
     # Get prediction and ground-truth labels
     # idx = 0
-    predicted_cls = tables[0][0]
-    correct_cls = tables[0][1]
+    # predicted_cls = tables[0][0]
+    # correct_cls = tables[0][1]
+    
+
+    # Apply Softmax to obtain scaled logits
+    s_logits = torch.nn.Softmax(dim=1)(logits)
+
+    # Sort indices to obtain the prediction
+    sorted_indices = torch.argsort(s_logits, dim=1)
+    
+
+    # Get prediction
+    predicted_cls = int(sorted_indices[0][-1].item())
+    correct_cls = int(test_image_label)
+    
+    
+    
 
     
     # Append information to the report
