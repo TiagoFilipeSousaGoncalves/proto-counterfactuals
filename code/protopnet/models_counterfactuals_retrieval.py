@@ -305,7 +305,7 @@ weights_dir = os.path.join(results_dir, "weights")
 
 
 # Features 
-features_dir = os.path.join(results_dir, "features", "test")
+features_dir = os.path.join(results_dir, "features")
 if not os.path.isdir(features_dir):
     os.makedirs(features_dir)
 
