@@ -293,11 +293,18 @@ with torch.no_grad():
         # print(f"Evolution of the inference dictionary:\n {inference_dict}\n")
 
 
+
 # Create dataframe from dictionary
 inference_df = pd.DataFrame.from_dict(inference_dict)
 
+# Check if old analysis.csv file exists
+csv_path = os.path.join(inference_dir, "inference_results.csv")
+if os.path.exists(csv_path):
+    os.remove(csv_path)
+
 # Convert this into .CSV
-inference_df.to_csv(os.path.join(inference_dir, "inference_results.csv"), index=False)
+inference_df.to_csv(csv_path, index=False)
+
 
 
 print("Finished.")
