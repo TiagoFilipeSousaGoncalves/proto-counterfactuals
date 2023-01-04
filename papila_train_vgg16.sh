@@ -14,11 +14,11 @@ model="dppnet"
 if [ $model == "ppnet" ]
 then
     echo "ProtoPNet | VGG16"
-    python code/protopnet/models_train.py --dataset PAPILA --base_architecture vgg16 --batchsize 64 --num_workers 0 --gpu_id 0
+    python code/protopnet/models_train.py --dataset PAPILA --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0
 elif [ $model == 'dppnet' ]
 then
     echo "Deformable-ProtoPNet | VGG16"
-    python code/protopnet_deform/models_train.py --dataset PAPILA --base_architecture vgg16 --batchsize 64 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+    python code/protopnet_deform/models_train.py --dataset PAPILA --base_architecture vgg16 --batchsize 16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
 else
     echo "Error"
 fi
