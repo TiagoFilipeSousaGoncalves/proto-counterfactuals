@@ -19,5 +19,9 @@ elif [ $model == 'dppnet' ]
 then
     echo "PH2 | Deformable-ProtoPNet VGG16"
     python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture vgg16 --batchsize 16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
+else
+    echo "Error"
+fi
+
 
 echo "Finished | PH2 | Training"
