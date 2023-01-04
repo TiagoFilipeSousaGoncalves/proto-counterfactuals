@@ -211,7 +211,7 @@ elif DATASET == "PH2":
     # Train Dataset
     train_set = PH2Dataset(
         data_path=DATA_DIR,
-        subset="test",
+        subset="train",
         cropped=True,
         augmented=False,
         transform=transforms
