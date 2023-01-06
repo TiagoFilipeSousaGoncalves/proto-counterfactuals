@@ -9,7 +9,7 @@
 
 echo "Started | CUB2002011 | Training"
 
-model="ppnet"
+model="dppnet"
 
 if [ $model == "ppnet" ]
 then
