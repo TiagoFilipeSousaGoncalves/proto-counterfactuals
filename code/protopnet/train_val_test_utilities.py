@@ -36,9 +36,10 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     # n_batches = 0
     # Initialise lists to compute scores
     y_true = np.empty((0), int)
-    y_pred = torch.empty(0, dtype=torch.int32, device=device)
+    y_pred = torch.empty(0, dtype=torch.int32, device="cpu")
+    
     # Save scores after softmax for roc auc
-    y_scores = torch.empty(0, dtype=torch.float, device=device)
+    # y_scores = torch.empty(0, dtype=torch.float, device=device)
     
         
     # Total Cross Entropy Loss & Total Cluster Cost
@@ -142,8 +143,8 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
             # Using Softmax
             # Apply Softmax on Logits and get the argmax to get the predicted labels
-            s_logits = torch.nn.Softmax(dim=1)(logits)
-            y_scores = torch.cat((y_scores, s_logits))
+            s_logits = torch.nn.Softmax(dim=1)(logits).cpu().detach()
+            # y_scores = torch.cat((y_scores, s_logits))
             s_logits = torch.argmax(s_logits, dim=1)
             y_pred = torch.cat((y_pred, s_logits))
 
@@ -227,7 +228,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
     # Compute performance metrics
     # Get the necessary data
     y_pred = y_pred.cpu().detach().numpy()
-    y_scores = y_scores.cpu().detach().numpy()
+    # y_scores = y_scores.cpu().detach().numpy()
 
     # Accuracy, Recall, Precision, F1 and AUC
     accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
