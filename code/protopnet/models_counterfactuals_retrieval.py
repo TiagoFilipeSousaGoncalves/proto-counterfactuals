@@ -58,9 +58,11 @@ parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU.
 # Get checkpoint
 parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint that contains weights and model parameters.")
 
-# Generate test images' features
+# Generate image's features
 parser.add_argument("--generate_img_features", action="store_true", help="Generate features for the retrieval.")
 
+# Decide the type of features to generate and to use in the retrieval
+parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features", "proto_features"], help="Feature space: convolutional features (conv_features) or prototype layer features (proto_features).")
 
 
 # Parse the arguments
@@ -96,6 +98,9 @@ ADD_ON_LAYERS_TYPE = args.add_on_layers_type
 
 # Generate features on the test set
 GENERATE_FEATURES = args.generate_img_features
+
+# Feature space
+FEATURE_SPACE = args.feature_space
 
 
 
@@ -305,7 +310,7 @@ weights_dir = os.path.join(results_dir, "weights")
 
 
 # Features 
-features_dir = os.path.join(results_dir, "features")
+features_dir = os.path.join(results_dir, "features", FEATURE_SPACE)
 if not os.path.isdir(features_dir):
     os.makedirs(features_dir)
 
@@ -454,8 +459,8 @@ for image_dir in test_img_directories:
             distances = list()
             
             
-            # Iterate again through ALL images of the database
-            for ctf_directory, ctf_data_path, ctf_labels_dict in zip([train_img_directories, test_img_directories], [train_data_path, test_data_path], [train_labels_dict, test_labels_dict]):
+            # Iterate again through the TRAIN images of the database
+            for ctf_directory, ctf_data_path, ctf_labels_dict in zip([train_img_directories], [train_data_path], [train_labels_dict]):
                 for counterfact_dir in ctf_directory:
 
                     # Get images in this directory
