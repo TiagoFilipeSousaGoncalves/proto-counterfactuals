@@ -11,7 +11,7 @@ echo "Started | PH2 | Training"
 
 model="ppnet"
 
-if [ $model == "ppnet" ]
+if [ $model == "dppnet" ]
 then
     echo "PH2 | ProtoPNet VGG16"
     python code/protopnet/models_train.py --dataset PH2 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0
