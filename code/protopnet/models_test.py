@@ -284,7 +284,7 @@ elif DATASET == "STANFORDCARS":
 
 
 
-# Test DataLoader
+# DataLoaders
 train_loader = DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 test_loader = DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 # print(f'Size of test set: {len(test_loader.dataset)}')

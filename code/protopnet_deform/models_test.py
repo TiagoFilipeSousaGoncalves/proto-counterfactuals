@@ -19,7 +19,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from train_val_test_utilities import model_test
 
@@ -180,55 +180,173 @@ test_transforms = torchvision.transforms.Compose([
 # Dataset
 # CUB2002011
 if DATASET == "CUB2002011":
-    # Test
-    test_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
+
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = CUB2002011Dataset(
+        data_path=train_data_path,
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
         augmented=False,
-        transform=test_transforms
+        transform=transforms
     )
+
+    # Get train labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
+
+    # Test Dataset
+    test_set = CUB2002011Dataset(
+        data_path=test_data_path,
+        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        augmented=False,
+        transform=transforms
+    )
+
+    # Get test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
 
     # Number of classes
     NUM_CLASSES = len(test_set.labels_dict)
 
 
 
+# PAPILA
+elif DATASET == "PAPILA":
+
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "train")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+
+    # Train Dataset
+    train_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+
+    # Get train Labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get image directories
+    test_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
+
+    # Test Dataset
+    test_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(np.unique(test_set.images_labels))
+
+    # Labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
+
+
+
 # PH2
 elif DATASET == "PH2":
-    # Test
+
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "train", "cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = PH2Dataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+    # Get train Labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "test", "cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
+
+    # Test Dataset
     test_set = PH2Dataset(
         data_path=DATA_DIR,
         subset="test",
         cropped=True,
         augmented=False,
-        transform=test_transforms
+        transform=transforms
     )
+
+    # Get test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
 
     # Number of classes
     NUM_CLASSES = len(test_set.diagnosis_dict)
 
 
-
 # STANFORDCARS
 elif DATASET == "STANFORDCARS":
-    # Test
+
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_train", "images_cropped")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+    # Train Dataset
+    train_set = STANFORDCARSDataset(
+        data_path=DATA_DIR,
+        cars_subset="cars_train",
+        augmented=False,
+        cropped=True,
+        transform=transforms
+    )
+
+    # Train labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get test image directories
+    test_data_path = os.path.join(DATA_DIR, "stanfordcars", "cars_test", "images_cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
+
+    # Test Dataset
     test_set = STANFORDCARSDataset(
         data_path=DATA_DIR,
         cars_subset="cars_test",
         augmented=False,
         cropped=True,
-        transform=test_transforms
+        transform=transforms
     )
+
+    # Test labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
+
 
     # Number of classes
     NUM_CLASSES = len(test_set.class_names)
 
 
 
-# Test DataLoader
+# DataLoaders
+train_loader = DataLoader(dataset=train_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
 test_loader = DataLoader(dataset=test_set, batch_size=BATCH_SIZE, shuffle=False, pin_memory=False, num_workers=WORKERS)
-print(f'Size of test set: {len(test_loader.dataset)}')
-print(f'Batch size: {BATCH_SIZE}')
+# print(f'Size of test set: {len(test_loader.dataset)}')
+# print(f'Batch size: {BATCH_SIZE}')
 
 
 
@@ -307,19 +425,30 @@ else:
     model_path_push_last = None
 
 
+# Create a report to append these results
+if os.path.exists(os.path.join(results_dir, "acc_report.txt")):
+    os.remove(os.path.join(results_dir, "acc_report.txt"))
+
+report = open(os.path.join(results_dir, "acc_report.txt"), "at")
+
+
 # Iterate through these model weights types
 for model_fname in [model_path, model_path_push, model_path_push_last]:
 
     if model_fname is not None:
         model_weights = torch.load(model_fname, map_location=DEVICE)
         ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
-        print(f"Model weights loaded with success from {model_fname}.")
+        report.write(f"Model weights loaded with success from {model_fname}.\n")
 
 
         # Get performance metrics
+        metrics_dict = model_test(model=ppnet_model, dataloader=train_loader, device=DEVICE, class_specific=class_specific)
+        test_accuracy = metrics_dict["accuracy"]
+        report.write(f"Train Accuracy: {test_accuracy}\n")
+
         metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
         test_accuracy = metrics_dict["accuracy"]
-        print(f"Test Accuracy: {test_accuracy}")
+        report.write(f"Test Accuracy: {test_accuracy}\n")
 
 
 
