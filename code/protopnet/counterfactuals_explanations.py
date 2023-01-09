@@ -22,6 +22,9 @@ parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011",
 # Checkpoint
 parser.add_argument('--checkpoint', type=str, default="data", help="Path to the model checkpoint.")
 
+# Decide the type of features to generate and to use in the retrieval
+parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features", "proto_features"], help="Feature space: convolutional features (conv_features) or prototype layer features (proto_features).")
+
 
 
 # Parse the arguments
@@ -37,6 +40,10 @@ DATASET = args.dataset
 
 # Get the checkpoint
 CHECKPOINT = args.checkpoint
+
+# Feature space
+FEATURE_SPACE = args.feature_space
+
 
 
 
@@ -83,7 +90,7 @@ elif DATASET == "STANFORDCARS":
 
 
 # Get pair(s) "image-counterfactuals" .CSV file
-image_retrieval_df = pd.read_csv(filepath_or_buffer=os.path.join("results", CHECKPOINT, "analysis", "image-retrieval", "analysis.csv"), sep=",", header=0)
+image_retrieval_df = pd.read_csv(filepath_or_buffer=os.path.join("results", CHECKPOINT, "analysis", "image-retrieval", FEATURE_SPACE, "analysis.csv"), sep=",", header=0)
 
 # Get the prototype statistics .CSV file
 proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join("results", CHECKPOINT, "analysis", "local", "analysis.csv"), sep=",", header=0)
@@ -91,7 +98,7 @@ proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join("results", CHECKPOI
 
 
 # Create a new directory to save the results from this analysis
-counterfact_exp_dir = os.path.join("results", CHECKPOINT, "analysis", "counterfac-exp")
+counterfact_exp_dir = os.path.join("results", CHECKPOINT, "analysis", "counterfac-exp", FEATURE_SPACE)
 if not os.path.isdir(counterfact_exp_dir):
     os.makedirs(counterfact_exp_dir)
 

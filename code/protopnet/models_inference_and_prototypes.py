@@ -231,8 +231,6 @@ ppnet_model = construct_PPNet(
     prototype_activation_function=PROTOTYPE_ACTIVATION_FUNCTION,
     add_on_layers_type=ADD_ON_LAYERS_TYPE
 )
-
-
 # Define if the model should be class specific
 class_specific = True
 

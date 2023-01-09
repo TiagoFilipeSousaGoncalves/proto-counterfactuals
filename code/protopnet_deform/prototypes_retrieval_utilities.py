@@ -140,6 +140,10 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
             report.write('Prototype connection identity: {0}\n'.format(prototype_max_connection[sorted_indices_act[-i].item()]))
         report.write('Activation value (similarity score): {0}\n'.format(array_act[-i]))
         report.write('Last layer connection with predicted class: {0}\n'.format(ppnet_model.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
+
+
+        # Append it to the list
+        topk_proto_cls_ident.append(prototype_img_identity[sorted_indices_act[-i].item()])
         
 
         # Get activation pattern and upsampled activation pattern

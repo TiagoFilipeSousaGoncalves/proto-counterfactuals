@@ -75,6 +75,9 @@ for index, row in proto_stats_pr_df.iterrows():
 
 
 # Open a file to save a small report w/ .TXT extension
+if os.path.exists(os.path.join("results", CHECKPOINT, "analysis", "local", "proto_stats.txt")):
+    os.remove(os.path.join("results", CHECKPOINT, "analysis", "local", "proto_stats.txt"))
+
 report = open(os.path.join("results", CHECKPOINT, "analysis", "local", "proto_stats.txt"), "at")
 
 # Get mean value of top-k cls-identity prototypes using this model
@@ -86,3 +89,7 @@ report.write(f"Average number of class-identity prototypes per correctly classif
 
 # Close report
 report.close()
+
+
+
+print("Finished.")

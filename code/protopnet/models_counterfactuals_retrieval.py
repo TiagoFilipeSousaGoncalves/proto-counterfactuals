@@ -115,7 +115,7 @@ STD = [0.229, 0.224, 0.225]
 
 
 
-# Test Transforms
+# Transforms
 transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.ToTensor(),
@@ -350,7 +350,7 @@ print(f"Model weights loaded with success from: {model_path_push_last}.")
 
 
 # Create a local analysis path
-save_analysis_path = os.path.join(results_dir, "analysis", "image-retrieval")
+save_analysis_path = os.path.join(results_dir, "analysis", "image-retrieval", FEATURE_SPACE)
 if not os.path.isdir(save_analysis_path):
     os.makedirs(save_analysis_path)
 

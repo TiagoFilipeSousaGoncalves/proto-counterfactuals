@@ -16,7 +16,7 @@ torch.manual_seed(random_seed)
 np.random.seed(random_seed)
 
 # Project Imports
-from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
 from model_utilities import construct_PPNet
 from train_val_test_utilities import model_predict
 
@@ -181,7 +181,8 @@ test_transforms = torchvision.transforms.Compose([
 # Dataset
 # CUB2002011
 if DATASET == "CUB2002011":
-    # Test
+    
+    # Test Dataset
     test_set = CUB2002011Dataset(
         data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
         classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
@@ -193,10 +194,26 @@ if DATASET == "CUB2002011":
     NUM_CLASSES = len(test_set.labels_dict)
 
 
+# PAPILA
+elif DATASET == "PAPILA":
+
+    # Test Dataset
+    test_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=test_transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(np.unique(test_set.images_labels))
+
 
 # PH2
 elif DATASET == "PH2":
-    # Test
+    
+    # Test Dataset
     test_set = PH2Dataset(
         data_path=DATA_DIR,
         subset="test",
@@ -244,7 +261,8 @@ print(f"Using device: {DEVICE}")
 
 # Define the number of prototypes per class
 # if NUM_PROTOTYPES == -1:
-NUM_PROTOTYPES_CLASS = NUM_PROTOTYPES
+# NUM_PROTOTYPES_CLASS = NUM_PROTOTYPES
+NUM_PROTOTYPES_CLASS = int(NUM_CLASSES * 10)
 
 if BASE_ARCHITECTURE.lower() == 'resnet34':
     PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 2, 2)
@@ -350,8 +368,14 @@ with torch.no_grad():
 # Create dataframe from dictionary
 inference_df = pd.DataFrame.from_dict(inference_dict)
 
+# Check if old analysis.csv file exists
+csv_path = os.path.join(inference_dir, "inference_results.csv")
+if os.path.exists(csv_path):
+    os.remove(csv_path)
+
 # Convert this into .CSV
-inference_df.to_csv(os.path.join(inference_dir, "inference_results.csv"), index=False)
+inference_df.to_csv(csv_path, index=False)
+
 
 
 print("Finished.")

@@ -65,6 +65,9 @@ for index, row in proto_stats_pr_df.iterrows():
 
 
 # Open a file to save a small report w/ .TXT extension
+if os.path.exists(os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", "inf_stats.txt")):
+    os.remove(os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", "inf_stats.txt"))
+
 report = open(os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", "inf_stats.txt"), "at")
 
 

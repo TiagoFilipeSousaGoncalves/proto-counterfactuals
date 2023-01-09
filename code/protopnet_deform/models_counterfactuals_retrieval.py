@@ -14,7 +14,7 @@ import torch.utils.data
 import torchvision
 
 # Project Imports
-from data_utilities import CUB2002011Dataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
 from image_retrieval_utilities import generate_image_features, get_image_counterfactual
 from model_utilities import construct_PPNet
 
@@ -91,6 +91,9 @@ parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint fro
 # Generate test images' features
 parser.add_argument("--generate_img_features", action="store_true", help="Generate features for the retrieval.")
 
+# Decide the type of features to generate and to use in the retrieval
+parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features", "proto_features"], help="Feature space: convolutional features (conv_features) or prototype layer features (proto_features).")
+
 
 
 # Parse the arguments
@@ -155,6 +158,9 @@ INCORRECT_CLASS_CONNECTION = args.incorrect_class_connection
 # Generate features on the test set
 GENERATE_FEATURES = args.generate_img_features
 
+# Feature space
+FEATURE_SPACE = args.feature_space
+
 
 
 # Get the directory of results
@@ -168,7 +174,7 @@ STD = [0.229, 0.224, 0.225]
 
 
 
-# Test Transforms
+# Transforms
 transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.ToTensor(),
@@ -216,6 +222,49 @@ if DATASET == "CUB2002011":
 
 
 
+# PAPILA
+elif DATASET == "PAPILA":
+
+    # Get train image directories
+    train_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "train")
+    train_img_directories = [f for f in os.listdir(train_data_path) if not f.startswith('.')]
+
+
+    # Train Dataset
+    train_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="train",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+
+    # Get train Labels dictionary
+    train_labels_dict = train_set.labels_dict.copy()
+
+
+    # Get image directories
+    test_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
+
+    # Test Dataset
+    test_set = PAPILADataset(
+        data_path=DATA_DIR,
+        subset="test",
+        cropped=True,
+        augmented=False,
+        transform=transforms
+    )
+
+    # Number of classes
+    NUM_CLASSES = len(np.unique(test_set.images_labels))
+
+    # Labels dictionary
+    test_labels_dict = test_set.labels_dict.copy()
+
+
+
 # PH2
 elif DATASET == "PH2":
 
@@ -226,7 +275,7 @@ elif DATASET == "PH2":
     # Train Dataset
     train_set = PH2Dataset(
         data_path=DATA_DIR,
-        subset="test",
+        subset="train",
         cropped=True,
         augmented=False,
         transform=transforms
@@ -300,7 +349,8 @@ elif DATASET == "STANFORDCARS":
 
 # Define the number of prototypes per class
 # if NUM_PROTOTYPES == -1:
-NUM_PROTOTYPES_CLASS = NUM_PROTOTYPES
+# NUM_PROTOTYPES_CLASS = NUM_PROTOTYPES
+NUM_PROTOTYPES_CLASS = int(NUM_CLASSES * 10)
 
 if BASE_ARCHITECTURE.lower() == 'resnet34':
     PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 2, 2)
@@ -332,7 +382,7 @@ weights_dir = os.path.join(results_dir, "weights")
 
 
 # Features 
-features_dir = os.path.join(results_dir, "features", "test")
+features_dir = os.path.join(results_dir, "features", FEATURE_SPACE)
 if not os.path.isdir(features_dir):
     os.makedirs(features_dir)
 
@@ -375,7 +425,7 @@ print(f"Model weights loaded with success from: {model_path_push}.")
 
 
 # Create a local analysis path
-save_analysis_path = os.path.join(results_dir, "analysis", "image-retrieval")
+save_analysis_path = os.path.join(results_dir, "analysis", "image-retrieval", FEATURE_SPACE)
 if not os.path.isdir(save_analysis_path):
     os.makedirs(save_analysis_path)
 
@@ -388,44 +438,47 @@ prototype_shape = ppnet_model.prototype_shape
 # Generate images features (we will need these for the retrieval)
 if GENERATE_FEATURES:
 
-    # Go through all image directories
-    for image_dir in test_img_directories:
+    for directory, data_path, labels_dict in zip([train_img_directories, test_img_directories], [train_data_path, test_data_path], [train_labels_dict, test_labels_dict]):
 
-        # Get images in this directory
-        image_names = [i for i in os.listdir(os.path.join(test_data_path, image_dir)) if not i.startswith('.')]
-        image_names = [i for i in image_names if not os.path.isdir(os.path.join(test_data_path, i))]
+        # Go through all image directories
+        for image_dir in directory:
 
-        # Go through all images in a single directory
-        for image_name in image_names:
+            # Get images in this directory
+            image_names = [i for i in os.listdir(os.path.join(data_path, image_dir)) if not i.startswith('.')]
+            image_names = [i for i in image_names if i != "augmented"]
+            image_names = [i for i in image_names if not os.path.isdir(os.path.join(data_path, i))]
 
-            # Get image label
-            image_label = test_labels_dict[image_dir]
+            # Go through all images in a single directory
+            for image_name in image_names:
 
-            # Generate test image path
-            test_img_path = os.path.join(test_data_path, image_dir, image_name)
+                # Get image label
+                image_label = labels_dict[image_dir]
 
-
-            # Generate features
-            conv_features = generate_image_features(
-                image_path=test_img_path,
-                ppnet_model=ppnet_model,
-                device=DEVICE,
-                transforms=transforms
-            )
+                # Generate test image path
+                test_img_path = os.path.join(data_path, image_dir, image_name)
 
 
-            # Convert feature vector to NumPy
-            conv_features = conv_features.detach().cpu().numpy()
+                # Generate features
+                conv_features = generate_image_features(
+                    image_path=test_img_path,
+                    ppnet_model=ppnet_model,
+                    device=DEVICE,
+                    transforms=transforms
+                )
 
-            # Save this into disk
-            conv_features_fname = image_name.split('.')[0] + '.npy'
-            conv_features_fpath = os.path.join(features_dir, conv_features_fname)
-            np.save(
-                file=conv_features_fpath,
-                arr=conv_features,
-                allow_pickle=True,
-                fix_imports=True
-            )
+
+                # Convert feature vector to NumPy
+                conv_features = conv_features.detach().cpu().numpy()
+
+                # Save this into disk
+                conv_features_fname = image_name.split('.')[0] + '.npy'
+                conv_features_fpath = os.path.join(features_dir, conv_features_fname)
+                np.save(
+                    file=conv_features_fpath,
+                    arr=conv_features,
+                    allow_pickle=True,
+                    fix_imports=True
+                )
 
 
 
@@ -476,30 +529,32 @@ for image_dir in test_img_directories:
             distances = list()
             
             
-            # Iterate again through the database
-            for counterfact_dir in test_img_directories:
+            # Iterate again through the TRAIN images of the database
+            for ctf_directory, ctf_data_path, ctf_labels_dict in zip([train_img_directories], [train_data_path], [train_labels_dict]):
+                for counterfact_dir in ctf_directory:
 
-                # Get images in this directory
-                ctf_names = [i for i in os.listdir(os.path.join(test_data_path, counterfact_dir)) if not i.startswith('.')]
-                ctf_names = [i for i in ctf_names if not os.path.isdir(os.path.join(test_data_path, i))]
+                    # Get images in this directory
+                    ctf_names = [i for i in os.listdir(os.path.join(ctf_data_path, counterfact_dir)) if not i.startswith('.')]
+                    ctf_names = [i for i in ctf_names if i != "augmented"]
+                    ctf_names = [i for i in ctf_names if not os.path.isdir(os.path.join(ctf_data_path, i))]
 
-                # Get label of the counterfactual first
-                ctf_label = test_labels_dict[counterfact_dir]
+                    # Get label of the counterfactual first
+                    ctf_label = ctf_labels_dict[counterfact_dir]
 
-                # We only evaluate in such cases
-                if int(ctf_label) == int(counterfactual_pred):
-                    for ctf_fname in ctf_names:
+                    # We only evaluate in such cases
+                    if int(ctf_label) == int(counterfactual_pred):
+                        for ctf_fname in ctf_names:
 
-                        # Load the features of the counterfactual
-                        ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+                            # Load the features of the counterfactual
+                            ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
 
-                        # Compute the Euclidean Distance (L2-norm) between these feature vectors
-                        distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
+                            # Compute the Euclidean Distance (L2-norm) between these feature vectors
+                            distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
 
 
-                        # Append these to lists
-                        counter_imgs_fnames.append(ctf_fname)
-                        distances.append(distance_img_ctf)
+                            # Append these to lists
+                            counter_imgs_fnames.append(ctf_fname)
+                            distances.append(distance_img_ctf)
     
 
 
@@ -513,7 +568,14 @@ for image_dir in test_img_directories:
 
 # Save data dictionary into a .CSV
 analysis_df = pd.DataFrame.from_dict(data=analysis_dict)
-analysis_df.to_csv(path_or_buf=os.path.join(save_analysis_path, "analysis.csv"))
+
+# Check if old analysis.csv file exists
+csv_path = os.path.join(save_analysis_path, "analysis.csv")
+if os.path.exists(csv_path):
+    os.remove(csv_path)
+
+# Save new file
+analysis_df.to_csv(path_or_buf=csv_path)
 
 
 

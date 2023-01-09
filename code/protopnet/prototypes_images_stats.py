@@ -89,3 +89,7 @@ report.write(f"Average number of class-identity prototypes per correctly classif
 
 # Close report
 report.close()
+
+
+
+print("Finished.")

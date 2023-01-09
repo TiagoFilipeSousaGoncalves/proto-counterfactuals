@@ -169,7 +169,7 @@ STD = [0.229, 0.224, 0.225]
 
 
 # Test Transforms
-test_transforms = torchvision.transforms.Compose([
+transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
@@ -362,7 +362,8 @@ print(f"Using device: {DEVICE}")
 
 # Define the number of prototypes per class
 # if NUM_PROTOTYPES == -1:
-NUM_PROTOTYPES_CLASS = NUM_PROTOTYPES
+# NUM_PROTOTYPES_CLASS = NUM_PROTOTYPES
+NUM_PROTOTYPES_CLASS = int(NUM_CLASSES * 10)
 
 if BASE_ARCHITECTURE.lower() == 'resnet34':
     PROTOTYPE_SHAPE = (NUM_PROTOTYPES_CLASS, 512, 2, 2)
