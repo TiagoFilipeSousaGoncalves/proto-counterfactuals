@@ -20,6 +20,8 @@ model_urls = {
 # model_dir = './pretrained_models'
 
 
+
+# Class: _DenseLayer
 class _DenseLayer(nn.Sequential):
 
     num_layers = 2
@@ -28,12 +30,10 @@ class _DenseLayer(nn.Sequential):
         super(_DenseLayer, self).__init__()
         self.add_module('norm1', nn.BatchNorm2d(num_input_features)),
         self.add_module('relu1', nn.ReLU(inplace=True)),
-        self.add_module('conv1', nn.Conv2d(num_input_features, bn_size *
-                        growth_rate, kernel_size=1, stride=1, bias=False)),
+        self.add_module('conv1', nn.Conv2d(num_input_features, bn_size * growth_rate, kernel_size=1, stride=1, bias=False)),
         self.add_module('norm2', nn.BatchNorm2d(bn_size * growth_rate)),
         self.add_module('relu2', nn.ReLU(inplace=True)),
-        self.add_module('conv2', nn.Conv2d(bn_size * growth_rate, growth_rate,
-                        kernel_size=3, stride=1, padding=1, bias=False)),
+        self.add_module('conv2', nn.Conv2d(bn_size * growth_rate, growth_rate, kernel_size=3, stride=1, padding=1, bias=False)),
         self.drop_rate = drop_rate
 
     def forward(self, x):
@@ -41,7 +41,7 @@ class _DenseLayer(nn.Sequential):
         if self.drop_rate > 0:
             new_features = F.dropout(new_features, p=self.drop_rate, training=self.training)
 
-        # channelwise concatenation
+        # Channelwise concatenation
         return torch.cat([x, new_features], 1)
 
     def layer_conv_info(self):
@@ -52,6 +52,8 @@ class _DenseLayer(nn.Sequential):
         return layer_kernel_sizes, layer_strides, layer_paddings
 
 
+
+# Class: _DenseBlock
 class _DenseBlock(nn.Sequential):
     def __init__(self, num_layers, num_input_features, bn_size, growth_rate, drop_rate):
         super(_DenseBlock, self).__init__()
@@ -73,6 +75,8 @@ class _DenseBlock(nn.Sequential):
         return self.block_kernel_sizes, self.block_strides, self.block_paddings
 
 
+
+# Class: _Transition
 class _Transition(nn.Sequential):
 
     num_layers = 1
@@ -89,6 +93,8 @@ class _Transition(nn.Sequential):
         return [1, 2], [1, 2], [0, 0]
 
 
+
+# Class: DenseNet_features
 class DenseNet_features(nn.Module):
     r"""Densenet-BC model class, based on
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
@@ -180,6 +186,8 @@ class DenseNet_features(nn.Module):
         return template.format((self.num_layers() + 2))
 
 
+
+# Function: DenseNet121 Backbone
 def densenet121_features(pretrained=False, **kwargs):
     r"""Densenet-121 model from
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
@@ -194,8 +202,7 @@ def densenet121_features(pretrained=False, **kwargs):
         # has keys 'norm.1', 'relu.1', 'conv.1', 'norm.2', 'relu.2', 'conv.2'.
         # They are also in the checkpoints in model_urls. This pattern is used
         # to find such keys.
-        pattern = re.compile(
-            r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
+        pattern = re.compile(r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
         # state_dict = model_zoo.load_url(model_urls['densenet121'], model_dir=model_dir)
         state_dict = model_zoo.load_url(model_urls['densenet121'])
         for key in list(state_dict.keys()):
@@ -218,6 +225,8 @@ def densenet121_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: DenseNet169 Backbone
 def densenet169_features(pretrained=False, **kwargs):
     r"""Densenet-169 model from
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
@@ -232,8 +241,7 @@ def densenet169_features(pretrained=False, **kwargs):
         # has keys 'norm.1', 'relu.1', 'conv.1', 'norm.2', 'relu.2', 'conv.2'.
         # They are also in the checkpoints in model_urls. This pattern is used
         # to find such keys.
-        pattern = re.compile(
-            r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
+        pattern = re.compile(r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
         # state_dict = model_zoo.load_url(model_urls['densenet169'], model_dir=model_dir)
         state_dict = model_zoo.load_url(model_urls['densenet169'])
         for key in list(state_dict.keys()):
@@ -256,6 +264,8 @@ def densenet169_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: DenseNet201 Backbone
 def densenet201_features(pretrained=False, **kwargs):
     r"""Densenet-201 model from
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
@@ -270,8 +280,7 @@ def densenet201_features(pretrained=False, **kwargs):
         # has keys 'norm.1', 'relu.1', 'conv.1', 'norm.2', 'relu.2', 'conv.2'.
         # They are also in the checkpoints in model_urls. This pattern is used
         # to find such keys.
-        pattern = re.compile(
-            r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
+        pattern = re.compile(r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
         # state_dict = model_zoo.load_url(model_urls['densenet201'], model_dir=model_dir)
         state_dict = model_zoo.load_url(model_urls['densenet201'])
         for key in list(state_dict.keys()):
@@ -295,6 +304,8 @@ def densenet201_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: DenseNet161 Backbone
 def densenet161_features(pretrained=False, **kwargs):
     r"""Densenet-161 model from
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
@@ -302,15 +313,13 @@ def densenet161_features(pretrained=False, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = DenseNet_features(num_init_features=96, growth_rate=48, block_config=(6, 12, 36, 24),
-                     **kwargs)
+    model = DenseNet_features(num_init_features=96, growth_rate=48, block_config=(6, 12, 36, 24), **kwargs)
     if pretrained:
         # '.'s are no longer allowed in module names, but pervious _DenseLayer
         # has keys 'norm.1', 'relu.1', 'conv.1', 'norm.2', 'relu.2', 'conv.2'.
         # They are also in the checkpoints in model_urls. This pattern is used
         # to find such keys.
-        pattern = re.compile(
-            r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
+        pattern = re.compile(r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
 
 
         # state_dict = model_zoo.load_url(model_urls['densenet161'], model_dir=model_dir)
@@ -336,6 +345,9 @@ def densenet161_features(pretrained=False, **kwargs):
 
     return model
 
+
+
+# Run this script if you want to test these functions
 if __name__ == '__main__':
 
     d161 = densenet161_features(True)

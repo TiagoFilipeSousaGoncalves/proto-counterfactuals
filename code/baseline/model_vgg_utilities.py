@@ -4,7 +4,7 @@ import torch.utils.model_zoo as model_zoo
 
 
 
-# Model URLs
+# Dictionary: Model URLs
 model_urls = {
     'vgg11': 'https://download.pytorch.org/models/vgg11-bbd30ac9.pth',
     'vgg13': 'https://download.pytorch.org/models/vgg13-c768596a.pth',
@@ -17,6 +17,8 @@ model_urls = {
 }
 # model_dir = './pretrained_models'
 
+
+# Dictionary: Model Configurations
 cfg = {
     'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -24,6 +26,9 @@ cfg = {
     'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
 
+
+
+# Class: VGG_features
 class VGG_features(nn.Module):
 
     def __init__(self, cfg, batch_norm=False, init_weights=True):
@@ -99,11 +104,11 @@ class VGG_features(nn.Module):
 
     def __repr__(self):
         template = 'VGG{}, batch_norm={}'
-        return template.format(self.num_layers() + 3,
-                               self.batch_norm)
+        return template.format(self.num_layers() + 3, self.batch_norm)
 
 
 
+# Function: VGG11 Backbone
 def vgg11_features(pretrained=False, **kwargs):
     """VGG 11-layer model (configuration "A")
 
@@ -126,6 +131,8 @@ def vgg11_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: VGG11-BN Backbone
 def vgg11_bn_features(pretrained=False, **kwargs):
     """VGG 11-layer model (configuration "A") with batch normalization
 
@@ -148,6 +155,8 @@ def vgg11_bn_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: VGG13 Backbone
 def vgg13_features(pretrained=False, **kwargs):
     """VGG 13-layer model (configuration "B")
 
@@ -170,6 +179,8 @@ def vgg13_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: VGG13-BN Backbone
 def vgg13_bn_features(pretrained=False, **kwargs):
     """VGG 13-layer model (configuration "B") with batch normalization
 
@@ -192,6 +203,8 @@ def vgg13_bn_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: VGG16 Backbone
 def vgg16_features(pretrained=False, **kwargs):
     """VGG 16-layer model (configuration "D")
 
@@ -214,6 +227,8 @@ def vgg16_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: VGG16-BN Backbone
 def vgg16_bn_features(pretrained=False, **kwargs):
     """VGG 16-layer model (configuration "D") with batch normalization
 
@@ -236,6 +251,8 @@ def vgg16_bn_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: VGG19 Backbone
 def vgg19_features(pretrained=False, **kwargs):
     """VGG 19-layer model (configuration "E")
 
@@ -258,6 +275,8 @@ def vgg19_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: VGG19-BN Features
 def vgg19_bn_features(pretrained=False, **kwargs):
     """VGG 19-layer model (configuration 'E') with batch normalization
 
@@ -280,6 +299,8 @@ def vgg19_bn_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Run this script if you want to test these functions
 if __name__ == '__main__':
 
     vgg11_f = vgg11_features(pretrained=True)

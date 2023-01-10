@@ -1,11 +1,10 @@
 # PyTorch Imports
-import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
 
 
-# Model URLs
+# Dictionary: Model URLs
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
     'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
@@ -15,17 +14,23 @@ model_urls = {
 }
 # model_dir = './pretrained_models'
 
+
+
+# Function: conv3x3
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=1, bias=False)
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
 
 
+
+# Function: conv1x1
 def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
+
+# Class: BasicBlock
 class BasicBlock(nn.Module):
     # class attribute
     expansion = 1
@@ -71,6 +76,8 @@ class BasicBlock(nn.Module):
         return block_kernel_sizes, block_strides, block_paddings
 
 
+
+# Class: Bottleneck
 class Bottleneck(nn.Module):
     # class attribute
     expansion = 4
@@ -121,6 +128,8 @@ class Bottleneck(nn.Module):
         return block_kernel_sizes, block_strides, block_paddings
 
 
+
+# Class: ResNet Backbone
 class ResNet_features(nn.Module):
     '''
     the convolutional layers of ResNet
@@ -227,6 +236,9 @@ class ResNet_features(nn.Module):
         template = 'resnet{}_features'
         return template.format(self.num_layers() + 1)
 
+
+
+# Function: ResNet18 Backbone
 def resnet18_features(pretrained=False, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
@@ -242,6 +254,8 @@ def resnet18_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: ResNet34 Backbone
 def resnet34_features(pretrained=False, **kwargs):
     """Constructs a ResNet-34 model.
     Args:
@@ -257,6 +271,8 @@ def resnet34_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: ResNet50 Backbone
 def resnet50_features(pretrained=False, **kwargs):
     """Constructs a ResNet-50 model.
     Args:
@@ -272,6 +288,8 @@ def resnet50_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: ResNet101 Backbone
 def resnet101_features(pretrained=False, **kwargs):
     """Constructs a ResNet-101 model.
     Args:
@@ -287,6 +305,8 @@ def resnet101_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Function: ResNet152 Backbone
 def resnet152_features(pretrained=False, **kwargs):
     """Constructs a ResNet-152 model.
     Args:
@@ -302,6 +322,8 @@ def resnet152_features(pretrained=False, **kwargs):
     return model
 
 
+
+# Run this script if you want to test these functions
 if __name__ == '__main__':
 
     r18_features = resnet18_features(pretrained=True)
