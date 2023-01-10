@@ -9,19 +9,22 @@
 
 echo "Started | PH2 | Training"
 
-model="ppnet"
+model="baseline"
 
-if [ $model == "dppnet" ]
+if [ $model == "baseline" ]
+then
+    echo "PH2 | Baseline VGG16"
+    python code/baseline/models_train --dataset PH2 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0
+elif [ $model == "ppnet" ]
 then
     echo "PH2 | ProtoPNet VGG16"
     python code/protopnet/models_train.py --dataset PH2 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0
-elif [ $model == 'dppnet' ]
+elif [ $model == "dppnet" ]
 then
     echo "PH2 | Deformable-ProtoPNet VGG16"
     python code/protopnet_deform/models_train.py --dataset PH2 --base_architecture vgg16 --batchsize 16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
 else
     echo "Error"
 fi
-
 
 echo "Finished | PH2 | Training"
