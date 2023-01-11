@@ -29,7 +29,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
 
     # Initialise lists to compute scores
     y_true = np.empty((0), int)
-    y_pred = torch.empty(0, dtype=torch.int32, device=device)
+    y_pred = torch.empty(0, dtype=torch.int32, device='cpu')
 
     # Save scores after softmax for roc auc
     # y_scores = torch.empty(0, dtype=torch.float, device=device)
@@ -172,7 +172,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
             s_logits = torch.nn.Softmax(dim=1)(marginless_logits.data).cpu().detach()
             # y_scores = torch.cat((y_scores, s_logits))
             s_logits = torch.argmax(s_logits, dim=1)
-            y_pred = torch.cat((y_pred, s_logits))
+            y_pred = torch.cat((y_pred.cpu(), s_logits))
 
 
             # Update losses and costs
