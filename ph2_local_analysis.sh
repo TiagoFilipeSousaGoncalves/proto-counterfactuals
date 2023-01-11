@@ -5,7 +5,7 @@
 echo "Started | PH2 | Local Analysis"
 
 
-model="dppnet"
+model="ppnet"
 
 
 if [ $model == "ppnet" ]

@@ -5,7 +5,7 @@
 echo "PH2 | Started | Testing"
 
 
-model="dppnet"
+model="ppnet"
 
 
 if [ $model == "ppnet" ]

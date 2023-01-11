@@ -5,7 +5,7 @@
 echo "Started | PH2 | Prototype Inference Stats"
 
 
-model="dppnet"
+model="ppnet"
 
 
 if [ $model == "ppnet" ]

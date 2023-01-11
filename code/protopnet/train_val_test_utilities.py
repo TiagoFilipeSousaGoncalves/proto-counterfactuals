@@ -436,6 +436,10 @@ def joint(model):
 def model_predict(model, in_data):
 
 
+    # Put model into evaluation mode
+    model.eval()
+
+
     # Get the logits with the model in inference mode
     logits, _ = model(in_data)
 

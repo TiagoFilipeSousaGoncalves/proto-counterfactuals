@@ -349,6 +349,10 @@ ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
 print(f"Model weights loaded with success from: {model_path_push_last}.")
 
 
+# Put model into evaluation mode
+ppnet_model.eval()
+
+
 # Create a local analysis path
 save_analysis_path = os.path.join(results_dir, "analysis", "image-retrieval", FEATURE_SPACE)
 if not os.path.isdir(save_analysis_path):
@@ -388,23 +392,24 @@ if GENERATE_FEATURES:
 
 
                 # Generate features
-                conv_features = generate_image_features(
+                features = generate_image_features(
                     image_path=image_path,
                     ppnet_model=ppnet_model,
                     device=DEVICE,
-                    transforms=transforms
+                    transforms=transforms,
+                    feature_space=FEATURE_SPACE
                 )
 
 
                 # Convert feature vector to NumPy
-                conv_features = conv_features.detach().cpu().numpy()
+                features = features.detach().cpu().numpy()
 
                 # Save this into disk
-                conv_features_fname = image_name.split('.')[0] + '.npy'
-                conv_features_fpath = os.path.join(features_dir, conv_features_fname)
+                features_fname = image_name.split('.')[0] + '.npy'
+                features_fpath = os.path.join(features_dir, features_fname)
                 np.save(
-                    file=conv_features_fpath,
-                    arr=conv_features,
+                    file=features_fpath,
+                    arr=features,
                     allow_pickle=True,
                     fix_imports=True
                 )

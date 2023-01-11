@@ -116,16 +116,13 @@ class PPNet(nn.Module):
                 nn.Sigmoid()
                 )
         
-        self.prototype_vectors = nn.Parameter(torch.rand(self.prototype_shape),
-                                              requires_grad=True)
+        self.prototype_vectors = nn.Parameter(torch.rand(self.prototype_shape), requires_grad=True)
 
         # do not make this just a tensor,
         # since it will not be moved automatically to gpu
-        self.ones = nn.Parameter(torch.ones(self.prototype_shape),
-                                 requires_grad=False)
+        self.ones = nn.Parameter(torch.ones(self.prototype_shape), requires_grad=False)
 
-        self.last_layer = nn.Linear(self.num_prototypes, self.num_classes,
-                                    bias=False) # do not use bias
+        self.last_layer = nn.Linear(self.num_prototypes, self.num_classes, bias=False) # do not use bias
 
         if init_weights:
             self._initialize_weights()

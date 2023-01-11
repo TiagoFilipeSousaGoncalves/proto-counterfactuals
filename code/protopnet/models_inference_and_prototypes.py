@@ -249,6 +249,9 @@ ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
 print(f"Model weights loaded with success from {model_path_push_last}.")
 
 
+# Put model into evaluation mode
+ppnet_model.eval()
+
 
 # Perform inference and iterate through the dataloader
 inference_dict = {

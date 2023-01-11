@@ -5,18 +5,25 @@
 echo "Started | PH2 | Counterfactual Explanations"
 
 
-model="dppnet"
+model="ppnet"
 
 
 if [ $model == "ppnet" ]
 then
-    echo "PH2 | ProtoPNet"
-    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/densenet121/2022-12-06_15-51-53/
-    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/densenet161/2022-12-06_19-46-07/
-    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/resnet34/2022-12-06_22-45-55/
-    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/resnet152/2022-12-07_00-40-00/
-    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/vgg16/2022-12-07_00-42-57/
-    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/vgg19/2022-12-07_02-48-40/
+    echo "PH2 | ProtoPNet | Convolution Feature Space"
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/densenet121/2022-12-06_15-51-53/ --feature_space conv_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/densenet161/2022-12-06_19-46-07/ --feature_space conv_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/resnet34/2022-12-06_22-45-55/ --feature_space conv_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/resnet152/2022-12-07_00-40-00/ --feature_space conv_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/vgg16/2022-12-07_00-42-57/ --feature_space conv_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/vgg19/2022-12-07_02-48-40/ --feature_space conv_features
+    echo "PH2 | ProtoPNet | Prototype Feature Space"
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/densenet121/2022-12-06_15-51-53/ --feature_space proto_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/densenet161/2022-12-06_19-46-07/ --feature_space proto_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/resnet34/2022-12-06_22-45-55/ --feature_space proto_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/resnet152/2022-12-07_00-40-00/ --feature_space proto_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/vgg16/2022-12-07_00-42-57/ --feature_space proto_features
+    python code/protopnet/counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/protopnet/vgg19/2022-12-07_02-48-40/ --feature_space proto_features
 elif [ $model == 'dppnet' ]
 then
     echo "PH2 | Deformable ProtoPNet"

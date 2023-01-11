@@ -11,6 +11,9 @@ import torch.utils.data
 # Function: Generate image counterfactual
 def get_image_counterfactual(image_path, ppnet_model, device, transforms):
 
+    # Put model into evaluation mode
+    ppnet_model.eval()
+
     # Load the image and labels
     img_pil = Image.open(image_path).convert('RGB')
     img_tensor = transforms(img_pil)
@@ -37,7 +40,13 @@ def get_image_counterfactual(image_path, ppnet_model, device, transforms):
 
 
 # Function: Generate image features
-def generate_image_features(image_path, ppnet_model, device, transforms):
+def generate_image_features(image_path, ppnet_model, device, transforms, feature_space):
+
+    assert feature_space in ("conv_features", "proto_features"), "Please provide a valid feature space ('conv_features', 'proto_features')."
+
+
+    # Put model into evaluation mode
+    ppnet_model.eval()
 
 
     # Load the image and labels
@@ -46,16 +55,26 @@ def generate_image_features(image_path, ppnet_model, device, transforms):
     img_variable = Variable(img_tensor.unsqueeze(0))
     image_test = img_variable.to(device)
 
+
     # Run inference with ppnet
-    conv_output, _ = ppnet_model.push_forward(image_test)
+    conv_output, distances = ppnet_model.push_forward(image_test)
+    
+    # Decide which feature space to use
+    if feature_space == "conv_features":
+        features = conv_output 
+    else:
+        features = distances
 
 
-    return conv_output
+    return features
 
 
 
 # Function: Generate image prediction
 def get_image_prediction(image_path, ppnet_model, device, transforms):
+
+    # Put model into evaluation mode
+    ppnet_model.eval()
 
     # Load the image and labels
     img_pil = Image.open(image_path).convert('RGB')
