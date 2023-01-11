@@ -14,7 +14,7 @@ model="baseline"
 if [ $model == "baseline" ]
 then
     echo "PH2 | Baseline VGG16"
-    python code/baseline/models_train --dataset PH2 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0
+    python code/baseline/models_train.py --dataset PH2 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0
 elif [ $model == "ppnet" ]
 then
     echo "PH2 | ProtoPNet VGG16"
