@@ -4,9 +4,7 @@
 
 echo "PAPILA | Started | Local Analysis"
 
-
 model="ppnet"
-
 
 if [ $model == "ppnet" ]
 then
@@ -29,6 +27,5 @@ then
 else
     echo "Error"
 fi
-
 
 echo "PAPILA | Finished | Local Analysis"

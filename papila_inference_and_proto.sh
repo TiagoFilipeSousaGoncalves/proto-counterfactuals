@@ -4,9 +4,7 @@
 
 echo "PAPILA | Started | Inference and Prototypes"
 
-
 model="ppnet"
-
 
 if [ $model == "ppnet" ]
 then

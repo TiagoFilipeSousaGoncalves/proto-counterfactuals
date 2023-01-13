@@ -4,9 +4,7 @@
 
 echo "PAPILA | Started | Prototype Image Stats"
 
-
 model="ppnet"
-
 
 if [ $model == "ppnet" ]
 then
