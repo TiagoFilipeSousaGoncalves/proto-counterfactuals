@@ -4,9 +4,7 @@
 
 echo "PAPILA | Started | Testing"
 
-
 model="ppnet"
-
 
 if [ $model == "ppnet" ]
 then
@@ -29,6 +27,5 @@ then
 else
     echo "Error"
 fi
-
 
 echo "PAPILA | Finished | Testing"
