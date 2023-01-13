@@ -138,9 +138,6 @@ PUSH_START = args.push_start
 # push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
 PUSH_EPOCHS = [i for i in range(NUM_TRAIN_EPOCHS) if i % 10 == 0]
 
-# Prototype activation function
-PROTOTYPE_ACTIVATION_FUNCTION = args.prototype_activation_function
-
 # Joint optimizer learning rates
 JOINT_OPTIMIZER_LRS = args.joint_optimizer_lrs
 
