@@ -9,12 +9,12 @@ model="ppnet"
 if [ $model == "ppnet" ]
 then
     echo "CUB2002011 | ProtoPNet"
-    python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/densenet121/2022-09-14_06-32-51/
-    # python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/densenet161/2022-09-15_16-14-45
-    python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/resnet34/2022-09-17_17-03-33/
-    # python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/resnet152/
-    python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/vgg16/2022-10-14_21-14-35/
-    # python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/vgg19/2022-10-17_08-13-40
+    python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/densenet121/2023-01-06_12-07-43/
+    # python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/densenet161/XXX/
+    python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/resnet34/2022-12-29_19-34-24/
+    # python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/resnet152/XXX/
+    python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/vgg16/2022-12-30_22-45-59/
+    # python code/protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/vgg19/XXX/
 elif [ $model == "dppnet" ]
 then
     echo "CUB2002011 | Deformable ProtoPNet"

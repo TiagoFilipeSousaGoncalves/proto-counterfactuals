@@ -9,12 +9,12 @@ model="ppnet"
 if [ $model == "ppnet" ]
 then
 echo "CUB2002011 | ProtoPNet"
-    python code/protopnet/prototypes_images_stats.py --checkpoint papila/protopnet/densenet121/2022-12-23_11-33-39/
-    # python code/protopnet/prototypes_images_stats.py --checkpoint ph2/protopnet/densenet161/2022-12-06_19-46-07/
-    python code/protopnet/prototypes_images_stats.py --checkpoint papila/protopnet/resnet34/2022-12-23_18-42-05/
-    # python code/protopnet/prototypes_images_stats.py --checkpoint ph2/protopnet/resnet152/2022-12-07_00-40-00/
-    python code/protopnet/prototypes_images_stats.py --checkpoint papila/protopnet/vgg16/2022-12-23_18-10-15/
-    # python code/protopnet/prototypes_images_stats.py --checkpoint ph2/protopnet/vgg19/2022-12-07_02-48-40/
+    python code/protopnet/prototypes_images_stats.py --checkpoint cub2002011/protopnet/densenet121/2023-01-06_12-07-43/
+    # python code/protopnet/prototypes_images_stats.py --checkpoint cub2002011/protopnet/densenet161/XXX/
+    python code/protopnet/prototypes_images_stats.py --checkpoint cub2002011/protopnet/resnet34/2022-12-29_19-34-24/
+    # python code/protopnet/prototypes_images_stats.py --checkpoint cub2002011/protopnet/resnet152/XXX/
+    python code/protopnet/prototypes_images_stats.py --checkpoint cub2002011/protopnet/vgg16/2022-12-30_22-45-59/
+    # python code/protopnet/prototypes_images_stats.py --checkpoint cub2002011/protopnet/vgg19/XXX/
 elif [ $model == 'dppnet' ]
 then
     echo "CUB2002011 | Deformable ProtoPNet"
