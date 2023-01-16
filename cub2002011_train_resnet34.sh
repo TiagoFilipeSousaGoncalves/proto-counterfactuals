@@ -9,9 +9,13 @@
 
 echo "Started | CUB2002011 | Training"
 
-model="dppnet"
+model="baseline"
 
-if [ $model == "ppnet" ]
+if [ $model == "baseline" ]
+then
+    echo "CUB200211 | Baseline ResNet34"
+    python code/baseline/models_train.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 32 --num_workers 0 --gpu_id 0
+elif [ $model == "ppnet" ]
 then
     echo "CUB200211 | ProtoPNet ResNet34"
     python code/protopnet/models_train.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 32 --num_workers 0 --gpu_id 0
