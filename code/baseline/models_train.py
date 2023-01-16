@@ -348,7 +348,7 @@ else:
 joint_optimizer_specs = [
 
     {'params': baseline_model.features.parameters(), 'lr': JOINT_OPTIMIZER_LRS['features'], 'weight_decay': 1e-3}, # bias are now also being regularized
-    {'params': baseline_model.last_layer, 'lr': LAST_LAYER_OPTIMIZER_LR},
+    {'params': baseline_model.last_layer.parameters(), 'lr': LAST_LAYER_OPTIMIZER_LR},
 
 ]
 joint_optimizer = torch.optim.Adam(joint_optimizer_specs)
@@ -367,7 +367,6 @@ last_layer_optimizer_specs = [
     {'params': baseline_model.last_layer.parameters(), 'lr': LAST_LAYER_OPTIMIZER_LR}
 ]
 last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
-
 
 
 # Put model into DEVICE (CPU or GPU)
