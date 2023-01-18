@@ -301,9 +301,9 @@ else:
 baseline_model = baseline_model.to(DEVICE)
 
 
-# Load model weights
+# Load model weights (model_path_push does not exist in the baseline architectures)
 model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
-model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
+# model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
 model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 
 
@@ -316,7 +316,7 @@ report = open(os.path.join(results_dir, "acc_report.txt"), "at")
 
 
 # Iterate through these model weights types
-for model_fname in [model_path, model_path_push, model_path_push_last]:
+for model_fname in [model_path, model_path_push_last]:
     model_weights = torch.load(model_fname, map_location=DEVICE)
     baseline_model.load_state_dict(model_weights['model_state_dict'], strict=True)
     report.write(f"Model weights loaded with success from {model_fname}.\n")
