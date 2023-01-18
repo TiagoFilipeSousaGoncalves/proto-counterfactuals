@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 # Create the parser
 parser = argparse.ArgumentParser()
 
+
+
 # Add the arguments
 # Data directory
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
@@ -19,12 +21,11 @@ parser.add_argument('--data_dir', type=str, default="data", help="Directory of t
 # Data set
 parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
 
-
 # Checkpoint
 parser.add_argument('--checkpoint', type=str, default="data", help="Path to the model checkpoint.")
 
 # Decide the type of features to generate and to use in the retrieval
-parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features", "proto_features"], help="Feature space: convolutional features (conv_features) or prototype layer features (proto_features).")
+parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features"], help="Feature space: convolutional features (conv_features).")
 
 
 
@@ -163,7 +164,7 @@ for index, row in image_retrieval_df.iterrows():
 
         # Read the query image prototypes
         query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_fname.split('.')[0], query_img_fname.split('.')[0], "most_activated_prototypes")
-        query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_in_original_pimg.png") for i in range(10)]
+        query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
         query_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in query_img_prototypes]
         
         # Get the query image prototypes class identities
@@ -179,7 +180,7 @@ for index, row in image_retrieval_df.iterrows():
 
         # Read the counterfactual image prototypes
         counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_fname.split('.')[0], counterfact_img_fname.split('.')[0], "most_activated_prototypes")
-        counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_in_original_pimg.png") for i in range(10)]
+        counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
         counterfact_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in counterfact_img_prototypes]
         
         # Get the query image prototypes class identities
