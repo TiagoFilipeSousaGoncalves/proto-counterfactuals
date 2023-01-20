@@ -56,6 +56,15 @@ if DATASET == "CUB2002011":
 
     # Get test image path
     test_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
+
+    # We need to map these directories into the names of the classes
+    test_map_dirs_dict = dict()
+    for img_dir in test_img_directories:
+        test_map_dirs_dict[img_dir] = img_dir.split('.')[1].lower()
+    
+    print(test_map_dirs_dict)
+    exit()
 
 
 # PAPILA
