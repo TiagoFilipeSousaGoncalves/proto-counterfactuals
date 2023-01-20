@@ -201,7 +201,7 @@ for index, row in image_retrieval_df.iterrows():
         # Create a directory to save results
         # Get the path according to the dataset
         if DATASET == "CUB2002011":
-            save_path = os.path.join(counterfact_exp_dir, query_img_dir)
+            save_path = os.path.join(counterfact_exp_dir, query_img_dir, query_img_fname.split('.')[0])
         else:
             save_path = os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])
         
