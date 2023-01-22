@@ -11,11 +11,11 @@ model="ppnet"
 if [ $model == "ppnet" ]
 then
     echo "CUB2002011 | ProtoPNet | Convolution Feature Space"
-    # python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/densenet121/2023-01-06_12-07-43/ --feature_space conv_features
+    python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/densenet121/2023-01-06_12-07-43/ --feature_space conv_features
     # python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/densenet161/XXX/ --feature_space conv_features
-    # python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/resnet34/2022-12-29_19-34-24/ --feature_space conv_features
+    python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/resnet34/2022-12-29_19-34-24/ --feature_space conv_features
     # python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/resnet152/XXX/ --feature_space conv_features
-    # python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/vgg16/2022-12-30_22-45-59/ --feature_space conv_features
+    python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/vgg16/2022-12-30_22-45-59/ --feature_space conv_features
     # python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/vgg19/XXX/ --feature_space conv_features
     echo "CUB2002011 | ProtoPNet | Prototype Feature Space"
     python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/densenet121/2023-01-06_12-07-43/ --feature_space proto_features
