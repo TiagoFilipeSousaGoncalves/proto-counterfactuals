@@ -444,8 +444,8 @@ for model_fname in [model_path, model_path_push, model_path_push_last]:
 
         # Get performance metrics
         metrics_dict = model_test(model=ppnet_model, dataloader=train_loader, device=DEVICE, class_specific=class_specific)
-        test_accuracy = metrics_dict["accuracy"]
-        report.write(f"Train Accuracy: {test_accuracy}\n")
+        train_accuracy = metrics_dict["accuracy"]
+        report.write(f"Train Accuracy: {train_accuracy}\n")
 
         metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
         test_accuracy = metrics_dict["accuracy"]
