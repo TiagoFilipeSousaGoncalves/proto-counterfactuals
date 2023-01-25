@@ -29,16 +29,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet50", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, densenet161, resnet34, resnet50, resnet152, vgg16, vgg19.')
 
 # Batch size
-parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation")
+parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation.")
 
 # Image size
-parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms")
+parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms.")
 
 # Margin (default=0.1)
 parser.add_argument('--margin', type=float, default=0.1)
@@ -74,19 +74,19 @@ parser.add_argument('--add_on_layers_type', type=str, default='regular', help="A
 parser.add_argument('--last_layer_fixed', action="store_true")
 
 # Class Weights (default: False)
-parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance")
+parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance.")
 
 # Output directory
 parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
 
 # Number of workers
-parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader")
+parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader.")
 
 # GPU ID
-parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU")
+parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU.")
 
 # Checkpoint
-parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training")
+parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training.")
 
 # Generate test images' features
 parser.add_argument("--generate_img_features", action="store_true", help="Generate features for the retrieval.")
