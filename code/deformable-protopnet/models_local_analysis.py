@@ -36,7 +36,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet50", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, densenet161, resnet34, resnet50, resnet152, vgg16, vgg19.')
@@ -429,7 +429,7 @@ class_specific = True
 ppnet_model = ppnet_model.to(DEVICE)
 
 
-# Load model weights
+# Load model weights (here, we load the best push layer)
 # model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
 # model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
@@ -498,14 +498,12 @@ for image_directories, data_path, labels_dict in zip([train_img_directories, tes
             img_fname, gt_label, pred_label, nr_prototypes_cls_ident, topk_proto_cls_ident = retrieve_image_prototypes(
                 save_analysis_path=image_analysis_path,
                 weights_dir=weights_dir,
-                load_img_dir=load_img_dir,
                 ppnet_model=ppnet_model,
                 device=DEVICE,
                 test_transforms=transforms,
                 test_image_dir=os.path.join(data_path, image_dir),
                 test_image_name=image_name,
                 test_image_label=image_label,
-                norm_params={"mean":MEAN, "std":STD},
                 img_size=IMG_SIZE
             )
 

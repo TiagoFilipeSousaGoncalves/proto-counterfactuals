@@ -17,10 +17,13 @@ from prototypes_utilities import find_high_activation_crop, get_deformation_info
 
 
 # Function: Retrieve prototypes from an image
-def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, norm_params, img_size, most_k_activated=10):
+def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, img_size, most_k_activated=10):
 
     # Open a file to save a small report w/ .TXT extension
-    report = open(os.path.join(save_analysis_path, "report.txt"), "at")
+    report_path = os.path.join(save_analysis_path, "report.txt")
+    if os.path.exists(report_path):
+        os.remove(report_path)
+    report = open(report_path, "at")
 
     # Specify the test image to be analyzed
     test_image_path = os.path.join(test_image_dir, test_image_name)
@@ -57,7 +60,6 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     img_tensor = test_transforms(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
     images_test = img_variable.to(device)
-    labels_test = torch.tensor([test_image_label])
 
 
     # Run inference with deform-ppnet
@@ -71,24 +73,40 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     offsets = offsets.detach()
 
 
-    # Create tables of predictions and ground-truth
-    tables = []
-    for i in range(logits.size(0)):
-        tables.append((torch.argmax(logits, dim=1)[i].item(), labels_test[i].item()))
-        report.write(str(i) + ' ' + str(tables[-1]) + '\n')
+    # # Create tables of predictions and ground-truth
+    # tables = []
+    # for i in range(logits.size(0)):
+    #     tables.append((torch.argmax(logits, dim=1)[i].item(), labels_test[i].item()))
+    #     report.write(str(i) + ' ' + str(tables[-1]) + '\n')
 
 
-    # Get prediction and ground-truth labels
-    idx = 0
-    predicted_cls = tables[idx][0]
-    correct_cls = tables[idx][1]
+    # # Get prediction and ground-truth labels
+    # idx = 0
+    # predicted_cls = tables[idx][0]
+    # correct_cls = tables[idx][1]
+
+    # Apply Softmax to obtain scaled logits
+    s_logits = torch.nn.Softmax(dim=1)(logits)
+
+    # Sort indices to obtain the prediction
+    sorted_indices = torch.argsort(s_logits, dim=1)
+    
+
+    # Get prediction
+    predicted_cls = int(sorted_indices[0][-1].item())
+    correct_cls = int(test_image_label)
     
     # Append this information to the report
     report.write(f'Predicted: {str(predicted_cls)}\n')
     report.write(f'Actual: {str(correct_cls)}\n')
 
-    # Save original image
-    original_img = save_preprocessed_img(os.path.join(save_analysis_path, 'original_img.png'), images_test, idx)
+    # Get original image
+    original_img = save_preprocessed_img(
+        fname=os.path.join(save_analysis_path, 'original_img.png'),
+        preprocessed_imgs=images_test,
+        index=0,
+        save_img=False
+    )
 
 
 
@@ -99,7 +117,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
     # Append information to the report
     report.write(f'Most activated {most_k_activated} prototypes of this image:\n')
-    array_act, sorted_indices_act = torch.sort(prototype_activations[idx])
+    array_act, sorted_indices_act = torch.sort(prototype_activations[0])
 
 
     # Create a list of the identitities of the top-K most activated prototypes
@@ -204,7 +222,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
 
-# Function: Get prototypes from top-K classes
+# FIXME: Function: Get prototypes from top-K classes
 def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls, offsets):
     
     # Get prototypes from top-K classes
