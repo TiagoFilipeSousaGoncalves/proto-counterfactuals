@@ -5,7 +5,7 @@
 echo "Started | PH2 | Prototype Inference Stats"
 
 
-model="ppnet"
+model="dppnet"
 
 
 if [ $model == "ppnet" ]
@@ -20,15 +20,14 @@ then
 elif [ $model == 'dppnet' ]
 then
     echo "PH2 | Deformable ProtoPNet"
-    python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/densenet161/XXX/
-    python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/resnet152/XXX/
-    python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/vgg19/XXX/
+    python code/deformable-protopnet/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/
+    # python code/deformable-protopnet/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/densenet161/XXX/
+    python code/deformable-protopnet/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/
+    # python code/deformable-protopnet/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/resnet152/XXX/
+    python code/deformable-protopnet/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/
+    # python code/deformable-protopnet/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/vgg19/XXX/
 else
     echo "Error"
 fi
-
 
 echo "Finished | PH2 | Prototype Inference Stats"

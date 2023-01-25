@@ -18,12 +18,12 @@ then
 elif [ $model == "dppnet" ]
 then
     echo "CUB2002011 | Deformable ProtoPNet"
-    python code/protopnet_deform/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet121 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint results/cub2002011/deformable-protopnet/densenet121/2022-11-14_11-19-59/
-    # python code/protopnet_deform/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet161 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint results/cub2002011/deformable-protopnet/densenet161/
-    python code/protopnet_deform/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet34 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint results/cub2002011/deformable-protopnet/resnet34/2022-11-13_22-48-06/
-    # python code/protopnet_deform/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet152 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint results/cub2002011/deformable-protopnet/resnet152/
-    python code/protopnet_deform/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint results/cub2002011/deformable-protopnet/vgg16/2022-11-14_08-54-02/
-    # python code/protopnet_deform/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg19 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint results/cub2002011/deformable-protopnet/vgg19/
+    python code/deformable-protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet121 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/densenet121/2023-01-09_01-07-48/
+    # python code/deformable-protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture densenet161 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/densenet161/XXX/
+    python code/deformable-protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet34 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/resnet34/2023-01-11_18-27-35/
+    # python code/deformable-protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture resnet152 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/resnet152/XXX/
+    python code/deformable-protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/vgg16/2023-01-13_07-25-59/
+    # python code/deformable-protopnet/models_local_analysis.py --dataset CUB2002011 --base_architecture vgg19 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/vgg19/XXX/
 else
     echo "Error"
 fi

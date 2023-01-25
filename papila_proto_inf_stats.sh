@@ -4,26 +4,26 @@
 
 echo "PAPILA | Started | Prototype Inference Stats"
 
-model="ppnet"
+model="dppnet"
 
 if [ $model == "ppnet" ]
 then
     echo "PAPILA | ProtoPNet"
     python code/protopnet/prototypes_inference_stats.py --checkpoint papila/protopnet/densenet121/2022-12-23_11-33-39/
-    # python code/protopnet/prototypes_inference_stats.py --checkpoint ph2/protopnet/densenet161/2022-12-06_19-46-07/
+    # python code/protopnet/prototypes_inference_stats.py --checkpoint papila/protopnet/densenet161/XXX/
     python code/protopnet/prototypes_inference_stats.py --checkpoint papila/protopnet/resnet34/2022-12-23_18-42-05/
-    # python code/protopnet/prototypes_inference_stats.py --checkpoint ph2/protopnet/resnet152/2022-12-07_00-40-00/
+    # python code/protopnet/prototypes_inference_stats.py --checkpoint papila/protopnet/resnet152/XXX/
     python code/protopnet/prototypes_inference_stats.py --checkpoint papila/protopnet/vgg16/2022-12-23_18-10-15/
-    # python code/protopnet/prototypes_inference_stats.py --checkpoint ph2/protopnet/vgg19/2022-12-07_02-48-40/
+    # python code/protopnet/prototypes_inference_stats.py --checkpoint papila/protopnet/vgg19/XXXS/
 elif [ $model == 'dppnet' ]
 then
     echo "PAPILA | Deformable ProtoPNet"
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/densenet121/2022-12-06_18-16-44/
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/densenet161/2022-12-07_11-54-55/
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/resnet34/2022-12-07_04-58-44/
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/resnet152/2022-12-07_15-56-33/
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/vgg16/2022-12-07_17-48-57/
-    # python code/protopnet_deform/prototypes_images_stats.py --checkpoint ph2/deformable-protopnet/vgg19/2022-12-07_19-02-13/
+    python code/deformable-protopnet/prototypes_images_stats.py --checkpoint papila/deformable-protopnet/densenet121/2023-01-04_12-12-15/
+    # python code/deformable-protopnet/prototypes_images_stats.py --checkpoint papila/deformable-protopnet/densenet161/XXX/
+    python code/deformable-protopnet/prototypes_images_stats.py --checkpoint papila/deformable-protopnet/resnet34/2023-01-04_16-02-21/
+    # python code/deformable-protopnet/prototypes_images_stats.py --checkpoint papila/deformable-protopnet/resnet152/XXX/
+    python code/deformable-protopnet/prototypes_images_stats.py --checkpoint papila/deformable-protopnet/vgg16/2023-01-04_18-47-51/
+    # python code/deformable-protopnet/prototypes_images_stats.py --checkpoint papila/deformable-protopnet/vgg19/XXX/
 else
     echo "Error"
 fi
