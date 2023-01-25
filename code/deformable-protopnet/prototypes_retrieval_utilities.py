@@ -165,7 +165,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         
 
         # Get activation pattern and upsampled activation pattern
-        activation_pattern = prototype_activation_patterns[idx][sorted_indices_act[-i].item()].detach().cpu().numpy()
+        activation_pattern = prototype_activation_patterns[0][sorted_indices_act[-i].item()].detach().cpu().numpy()
         upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
         
         # Save deformable-prototype information

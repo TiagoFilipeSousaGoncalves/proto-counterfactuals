@@ -20,12 +20,12 @@ then
 elif [ $model == "dppnet" ]
 then
     echo "PH2 | Deformable ProtoPNet"
-    python code/protopnet_deform/models_local_analysis.py --dataset PH2 --base_architecture densenet121 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/
-    # python code/protopnet_deform/models_local_analysis.py --dataset PH2 --base_architecture densenet161 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/densenet161/XXX/
-    python code/protopnet_deform/models_local_analysis.py --dataset PH2 --base_architecture resnet34 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/
-    # python code/protopnet_deform/models_local_analysis.py --dataset PH2 --base_architecture resnet152 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/resnet152/XXX/
-    python code/protopnet_deform/models_local_analysis.py --dataset PH2 --base_architecture vgg16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/
-    # python code/protopnet_deform/models_local_analysis.py --dataset PH2 --base_architecture vgg19 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/vgg19/XXX/
+    python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture densenet121 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/
+    # python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture densenet161 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/densenet161/XXX/
+    python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture resnet34 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/
+    # python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture resnet152 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/resnet152/XXX/
+    python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture vgg16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/
+    # python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture vgg19 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/vgg19/XXX/
 elif [ $model == "baseline" ]
 then
     echo "PH2 | Baseline"
