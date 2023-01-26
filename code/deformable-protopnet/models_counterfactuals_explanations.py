@@ -12,20 +12,18 @@ import matplotlib.pyplot as plt
 # Create the parser
 parser = argparse.ArgumentParser()
 
-
-
 # Add the arguments
 # Data directory
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Checkpoint
 parser.add_argument('--checkpoint', type=str, default="data", help="Path to the model checkpoint.")
 
 # Decide the type of features to generate and to use in the retrieval
-parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features"], help="Feature space: convolutional features (conv_features).")
+parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features", "proto_features"], help="Feature space: convolutional features (conv_features) or prototype layer features (proto_features).")
 
 
 
@@ -48,6 +46,7 @@ FEATURE_SPACE = args.feature_space
 
 
 
+
 # Dataset
 # CUB2002011
 if DATASET == "CUB2002011":
@@ -57,6 +56,14 @@ if DATASET == "CUB2002011":
 
     # Get test image path
     test_data_path = os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped")
+    test_img_directories = [f for f in os.listdir(test_data_path) if not f.startswith('.')]
+
+    # We need to map these directories into the names of the classes
+    test_map_dirs_dict = dict()
+    for img_dir in test_img_directories:
+        test_map_dirs_dict[img_dir.split('.')[1].lower()] = img_dir
+    
+    # print(test_map_dirs_dict)    
 
 
 # PAPILA
@@ -111,23 +118,65 @@ if os.path.exists(os.path.join(counterfact_exp_dir, "err_report.txt")):
 
 err_report = open(os.path.join(counterfact_exp_dir, "err_report.txt"), "at")
 
-
 # Iterate through the rows of the image_retrieval_df
 for index, row in image_retrieval_df.iterrows():
 
     # Get query image and label
     query_img_fname = row["Image"]
     query_img_label = row["Image Label"]
-    query_img = Image.open(os.path.join(test_data_path, query_img_fname.split('.')[0], query_img_fname)).convert("RGB")
+
+
+    # For the CUB2002011 database, we have to apply a special processing
+    if DATASET == "CUB2002011":
+        
+        # Get simplified name
+        query_img_ = query_img_fname.split('_')
+        query_img_ = query_img_[0:-2]
+        query_img_ = '_'.join(query_img_)
+        query_img_ = query_img_.lower()
+
+        # Obtain correspondent directory of this image
+        query_img_dir = test_map_dirs_dict[query_img_]
+
+        # Get image name
+        query_img = Image.open(os.path.join(test_data_path, query_img_dir, query_img_fname)).convert("RGB")
+
+    else:
+        query_img = Image.open(os.path.join(test_data_path, query_img_fname.split('.')[0], query_img_fname)).convert("RGB")
+    
+    
+    # Open the query image
     query_img = query_img.resize((224, 224))
     query_img = np.array(query_img)
+
 
 
     # Get counterfactual (not all images of all models have counterfactuals)
     try:
         counterfact_img_fname = row["Nearest Counterfactual"]
         counterfact_label = row["Nearest Counterfactual Label"]
-        counterfact_img_path = os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname) if os.path.exists(os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)) else os.path.join(train_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)
+
+
+        # For the CUB2002011 database, we have to apply a special processing
+        if DATASET == "CUB2002011":
+        
+            # Get simplified name
+            counterfact_img_fname_ = counterfact_img_fname.split('_')
+            counterfact_img_fname_ = counterfact_img_fname_[0:-2]
+            counterfact_img_fname_ = '_'.join(counterfact_img_fname_)
+            counterfact_img_fname_ = counterfact_img_fname_.lower()
+
+            # Obtain correspondent directory of this image
+            counterfact_img_dir = test_map_dirs_dict[counterfact_img_fname_]
+
+            # Get counterfactual image path
+            counterfact_img_path = os.path.join(test_data_path, counterfact_img_dir, counterfact_img_fname) if os.path.exists(os.path.join(test_data_path, counterfact_img_dir, counterfact_img_fname)) else os.path.join(train_data_path, counterfact_img_dir, counterfact_img_fname)
+
+        else:
+            counterfact_img_path = os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname) if os.path.exists(os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)) else os.path.join(train_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)
+        
+        
+        # Open counterfactual image
         counterfact_img = Image.open(counterfact_img_path).convert("RGB")
         counterfact_img = counterfact_img.resize((224, 224))
         counterfact_img = np.array(counterfact_img)
@@ -150,20 +199,33 @@ for index, row in image_retrieval_df.iterrows():
 
 
         # Create a directory to save results
-        save_path = os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])
+        # Get the path according to the dataset
+        if DATASET == "CUB2002011":
+            save_path = os.path.join(counterfact_exp_dir, query_img_dir, query_img_fname.split('.')[0])
+        else:
+            save_path = os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])
+        
+        
+        # Create this directory
         if not os.path.isdir(save_path):
             os.makedirs(save_path)
         
         
         # Save results
         # plt.show(block=True)
-        plt.savefig(fname=os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0], "query_vs_cntf_global.png"))
+        plt.savefig(fname=os.path.join(save_path, "query_vs_cntf_global.png"))
         plt.close()
 
 
 
         # Read the query image prototypes
-        query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_fname.split('.')[0], query_img_fname.split('.')[0], "most_activated_prototypes")
+        if DATASET == "CUB2002011":
+            query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_dir, query_img_fname.split('.')[0], "most_activated_prototypes")
+        else:
+            query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_fname.split('.')[0], query_img_fname.split('.')[0], "most_activated_prototypes")
+        
+        
+        # Get the query image prototypes
         query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
         query_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in query_img_prototypes]
         
@@ -179,7 +241,12 @@ for index, row in image_retrieval_df.iterrows():
         
 
         # Read the counterfactual image prototypes
-        counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_fname.split('.')[0], counterfact_img_fname.split('.')[0], "most_activated_prototypes")
+        if DATASET == "CUB2002011":
+            counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_dir, counterfact_img_fname.split('.')[0], "most_activated_prototypes")
+        else:
+            counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_fname.split('.')[0], counterfact_img_fname.split('.')[0], "most_activated_prototypes")
+        
+        # Get the counterfactual image prototypes
         counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
         counterfact_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in counterfact_img_prototypes]
         
@@ -211,13 +278,13 @@ for index, row in image_retrieval_df.iterrows():
         
 
             # Save figure
-            plt.savefig(fname=os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0], f"query_vs_cntf_proto_{l+1}.png"))
+            plt.savefig(fname=os.path.join(save_path, f"query_vs_cntf_proto_{l+1}.png"))
             plt.close()
 
 
             # FIXME: Extra
-            if "query_vs_cntf_proto.png" in os.listdir(os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])):
-                os.remove(os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0], "query_vs_cntf_proto.png"))
+            if "query_vs_cntf_proto.png" in os.listdir(save_path):
+                os.remove(os.path.join(save_path, "query_vs_cntf_proto.png"))
 
     except:
         err_report.write(f"Proper counterfactual not available for {query_img_fname}\n")
