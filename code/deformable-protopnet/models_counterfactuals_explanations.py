@@ -152,142 +152,142 @@ for index, row in image_retrieval_df.iterrows():
 
 
     # Get counterfactual (not all images of all models have counterfactuals)
-    try:
-        counterfact_img_fname = row["Nearest Counterfactual"]
-        counterfact_label = row["Nearest Counterfactual Label"]
+    #try:
+    counterfact_img_fname = row["Nearest Counterfactual"]
+    counterfact_label = row["Nearest Counterfactual Label"]
 
 
-        # For the CUB2002011 database, we have to apply a special processing
-        if DATASET == "CUB2002011":
+    # For the CUB2002011 database, we have to apply a special processing
+    if DATASET == "CUB2002011":
+    
+        # Get simplified name
+        counterfact_img_fname_ = counterfact_img_fname.split('_')
+        counterfact_img_fname_ = counterfact_img_fname_[0:-2]
+        counterfact_img_fname_ = '_'.join(counterfact_img_fname_)
+        counterfact_img_fname_ = counterfact_img_fname_.lower()
+
+        # Obtain correspondent directory of this image
+        counterfact_img_dir = test_map_dirs_dict[counterfact_img_fname_]
+
+        # Get counterfactual image path
+        counterfact_img_path = os.path.join(test_data_path, counterfact_img_dir, counterfact_img_fname) if os.path.exists(os.path.join(test_data_path, counterfact_img_dir, counterfact_img_fname)) else os.path.join(train_data_path, counterfact_img_dir, counterfact_img_fname)
+
+    else:
+        counterfact_img_path = os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname) if os.path.exists(os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)) else os.path.join(train_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)
+    
+    
+    # Open counterfactual image
+    counterfact_img = Image.open(counterfact_img_path).convert("RGB")
+    counterfact_img = counterfact_img.resize((224, 224))
+    counterfact_img = np.array(counterfact_img)
+
+
+
+    # Plot Query Image and its Counterfactual
+    fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout=True)
+
+    # Query Image
+    ax1.imshow(query_img, cmap="gray")
+    ax1.set_title(f'Query: {query_img_fname} ({query_img_label})')
+    ax1.axis("off")
+
+
+    # Counterfactual
+    ax2.imshow(counterfact_img, cmap="gray")
+    ax2.set_title(f'Counterfactual: {counterfact_img_fname} ({counterfact_label})')
+    ax2.axis("off")
+
+
+    # Create a directory to save results
+    # Get the path according to the dataset
+    if DATASET == "CUB2002011":
+        save_path = os.path.join(counterfact_exp_dir, query_img_dir, query_img_fname.split('.')[0])
+    else:
+        save_path = os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])
+    
+    
+    # Create this directory
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
+    
+    
+    # Save results
+    # plt.show(block=True)
+    plt.savefig(fname=os.path.join(save_path, "query_vs_cntf_global.png"))
+    plt.close()
+
+
+
+    # Read the query image prototypes
+    if DATASET == "CUB2002011":
+        query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_dir, query_img_fname.split('.')[0], "most_activated_prototypes")
+    else:
+        query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_fname.split('.')[0], query_img_fname.split('.')[0], "most_activated_prototypes")
+    
+    
+    # Get the query image prototypes
+    query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
+    query_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in query_img_prototypes]
+    
+    # Get the query image prototypes class identities
+    # print("Why?")
+    cls_ids_query_img = proto_stats_df[proto_stats_df["Image Filename"]==query_img_fname]["Top-10 Prototypes Class Identities"].values[0]
+    cls_ids_query_img = cls_ids_query_img.split('[')[1]
+    cls_ids_query_img = cls_ids_query_img.split(']')[0]
+    cls_ids_query_img = [i for i in cls_ids_query_img.split(',')]
+    # print(f'Class Identities of the Prototypes Activated by Query Image: {cls_ids_query_img}')
+    
+    
+    
+
+    # Read the counterfactual image prototypes
+    if DATASET == "CUB2002011":
+        counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_dir, counterfact_img_fname.split('.')[0], "most_activated_prototypes")
+    else:
+        counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_fname.split('.')[0], counterfact_img_fname.split('.')[0], "most_activated_prototypes")
+    
+    # Get the counterfactual image prototypes
+    counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
+    counterfact_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in counterfact_img_prototypes]
+    
+    # Get the query image prototypes class identities
+    cls_ids_counterfact_img = proto_stats_df[proto_stats_df["Image Filename"]==counterfact_img_fname]["Top-10 Prototypes Class Identities"].values[0]
+    cls_ids_counterfact_img = cls_ids_counterfact_img.split('[')[1]
+    cls_ids_counterfact_img = cls_ids_counterfact_img.split(']')[0]
+    cls_ids_counterfact_img = [i for i in cls_ids_counterfact_img.split(',')]
+    # print(f'Class Identities of the Prototypes Activated by Counterfactual Image: {cls_ids_counterfact_img}')
+
+
+
+    # Plot the prototypes
+    for l in range(10):
         
-            # Get simplified name
-            counterfact_img_fname_ = counterfact_img_fname.split('_')
-            counterfact_img_fname_ = counterfact_img_fname_[0:-2]
-            counterfact_img_fname_ = '_'.join(counterfact_img_fname_)
-            counterfact_img_fname_ = counterfact_img_fname_.lower()
-
-            # Obtain correspondent directory of this image
-            counterfact_img_dir = test_map_dirs_dict[counterfact_img_fname_]
-
-            # Get counterfactual image path
-            counterfact_img_path = os.path.join(test_data_path, counterfact_img_dir, counterfact_img_fname) if os.path.exists(os.path.join(test_data_path, counterfact_img_dir, counterfact_img_fname)) else os.path.join(train_data_path, counterfact_img_dir, counterfact_img_fname)
-
-        else:
-            counterfact_img_path = os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname) if os.path.exists(os.path.join(test_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)) else os.path.join(train_data_path, counterfact_img_fname.split('.')[0], counterfact_img_fname)
-        
-        
-        # Open counterfactual image
-        counterfact_img = Image.open(counterfact_img_path).convert("RGB")
-        counterfact_img = counterfact_img.resize((224, 224))
-        counterfact_img = np.array(counterfact_img)
-
-
-
-        # Plot Query Image and its Counterfactual
+        # Create subfigures 
         fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout=True)
 
-        # Query Image
-        ax1.imshow(query_img, cmap="gray")
-        ax1.set_title(f'Query: {query_img_fname} ({query_img_label})')
+        # Plot the query image prototypes in the first column
+        ax1.set_title(f"{cls_ids_query_img[l]}")
         ax1.axis("off")
+        ax1.imshow(query_img_prototypes[l])
 
 
-        # Counterfactual
-        ax2.imshow(counterfact_img, cmap="gray")
-        ax2.set_title(f'Counterfactual: {counterfact_img_fname} ({counterfact_label})')
+        # Plot the counterfactual image prototypes in the second column
+        ax2.set_title(f"{cls_ids_counterfact_img[l]}")
         ax2.axis("off")
+        ax2.imshow(counterfact_img_prototypes[l])
+    
 
-
-        # Create a directory to save results
-        # Get the path according to the dataset
-        if DATASET == "CUB2002011":
-            save_path = os.path.join(counterfact_exp_dir, query_img_dir, query_img_fname.split('.')[0])
-        else:
-            save_path = os.path.join(counterfact_exp_dir, query_img_fname.split('.')[0])
-        
-        
-        # Create this directory
-        if not os.path.isdir(save_path):
-            os.makedirs(save_path)
-        
-        
-        # Save results
-        # plt.show(block=True)
-        plt.savefig(fname=os.path.join(save_path, "query_vs_cntf_global.png"))
+        # Save figure
+        plt.savefig(fname=os.path.join(save_path, f"query_vs_cntf_proto_{l+1}.png"))
         plt.close()
 
 
+        # FIXME: Extra
+        if "query_vs_cntf_proto.png" in os.listdir(save_path):
+            os.remove(os.path.join(save_path, "query_vs_cntf_proto.png"))
 
-        # Read the query image prototypes
-        if DATASET == "CUB2002011":
-            query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_dir, query_img_fname.split('.')[0], "most_activated_prototypes")
-        else:
-            query_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", query_img_fname.split('.')[0], query_img_fname.split('.')[0], "most_activated_prototypes")
-        
-        
-        # Get the query image prototypes
-        query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
-        query_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in query_img_prototypes]
-        
-        # Get the query image prototypes class identities
-        # print("Why?")
-        cls_ids_query_img = proto_stats_df[proto_stats_df["Image Filename"]==query_img_fname]["Top-10 Prototypes Class Identities"].values[0]
-        cls_ids_query_img = cls_ids_query_img.split('[')[1]
-        cls_ids_query_img = cls_ids_query_img.split(']')[0]
-        cls_ids_query_img = [i for i in cls_ids_query_img.split(',')]
-        # print(f'Class Identities of the Prototypes Activated by Query Image: {cls_ids_query_img}')
-        
-        
-        
-
-        # Read the counterfactual image prototypes
-        if DATASET == "CUB2002011":
-            counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_dir, counterfact_img_fname.split('.')[0], "most_activated_prototypes")
-        else:
-            counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_fname.split('.')[0], counterfact_img_fname.split('.')[0], "most_activated_prototypes")
-        
-        # Get the counterfactual image prototypes
-        counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
-        counterfact_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in counterfact_img_prototypes]
-        
-        # Get the query image prototypes class identities
-        cls_ids_counterfact_img = proto_stats_df[proto_stats_df["Image Filename"]==counterfact_img_fname]["Top-10 Prototypes Class Identities"].values[0]
-        cls_ids_counterfact_img = cls_ids_counterfact_img.split('[')[1]
-        cls_ids_counterfact_img = cls_ids_counterfact_img.split(']')[0]
-        cls_ids_counterfact_img = [i for i in cls_ids_counterfact_img.split(',')]
-        # print(f'Class Identities of the Prototypes Activated by Counterfactual Image: {cls_ids_counterfact_img}')
-
-
-
-        # Plot the prototypes
-        for l in range(10):
-            
-            # Create subfigures 
-            fig, (ax1, ax2) = plt.subplots(1, 2, constrained_layout=True)
-
-            # Plot the query image prototypes in the first column
-            ax1.set_title(f"{cls_ids_query_img[l]}")
-            ax1.axis("off")
-            ax1.imshow(query_img_prototypes[l])
-
-
-            # Plot the counterfactual image prototypes in the second column
-            ax2.set_title(f"{cls_ids_counterfact_img[l]}")
-            ax2.axis("off")
-            ax2.imshow(counterfact_img_prototypes[l])
-        
-
-            # Save figure
-            plt.savefig(fname=os.path.join(save_path, f"query_vs_cntf_proto_{l+1}.png"))
-            plt.close()
-
-
-            # FIXME: Extra
-            if "query_vs_cntf_proto.png" in os.listdir(save_path):
-                os.remove(os.path.join(save_path, "query_vs_cntf_proto.png"))
-
-    except:
-        err_report.write(f"Proper counterfactual not available for {query_img_fname}\n")
+    #except:
+        #err_report.write(f"Proper counterfactual not available for {query_img_fname}\n")
 
 
 
