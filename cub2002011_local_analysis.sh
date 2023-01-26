@@ -4,7 +4,7 @@
 
 echo "CUB2002011 | Started | Local Analysis"
 
-model="ppnet"
+model="dppnet"
 
 if [ $model == "ppnet" ]
 then
