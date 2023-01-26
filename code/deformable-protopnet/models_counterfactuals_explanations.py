@@ -286,7 +286,7 @@ for index, row in image_retrieval_df.iterrows():
         # The other option is to check other naming styles
         else:
             for j in range(100):
-                proto_path = os.path.join(counterfact_img_prototypes, f"top-{i+1}_activated_prototype_{j}-with_box.png")
+                proto_path = os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_{j}-with_box.png")
 
                 if os.path.exists(proto_path):
                     break
