@@ -44,4 +44,4 @@ else
     echo "Error"
 fi
 
-echo "Finished | PH2 | Counterfactual Explanations"
+echo "Finished | PAPILA | Counterfactual Explanations"
