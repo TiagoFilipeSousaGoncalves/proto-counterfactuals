@@ -226,7 +226,30 @@ for index, row in image_retrieval_df.iterrows():
     
     
     # Get the query image prototypes
-    query_img_prototypes = [os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
+    query_img_prototypes = list()
+    
+    # In the Deformable ProtoPNet, the prototype retrieval has a different naming style (examples below)
+    # top-3_activated_prototype.png
+    # top-5_activated_prototype_5-with_box.png
+    for i in range(10):
+
+        # Check the basic naming style (inherited from ProtoPNet)
+        proto_path = os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png")
+        if os.path.exists(proto_path):
+            query_img_prototypes.append(proto_path)
+        
+        # The other option is to check other naming styles
+        else:
+            for j in range(100):
+                proto_path = os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_{j}-with_box.png")
+
+                if os.path.exists(proto_path):
+                    break
+
+            query_img_prototypes.append(proto_path)
+
+
+    # Open all the query image prototypes
     query_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in query_img_prototypes]
     
     # Get the query image prototypes class identities
@@ -245,12 +268,36 @@ for index, row in image_retrieval_df.iterrows():
         counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_dir, counterfact_img_fname.split('.')[0], "most_activated_prototypes")
     else:
         counterfact_img_prototypes_path = os.path.join("results", CHECKPOINT, "analysis", "local", counterfact_img_fname.split('.')[0], counterfact_img_fname.split('.')[0], "most_activated_prototypes")
-    
+
+
     # Get the counterfactual image prototypes
-    counterfact_img_prototypes = [os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png") for i in range(10)]
+    counterfact_img_prototypes = list()
+    
+    # In the Deformable ProtoPNet, the prototype retrieval has a different naming style (examples below)
+    # top-3_activated_prototype.png
+    # top-5_activated_prototype_5-with_box.png
+    for i in range(10):
+
+        # Check the basic naming style (inherited from ProtoPNet)
+        proto_path = os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_with_box.png")
+        if os.path.exists(proto_path):
+            counterfact_img_prototypes.append(proto_path)
+        
+        # The other option is to check other naming styles
+        else:
+            for j in range(100):
+                proto_path = os.path.join(counterfact_img_prototypes, f"top-{i+1}_activated_prototype_{j}-with_box.png")
+
+                if os.path.exists(proto_path):
+                    break
+
+            counterfact_img_prototypes.append(proto_path)
+    
+
+    # Open all the counterfactual image prototypes
     counterfact_img_prototypes = [np.array(Image.open(i).convert("RGB")) for i in counterfact_img_prototypes]
     
-    # Get the query image prototypes class identities
+    # Get the counterfactual image prototypes class identities
     cls_ids_counterfact_img = proto_stats_df[proto_stats_df["Image Filename"]==counterfact_img_fname]["Top-10 Prototypes Class Identities"].values[0]
     cls_ids_counterfact_img = cls_ids_counterfact_img.split('[')[1]
     cls_ids_counterfact_img = cls_ids_counterfact_img.split(']')[0]
