@@ -4,7 +4,7 @@
 
 echo "PAPILA | Started | Testing"
 
-model="dppnet"
+model="baseline"
 
 if [ $model == "ppnet" ]
 then
@@ -27,6 +27,12 @@ then
 elif [ $model == "baseline" ]
 then
     echo "PAPILA | Baseline"
+    python code/baseline/models_test.py --dataset PAPILA --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/densenet121/2023-01-16_00-08-15/
+    # python code/baseline/models_test.py --dataset PAPILA --base_architecture densenet161 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/densenet161/XXX/
+    python code/baseline/models_test.py --dataset PAPILA --base_architecture resnet34 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/resnet34/2023-01-16_07-33-46/
+    # python code/baseline/models_test.py --dataset PAPILA --base_architecture resnet152 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/resnet152/XXX/
+    python code/baseline/models_test.py --dataset PAPILA --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/vgg16/2023-01-16_13-44-00/
+    # python code/baseline/models_test.py --dataset PAPILA --base_architecture vgg19 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/vgg19/XXX/
 else
     echo "Error"
 fi

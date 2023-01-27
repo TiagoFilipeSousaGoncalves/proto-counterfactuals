@@ -4,7 +4,7 @@
 
 echo "CUB2002011 | Started | Testing"
 
-model="dppnet"
+model="baseline"
 
 if [ $model = "ppnet" ]
 then
@@ -21,6 +21,12 @@ then
     python code/deformable-protopnet/models_test.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 8 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/densenet121/2023-01-09_01-07-48/
     python code/deformable-protopnet/models_test.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 8 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/resnet34/2023-01-11_18-27-35/
     python code/deformable-protopnet/models_test.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 8 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint cub2002011/deformable-protopnet/vgg16/2023-01-13_07-25-59/
+elif [ $model == "baseline" ]
+then
+    echo "CUB2002011 | Baseline"
+    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/densenet121/2023-01-17_03-44-38/
+    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/resnet34/2023-01-21_03-37-39/
+    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/vgg16/2023-01-24_01-40-54/
 else
     echo "Error"
 fi
