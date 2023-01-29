@@ -56,7 +56,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
 
     
     # Load image and labels
-    img_pil = Image.open(test_image_path)
+    img_pil = Image.open(test_image_path).convert("RGB")
     img_tensor = test_transforms(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
     images_test = img_variable.to(device)
