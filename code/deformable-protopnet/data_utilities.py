@@ -107,35 +107,52 @@ def save_preprocessed_img(fname, preprocessed_imgs, index=0, save_img=False):
 
 
 # Function: Save image prototypes
-def save_prototype(fname, load_img_dir, index):
+def save_prototype(fname, load_img_dir, index, save_img=False):
     
     try:
+        # Note: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imread.html
         # Open an image file and save it
-        p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img'+str(index)+'.png'))
-        plt.imsave(fname, p_img)
-    except:
-        pass
+        # p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img'+str(index)+'.png'))
+        p_img = Image.open(os.path.join(load_img_dir, 'prototype-img'+str(index)+'.png')).convert("RGB")
+        p_img = np.array(p_img)
 
-    return
+        # Save image (if necessary)
+        if save_img:
+            plt.imsave(fname, p_img)
+    
+    except:
+        p_img = None
+
+
+    return p_img
     
 
 
 # Function: Save prototype bbox
-def save_prototype_box(fname, load_img_dir, index):
+def save_prototype_box(fname, load_img_dir, index, save_img=False):
     
     try:
+        # Note: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imread.html
         # Open an image file and save it
-        p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img-with_box'+str(index)+'.png'))
-        plt.imsave(fname, p_img)
-    except:
-        pass
+        # p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img-with_box'+str(index)+'.png'))
+        p_img = Image.open(os.path.join(load_img_dir, 'prototype-img-with_box'+str(index)+'.png')).convert("RGB")
+        p_img = np.array(p_img)
 
-    return
+
+        # Save image (if necessary)
+        if save_img:
+            plt.imsave(fname, p_img)
+    
+    except:
+        p_img = None
+
+
+    return p_img
     
 
 
 # Function: Save image with a bounding-box
-def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_width_start, bbox_width_end, color=(0, 255, 255)):
+def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_width_start, bbox_width_end, color=(0, 255, 255), save_img=False):
     
 
     try:
@@ -149,18 +166,20 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_wi
         img_rgb_uint8 = img_bgr_uint8[...,::-1]
         img_rgb_float = np.float32(img_rgb_uint8) / 255
         
-        # Save image
-        plt.imsave(fname, img_rgb_float)
+        # Save image (if needed)
+        if save_img:
+            plt.imsave(fname, img_rgb_float)
+    
     except:
-        pass
+        img_rgb_float = None
 
 
-    return
+    return img_rgb_float
 
 
 
 # Function: Save deformable prototype information
-def save_deform_info(model, offsets, input, activations, save_dir, prototype_img_filename_prefix, proto_index, prototype_layer_stride=1):
+def save_deform_info(model, offsets, input, activations, save_dir, prototype_img_filename_prefix, proto_index, prototype_layer_stride=1, save_img=False):
     
     # Get prototype shape
     prototype_shape = model.prototype_shape
@@ -206,6 +225,9 @@ def save_deform_info(model, offsets, input, activations, save_dir, prototype_img
 
 
     # Iterate through prototype shape(s) to get the prototypes
+    prototypes_just_this_box = list()
+    prototypes_patches = list()
+
     for i in range(prototype_shape[-2]):
         for k in range(prototype_shape[-1]):
             
@@ -239,13 +261,17 @@ def save_deform_info(model, offsets, input, activations, save_dir, prototype_img
             )
 
 
-            # Save this image
-            plt.imsave(
-                os.path.join(save_dir, prototype_img_filename_prefix + str(proto_index) + '_patch_' + str(i*prototype_shape[-1] + k) + '-with_box.png'),
-                img_with_just_this_box,
-                vmin=0.0,
-                vmax=1.0
-            )
+            # Add this to the corresponding list
+            prototypes_just_this_box.append(img_with_just_this_box)
+
+            # Save this image (if needed)
+            if save_img:
+                plt.imsave(
+                    os.path.join(save_dir, prototype_img_filename_prefix + str(proto_index) + '_patch_' + str(i*prototype_shape[-1] + k) + '-with_box.png'),
+                    img_with_just_this_box,
+                    vmin=0.0,
+                    vmax=1.0
+                )
 
 
             # Draw rectangle ont the other image with bboxes
@@ -260,23 +286,30 @@ def save_deform_info(model, offsets, input, activations, save_dir, prototype_img
 
             # Save this image uppon a given condition (defined by the original authors)
             if not (def_image_space_col_start < 0 or def_image_space_row_start < 0 or def_image_space_col_end >= input.shape[0] or def_image_space_row_end >= input.shape[1]):
-                plt.imsave(
-                    os.path.join(save_dir, prototype_img_filename_prefix + str(proto_index) + '_patch_' + str(i*prototype_shape[-1] + k) + '.png'),
-                    input[def_image_space_row_start:def_image_space_row_end, def_image_space_col_start:def_image_space_col_end, :],
-                    vmin=0.0,
-                    vmax=1.0
-                )
+                
+                # Append this to the list
+                prototypes_patches.append(input[def_image_space_row_start:def_image_space_row_end, def_image_space_col_start:def_image_space_col_end, :])
+
+                # Save image (if needed)
+                if save_img:
+                    plt.imsave(
+                        os.path.join(save_dir, prototype_img_filename_prefix + str(proto_index) + '_patch_' + str(i*prototype_shape[-1] + k) + '.png'),
+                        input[def_image_space_row_start:def_image_space_row_end, def_image_space_col_start:def_image_space_col_end, :],
+                        vmin=0.0,
+                        vmax=1.0
+                    )
 
 
-    # Save this image
-    plt.imsave(
-        os.path.join(save_dir, prototype_img_filename_prefix + str(proto_index) + '-with_box.png'),
-        original_img_j_with_boxes,
-        vmin=0.0,
-        vmax=1.0
-    )
+    # Save this image (if needed)
+    if save_img:
+        plt.imsave(
+            os.path.join(save_dir, prototype_img_filename_prefix + str(proto_index) + '-with_box.png'),
+            original_img_j_with_boxes,
+            vmin=0.0,
+            vmax=1.0
+        )
 
-    return
+    return prototypes_just_this_box, prototypes_patches, original_img_j_with_boxes
 
 
 

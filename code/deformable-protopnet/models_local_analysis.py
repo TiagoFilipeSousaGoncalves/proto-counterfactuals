@@ -495,7 +495,7 @@ for image_directories, data_path, labels_dict in zip([train_img_directories, tes
                 os.makedirs(image_analysis_path)
 
             # Analyse this image
-            img_fname, gt_label, pred_label, nr_prototypes_cls_ident, topk_proto_cls_ident = retrieve_image_prototypes(
+            img_fname, gt_label, pred_label, nr_prototypes_cls_ident, topk_proto_cls_ident, prototype_images, prototype_images_bboxes, prototype_images_just_this_box, prototypes_patches_lists, original_images_with_bboxes, high_activated_patches, high_activated_patches_in_orig_image, overlayed_images = retrieve_image_prototypes(
                 save_analysis_path=image_analysis_path,
                 weights_dir=weights_dir,
                 ppnet_model=ppnet_model,
@@ -504,7 +504,8 @@ for image_directories, data_path, labels_dict in zip([train_img_directories, tes
                 test_image_dir=os.path.join(data_path, image_dir),
                 test_image_name=image_name,
                 test_image_label=image_label,
-                img_size=IMG_SIZE
+                img_size=IMG_SIZE,
+                save_image=False
             )
 
 

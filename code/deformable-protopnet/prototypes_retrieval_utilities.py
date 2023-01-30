@@ -17,7 +17,7 @@ from prototypes_utilities import find_high_activation_crop, get_deformation_info
 
 
 # Function: Retrieve prototypes from an image
-def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, img_size, most_k_activated=10):
+def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, img_size, most_k_activated=10, save_image=False):
 
     # Open a file to save a small report w/ .TXT extension
     report_path = os.path.join(save_analysis_path, "report.txt")
@@ -122,6 +122,30 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
 
     # Create a list of the identitities of the top-K most activated prototypes
     topk_proto_cls_ident = list()
+    
+    # Create a list of the prototypes (images)
+    prototype_images = list()
+
+    # Create a list of the prototypes (images) w/ bbox
+    prototype_images_bboxes = list()
+
+    # Create a list for prototypes with just one box
+    prototype_images_just_this_box = list()
+
+    # Create a list for prototypes patches list
+    prototypes_patches_lists = list()
+
+    # Create a list for the original images with all bboxes
+    original_images_with_bboxes = list()
+
+    # Create a list for the high activated patches
+    high_activated_patches = list()
+
+    # Create a list for the high activated patches in original image
+    high_activated_patches_in_orig_image = list()
+
+    # Create a list for the overlayed images
+    overlayed_images = list()
 
 
     # Iterate through the most K activated prototypes
@@ -134,23 +158,30 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         # Save prototype
         prototype_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i)
         report.write(f"Prototype: {prototype_fname}\n")
-        save_prototype(
+        prototype_img = save_prototype(
             fname=prototype_fname,
             load_img_dir=saved_prototypes_dir,
-            index=sorted_indices_act[-i].item()
+            index=sorted_indices_act[-i].item(),
+            save_img=save_image
         )
+
+        # Append to the corresponding list
+        prototype_images.append(prototype_img)
 
 
         # Save prototype w/ bbox
         prototype_w_bbox_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_with_box.png' % i)
         report.write(f"Prototype with bbox: {prototype_w_bbox_fname}\n")
-        save_prototype_box(
+        prototype_img_bbox = save_prototype_box(
             fname=prototype_w_bbox_fname,
             load_img_dir=saved_prototypes_dir,
             index=sorted_indices_act[-i].item()
         )
+
+        # Append to the corresponding list
+        prototype_images_bboxes.append(prototype_img_bbox)
         
-        
+
         # Add some important information to the report
         report.write('Prototype index: {0}\n'.format(sorted_indices_act[-i].item()))
         report.write('Prototype class identity: {0}\n'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
@@ -169,7 +200,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
         
         # Save deformable-prototype information
-        save_deform_info(
+        prototypes_just_this_box, prototypes_patches, original_img_j_with_boxes = save_deform_info(
             model=ppnet_model,
             offsets=offsets,
             input=original_img,
@@ -177,28 +208,45 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
             save_dir=os.path.join(save_analysis_path, 'most_activated_prototypes'),
             prototype_img_filename_prefix='top-%d_activated_prototype_' % i,
             proto_index=sorted_indices_act[-i].item(),
-            prototype_layer_stride=1
+            prototype_layer_stride=1,
+            save_img=save_image
         )
+
+        # Append to the corresponding lists
+        prototype_images_just_this_box.append(prototypes_just_this_box)
+        prototypes_patches_lists.append(prototypes_patches)
+        original_images_with_bboxes.append(original_img_j_with_boxes)
 
         # Show the most highly activated patch of the image by this prototype
         high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
         high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
         report.write('Most highly activated patch of the chosen image by this prototype:\n')
-        plt.imsave(
-            os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_by_top-%d_prototype.png' % i),
-            high_act_patch
-        )
+        
+        # Append to the corresponding list
+        high_activated_patches.append(high_act_patch)
+        
+        # Save image (if needed)
+        if save_image:
+            plt.imsave(
+                os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_by_top-%d_prototype.png' % i),
+                high_act_patch
+            )
+
 
         report.write('Most highly activated patch by this prototype shown in the original image:\n')
-        imsave_with_bbox(
+        high_activated_patch_in_orig_img = imsave_with_bbox(
             fname=os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % i),
             img_rgb=original_img,
             bbox_height_start=high_act_patch_indices[0],
             bbox_height_end=high_act_patch_indices[1],
             bbox_width_start=high_act_patch_indices[2],
             bbox_width_end=high_act_patch_indices[3],
-            color=(0, 255, 255)
+            color=(0, 255, 255),
+            save_img=save_image
         )
+
+        # Append it to the corresponding list
+        high_activated_patches_in_orig_image.append(high_activated_patch_in_orig_img)
 
 
         # Show the image overlayed with prototype activation map
@@ -209,8 +257,14 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         heatmap = heatmap[...,::-1]
         overlayed_img = 0.5 * original_img + 0.3 * heatmap
         report.write('Prototype activation map of the chosen image:\n')
-        # plt.axis('off')
-        plt.imsave(os.path.join(save_analysis_path, 'most_activated_prototypes', 'prototype_activation_map_by_top-%d_prototype.png' % i), overlayed_img)
+
+        # Append it to the corresponding list
+        overlayed_images.append(overlayed_img)
+
+        # Save image (if necessary)
+        if save_image:
+            # plt.axis('off')
+            plt.imsave(os.path.join(save_analysis_path, 'most_activated_prototypes', 'prototype_activation_map_by_top-%d_prototype.png' % i), overlayed_img)
         # log('--------------------------------------------------------------')
         report.write("\n")
     
@@ -218,7 +272,8 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
     # Close report
     report.close()
 
-    return test_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident
+
+    return test_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident, prototype_images, prototype_images_bboxes, prototype_images_just_this_box, prototypes_patches_lists, original_images_with_bboxes, high_activated_patches, high_activated_patches_in_orig_image, overlayed_images
 
 
 
