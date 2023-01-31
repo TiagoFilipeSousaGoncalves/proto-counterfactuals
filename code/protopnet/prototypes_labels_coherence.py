@@ -84,7 +84,7 @@ for proto_stats_pr_df in proto_stats_df_list:
         # Apply a processing to this string
         top_k_proto = top_k_proto.split('[')[1]
         top_k_proto = top_k_proto.split(']')[0]
-        top_k_proto = [i for i in top_k_proto.split(',')]
+        top_k_proto = [int(i) for i in top_k_proto.split(',')]
         # print(top_k_proto)
 
         # Append this to teh dictionary of results
