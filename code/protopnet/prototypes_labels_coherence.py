@@ -30,6 +30,17 @@ CHECKPOINTS = args.append_checkpoints
 # print(CHECKPOINTS)
 
 
+# Get the number of classes for the computation of the coherence metric
+if DATASET == "CUB2002011": 
+    N_CLASSES = 200
+elif DATASET == "PAPILA":
+    N_CLASSES = 3
+elif DATASET == "PH2":
+    N_CLASSES = 3
+elif DATASET == "STANFORDCARS":
+    pass
+
+
 
 # Create a list of multiple checkpoints' stats'
 proto_stats_df_list = list()
@@ -102,9 +113,9 @@ for image_filename in label_coherence_dict.keys():
 
     # Transpose the vector so we have the right format to compute the Fleiss Kappa
     prototypes_among_models = np.transpose(prototypes_among_models)
-    print(prototypes_among_models)
+    # print(prototypes_among_models)
     
-    fleiss_kappa_arr, categories_arr = aggregate_raters(prototypes_among_models)
+    fleiss_kappa_arr, categories_arr = aggregate_raters(data=prototypes_among_models, n_cat=N_CLASSES)
     print(fleiss_kappa_arr)
     fleiss_kappa_value = fleiss_kappa(fleiss_kappa_arr)
 
@@ -117,10 +128,10 @@ for image_filename in label_coherence_dict.keys():
 
 
 # Open a file to save a small report w/ .TXT extension
-if os.path.exists(os.path.join("results", DATASET, "protopnet", "prototype_label_coherence.txt")):
-    os.remove(os.path.join("results", DATASET, "protopnet", "prototype_label_coherence.txt"))
+if os.path.exists(os.path.join("results", DATASET.lower(), "protopnet", "prototype_label_coherence.txt")):
+    os.remove(os.path.join("results", DATASET.lower(), "protopnet", "prototype_label_coherence.txt"))
 
-report = open(os.path.join("results", DATASET, "protopnet", "prototype_label_coherence.txt"), "at")
+report = open(os.path.join("results", DATASET.lower(), "protopnet", "prototype_label_coherence.txt"), "at")
 
 
 
