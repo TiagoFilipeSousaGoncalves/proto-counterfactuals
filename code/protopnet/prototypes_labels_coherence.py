@@ -96,9 +96,11 @@ for proto_stats_pr_df in proto_stats_df_list:
 for image_filename in label_coherence_dict.keys():
 
     # Get the set of top-10 activated prototypes per image
-    protypes_among_models = label_coherence_dict[image_filename]["Top-10 Prototypes Models"]
-    protypes_among_models = np.array(protypes_among_models)
-    fleiss_kappa_format = aggregate_raters(protypes_among_models)
+    prototypes_among_models = label_coherence_dict[image_filename]["Top-10 Prototypes Models"]
+    prototypes_among_models = np.array(prototypes_among_models)
+    print(prototypes_among_models)
+    fleiss_kappa_format = aggregate_raters(prototypes_among_models)
+    print(fleiss_kappa_format)
     fleiss_kappa_value = fleiss_kappa(fleiss_kappa_format)
 
     # Add this to the dictionary
