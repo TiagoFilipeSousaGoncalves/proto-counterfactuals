@@ -142,7 +142,7 @@ report = open(os.path.join("results", DATASET.lower(), "protopnet", "prototype_l
 mean_value = np.mean(coherence_values)
 
 # Add this value to a report
-report.write(f"Coherence (Fleiss Kappa) among models: {mean_value}\n")
+report.write(f"Coherence (Fleiss Kappa): {mean_value}\n")
 
 # Close report
 report.close()
