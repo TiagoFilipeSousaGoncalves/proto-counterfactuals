@@ -2,7 +2,7 @@
 
 echo "Prototype Label Coherence | Started"
 
-model="ppnet"
+model="dppnet"
 
 if [ $model=="ppnet" ]
 then
@@ -18,6 +18,14 @@ then
 elif [$model=="dppnet"]
 then
     echo "Deformable ProtoPNet"
+    echo "Prototype Label Coherence | CUB2002011"
+    python code/deformable-protopnet/prototypes_labels_coherence.py --dataset CUB2002011 --append-checkpoints cub2002011/deformable-protopnet/densenet121/2023-01-09_01-07-48/ --append-checkpoints cub2002011/deformable-protopnet/resnet34/2023-01-11_18-27-35/ --append-checkpoints cub2002011/deformable-protopnet/vgg16/2023-01-13_07-25-59/
+
+    echo "Prototype Label Coherence | PAPILA"
+    python code/deformable-protopnet/prototypes_labels_coherence.py --dataset PAPILA --append-checkpoints papila/deformable-protopnet/densenet121/2023-01-04_12-12-15/ --append-checkpoints papila/deformable-protopnet/resnet34/2023-01-04_16-02-21/ --append-checkpoints papila/deformable-protopnet/vgg16/2023-01-04_18-47-51/
+
+    echo "Prototype Label Coherence | PH2"
+    python code/deformable-protopnet/prototypes_labels_coherence.py --dataset PH2 --append-checkpoints ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/ --append-checkpoints ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/ --append-checkpoints ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/
 else
     echo "Error"
 fi
