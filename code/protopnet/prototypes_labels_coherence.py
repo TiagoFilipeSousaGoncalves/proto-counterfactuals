@@ -24,7 +24,11 @@ args = parser.parse_args()
 
 # Get the dataset
 DATASET = args.dataset
+
 # Get the path of the CSV that contains the analysis
+CHECKPOINTS = list()
+print(args._get_kwargs())
+exit()
 CHECKPOINTS = args.checkpoints
 
 
