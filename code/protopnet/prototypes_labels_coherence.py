@@ -116,8 +116,9 @@ for image_filename in label_coherence_dict.keys():
     # print(prototypes_among_models)
     
     fleiss_kappa_arr, categories_arr = aggregate_raters(data=prototypes_among_models, n_cat=N_CLASSES)
-    print(fleiss_kappa_arr)
-    fleiss_kappa_value = fleiss_kappa(fleiss_kappa_arr)
+    # print(fleiss_kappa_arr)
+    fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
+    print(fleiss_kappa_value)
 
     # Add this to the dictionary
     label_coherence_dict[image_filename]["Prototype Label Coherence"] = fleiss_kappa_value
