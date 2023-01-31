@@ -106,25 +106,27 @@ for proto_stats_pr_df in proto_stats_df_list:
 # Iterate through the dictionary of results
 for image_filename in label_coherence_dict.keys():
 
-    # Get the set of top-10 activated prototypes per image
-    prototypes_among_models = label_coherence_dict[image_filename]["Top-10 Prototypes Models"]
-    prototypes_among_models = np.array(prototypes_among_models)
-    # print(prototypes_among_models)
+    # Compute only for the cases where we have all the n models
+    if len(label_coherence_dict[image_filename]["Top-10 Prototypes Models"]) == len(CHECKPOINTS):
+        # Get the set of top-10 activated prototypes per image
+        prototypes_among_models = label_coherence_dict[image_filename]["Top-10 Prototypes Models"]
+        prototypes_among_models = np.array(prototypes_among_models)
+        # print(prototypes_among_models)
 
-    # Transpose the vector so we have the right format to compute the Fleiss Kappa
-    prototypes_among_models = np.transpose(prototypes_among_models)
-    # print(prototypes_among_models)
-    
-    fleiss_kappa_arr, categories_arr = aggregate_raters(data=prototypes_among_models, n_cat=N_CLASSES)
-    # print(fleiss_kappa_arr)
-    fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
-    print(fleiss_kappa_value)
+        # Transpose the vector so we have the right format to compute the Fleiss Kappa
+        prototypes_among_models = np.transpose(prototypes_among_models)
+        # print(prototypes_among_models)
+        
+        fleiss_kappa_arr, categories_arr = aggregate_raters(data=prototypes_among_models, n_cat=N_CLASSES)
+        # print(fleiss_kappa_arr)
+        fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
+        print(fleiss_kappa_value)
 
-    # Add this to the dictionary
-    label_coherence_dict[image_filename]["Prototype Label Coherence"] = fleiss_kappa_value
+        # Add this to the dictionary
+        label_coherence_dict[image_filename]["Prototype Label Coherence"] = fleiss_kappa_value
 
-    # Add this to the list of values
-    coherence_values.append(fleiss_kappa_value)
+        # Add this to the list of values
+        coherence_values.append(fleiss_kappa_value)
 
 
 
