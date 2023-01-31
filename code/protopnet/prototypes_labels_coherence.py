@@ -45,13 +45,6 @@ for checkpoint in CHECKPOINTS:
     proto_stats_pr_df = proto_stats_df.copy()[["Image Filename", "Ground-Truth Label", "Predicted Label", "Number of Prototypes Connected to the Class Identity", "Top-10 Prototypes Class Identities"]][proto_stats_df["Ground-Truth Label"]==proto_stats_df["Predicted Label"]]
     # print(proto_stats_pr_df.head())
 
-
-
-    # Create a anoter column to count the number of prototypes (out of the most activated) that are related to the class identity
-    proto_stats_pr_df["Prototype Label Coherence"] = 0
-    # print(proto_stats_pr_df.head())
-
-
     # Reset index so that indices match the number of rows
     proto_stats_pr_df = proto_stats_pr_df.reset_index()
 
@@ -59,9 +52,12 @@ for checkpoint in CHECKPOINTS:
     proto_stats_df_list.append(proto_stats_pr_df)
 
 
+
 # Create a dictionary to append this results
 label_coherence_dict = dict()
 coherence_values = list()
+
+
 
 # Go through the list of proto stats df
 for proto_stats_pr_df in proto_stats_df_list:
@@ -73,7 +69,7 @@ for proto_stats_pr_df in proto_stats_df_list:
         if row["Image Filename"] not in label_coherence_dict.keys():
             label_coherence_dict[row["Image Filename"]] = dict()
             label_coherence_dict[row["Image Filename"]]["Ground-Truth Label"] = 0
-            label_coherence_dict[row["Image Filename"]][row["Top-10 Prototypes Models"]] = list()
+            label_coherence_dict[row["Image Filename"]]["Top-10 Prototypes Models"]] = list()
             label_coherence_dict[row["Image Filename"]]["Prototype Label Coherence"] = 0
 
 
