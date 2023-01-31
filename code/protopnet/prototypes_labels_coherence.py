@@ -88,7 +88,7 @@ for proto_stats_pr_df in proto_stats_df_list:
         # print(top_k_proto)
 
         # Append this to teh dictionary of results
-        label_coherence_dict[row["Top-10 Prototypes Models"]].append(top_k_proto)
+        label_coherence_dict["Top-10 Prototypes Models"].append(top_k_proto)
 
 
 
