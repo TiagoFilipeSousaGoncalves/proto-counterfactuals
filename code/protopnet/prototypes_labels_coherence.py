@@ -69,7 +69,7 @@ for proto_stats_pr_df in proto_stats_df_list:
         if row["Image Filename"] not in label_coherence_dict.keys():
             label_coherence_dict[row["Image Filename"]] = dict()
             label_coherence_dict[row["Image Filename"]]["Ground-Truth Label"] = 0
-            label_coherence_dict[row["Image Filename"]]["Top-10 Prototypes Models"]] = list()
+            label_coherence_dict[row["Image Filename"]]["Top-10 Prototypes Models"] = list()
             label_coherence_dict[row["Image Filename"]]["Prototype Label Coherence"] = 0
 
 
