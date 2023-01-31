@@ -26,10 +26,9 @@ args = parser.parse_args()
 DATASET = args.dataset
 
 # Get the path of the CSV that contains the analysis
-CHECKPOINTS = list()
-print(args._get_kwargs())
+CHECKPOINTS = args.append_checkpoints
+print(CHECKPOINTS)
 exit()
-CHECKPOINTS = args.checkpoints
 
 
 # Create a list of multiple checkpoints' stats'
