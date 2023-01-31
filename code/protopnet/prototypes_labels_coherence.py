@@ -27,8 +27,8 @@ DATASET = args.dataset
 
 # Get the path of the CSV that contains the analysis
 CHECKPOINTS = args.append_checkpoints
-print(CHECKPOINTS)
-exit()
+# print(CHECKPOINTS)
+
 
 
 # Create a list of multiple checkpoints' stats'
