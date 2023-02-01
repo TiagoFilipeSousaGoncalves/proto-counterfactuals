@@ -4,7 +4,7 @@ echo "Prototype Label Coherence | Started"
 
 model="dppnet"
 
-if [ $model=="ppnet" ]
+if [ $model == "ppnet" ]
 then
     echo "ProtoPNet"
     echo "Prototype Label Coherence | CUB2002011"
@@ -15,7 +15,7 @@ then
 
     echo "Prototype Label Coherence | PH2"
     python code/protopnet/prototypes_labels_coherence.py --dataset PH2 --append-checkpoints ph2/protopnet/densenet121/2022-12-06_15-51-53/ --append-checkpoints ph2/protopnet/resnet34/2022-12-06_22-45-55/ --append-checkpoints ph2/protopnet/vgg16/2022-12-07_00-42-57/
-elif [$model=="dppnet"]
+elif [ $model == "dppnet" ]
 then
     echo "Deformable ProtoPNet"
     echo "Prototype Label Coherence | CUB2002011"
