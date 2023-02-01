@@ -4,7 +4,7 @@
 
 echo "CUB2002011 | Started | Prototype Inference Stats"
 
-model="ppnet"
+model="dppnet"
 
 if [ $model == "ppnet" ]
 then
@@ -18,12 +18,12 @@ echo "CUB2002011 | ProtoPNet"
 elif [ $model == 'dppnet' ]
 then
     echo "CUB2002011 | Deformable ProtoPNet"
-    # python code/protopnet_deform/prototypes_inference_stats.py --checkpoint ph2/deformable-protopnet/densenet121/2022-12-06_18-16-44/
-    # python code/protopnet_deform/prototypes_inference_stats.py --checkpoint ph2/deformable-protopnet/densenet161/2022-12-07_11-54-55/
-    # python code/protopnet_deform/prototypes_inference_stats.py --checkpoint ph2/deformable-protopnet/resnet34/2022-12-07_04-58-44/
-    # python code/protopnet_deform/prototypes_inference_stats.py --checkpoint ph2/deformable-protopnet/resnet152/2022-12-07_15-56-33/
-    # python code/protopnet_deform/prototypes_inference_stats.py --checkpoint ph2/deformable-protopnet/vgg16/2022-12-07_17-48-57/
-    # python code/protopnet_deform/prototypes_inference_stats.py --checkpoint ph2/deformable-protopnet/vgg19/2022-12-07_19-02-13/
+    python code/deformable-protopnet/prototypes_inference_stats.py --checkpoint cub2002011/deformable-protopnet/densenet121/2023-01-09_01-07-48/
+    # python code/deformable-protopnet/prototypes_inference_stats.py --checkpoint cub2002011/deformable-protopnet/densenet161/XXX/
+    python code/deformable-protopnet/prototypes_inference_stats.py --checkpoint cub2002011/deformable-protopnet/resnet34/2023-01-11_18-27-35/
+    # python code/deformable-protopnet/prototypes_inference_stats.py --checkpoint cub2002011/deformable-protopnet/resnet152/XXX/
+    python code/deformable-protopnet/prototypes_inference_stats.py --checkpoint cub2002011/deformable-protopnet/vgg16/2023-01-13_07-25-59/
+    # python code/deformable-protopnet/prototypes_inference_stats.py --checkpoint cub2002011/deformable-protopnet/vgg19/XXX/
 else
     echo "Error"
 fi
