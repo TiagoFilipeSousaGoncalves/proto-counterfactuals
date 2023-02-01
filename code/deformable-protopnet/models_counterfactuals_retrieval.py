@@ -15,7 +15,7 @@ import torchvision
 
 # Project Imports
 from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
-from image_retrieval_utilities import generate_image_features, get_image_counterfactual
+from image_retrieval_utilities import generate_image_features, get_image_counterfactual, get_image_prediction
 from model_utilities import construct_PPNet
 
 
@@ -436,6 +436,7 @@ prototype_shape = ppnet_model.prototype_shape
 
 
 # Generate images features (we will need these for the retrieval)
+# Note: We generate features for the entire database
 if GENERATE_FEATURES:
 
     for directory, data_path, labels_dict in zip([train_img_directories, test_img_directories], [train_data_path, test_data_path], [train_labels_dict, test_labels_dict]):
@@ -455,27 +456,28 @@ if GENERATE_FEATURES:
                 image_label = labels_dict[image_dir]
 
                 # Generate test image path
-                test_img_path = os.path.join(data_path, image_dir, image_name)
+                image_path = os.path.join(data_path, image_dir, image_name)
 
 
                 # Generate features
-                conv_features = generate_image_features(
-                    image_path=test_img_path,
+                features = generate_image_features(
+                    image_path=image_path,
                     ppnet_model=ppnet_model,
                     device=DEVICE,
-                    transforms=transforms
+                    transforms=transforms,
+                    feature_space=FEATURE_SPACE
                 )
 
 
                 # Convert feature vector to NumPy
-                conv_features = conv_features.detach().cpu().numpy()
+                features = features.detach().cpu().numpy()
 
                 # Save this into disk
-                conv_features_fname = image_name.split('.')[0] + '.npy'
-                conv_features_fpath = os.path.join(features_dir, conv_features_fname)
+                features_fname = image_name.split('.')[0] + '.npy'
+                features_fpath = os.path.join(features_dir, features_fname)
                 np.save(
-                    file=conv_features_fpath,
-                    arr=conv_features,
+                    file=features_fpath,
+                    arr=features,
                     allow_pickle=True,
                     fix_imports=True
                 )
@@ -492,7 +494,8 @@ analysis_dict = {
 
 
 
-# Go through all image directories
+# Query Image: Here, we will only use the images of the test set as query images
+# Go through all test image directories
 for image_dir in test_img_directories:
 
     # Get images in this directory
@@ -545,23 +548,40 @@ for image_dir in test_img_directories:
                     if int(ctf_label) == int(counterfactual_pred):
                         for ctf_fname in ctf_names:
 
-                            # Load the features of the counterfactual
-                            ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+                            # Get the prediction of the model on this counterfactual
+                            ctf_prediction = get_image_prediction(
+                                image_path=os.path.join(ctf_data_path, counterfact_dir, ctf_fname),
+                                ppnet_model=ppnet_model,
+                                device=DEVICE,
+                                transforms=transforms
+                            )
 
-                            # Compute the Euclidean Distance (L2-norm) between these feature vectors
-                            distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
+
+                            # Only compute the distances to cases where both the ground-truth and the predicted label(s) of the counterfactual match
+                            if int(ctf_prediction) == int(ctf_label):
+                                # Load the features of the counterfactual
+                                ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+
+                                # Compute the Euclidean Distance (L2-norm) between these feature vectors
+                                distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
 
 
-                            # Append these to lists
-                            counter_imgs_fnames.append(ctf_fname)
-                            distances.append(distance_img_ctf)
+                                # Append these to lists
+                                counter_imgs_fnames.append(ctf_fname)
+                                distances.append(distance_img_ctf)
     
 
 
             # Add information to our data dictionary
             analysis_dict["Image"].append(image_name)
             analysis_dict["Image Label"].append(int(image_label))
-            analysis_dict["Nearest Counterfactual"].append(counter_imgs_fnames[np.argmin(distances)])
+
+            # We must be sure that we found at least one valid counterfactual
+            if len(distances) > 0:
+                analysis_dict["Nearest Counterfactual"].append(counter_imgs_fnames[np.argmin(distances)])
+            else:
+                analysis_dict["Nearest Counterfactual"].append("N/A")
+            
             analysis_dict["Nearest Counterfactual Label"].append(int(counterfactual_pred))
 
 
