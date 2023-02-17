@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 # Project Imports
 from model_resnet_utilities import resnet18_features, resnet34_features, resnet50_features, resnet101_features, resnet152_features
 from model_densenet_utilities import densenet121_features, densenet161_features, densenet169_features, densenet201_features

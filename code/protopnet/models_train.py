@@ -454,7 +454,8 @@ ppnet_model = construct_PPNet(
     prototype_shape=PROTOTYPE_SHAPE,
     num_classes=NUM_CLASSES,
     prototype_activation_function=PROTOTYPE_ACTIVATION_FUNCTION,
-    add_on_layers_type=ADD_ON_LAYERS_TYPE)
+    add_on_layers_type=ADD_ON_LAYERS_TYPE
+)
 
 # if prototype_activation_function == 'linear':
 #     ppnet.set_last_layer_incorrect_connection(incorrect_strength=0)
@@ -515,6 +516,12 @@ except:
 # Write into file
 with open(os.path.join(results_dir, "model_summary.txt"), 'w') as f:
     f.write(str(model_summary))
+
+
+
+
+# Log model's parameters and gradients to W&B
+wandb.watch(ppnet_model)
 
 
 
@@ -727,12 +734,6 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
         "epoch/val":epoch
     }
     wandb.log(wandb_val_metrics)
-
-
-
-    # Log model's parameters and gradients to W&B
-    wandb.watch(ppnet_model)
-
 
 
     # save.save_model_w_condition(model=ppnet_model, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu, target_accu=0.70, log=log)

@@ -386,6 +386,9 @@ with open(os.path.join(results_dir, "model_summary.txt"), 'w') as f:
     f.write(str(model_summary))
 
 
+# Log model's parameters and gradients to W&B
+wandb.watch(baseline_model)
+
 
 # TODO: Review
 # Class weights for loss
@@ -574,11 +577,6 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
         "epoch/val":epoch
     }
     wandb.log(wandb_val_metrics)
-
-
-
-    # Log model's parameters and gradients to W&B
-    wandb.watch(baseline_model)
 
 
 

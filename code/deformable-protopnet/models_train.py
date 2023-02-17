@@ -610,6 +610,11 @@ with open(os.path.join(results_dir, "model_summary.txt"), 'w') as f:
 
 
 
+# Log model's parameters and gradients to W&B
+wandb.watch(ppnet_model)
+
+
+
 # TODO: Review
 # Class weights for loss
 # if args.classweights:
@@ -879,12 +884,6 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
         "epoch/val":epoch
     }
     wandb.log(wandb_val_metrics)
-
-
-
-    # Log model's parameters and gradients to W&B
-    wandb.watch(ppnet_model)
-
 
 
     # Save checkpoint
