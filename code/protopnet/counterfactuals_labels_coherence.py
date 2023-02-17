@@ -19,7 +19,7 @@ parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011",
 parser.add_argument('--append-checkpoints', action="append", type=str, required=True, help="Path to the model checkpoint(s).")
 
 # Feature space
-parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features", "proto_features"], help="Feature space: convolutional features (conv_features).")
+parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features", "proto_features"], help="Feature space: convolutional features (conv_features), prototype layer features (proto_features).")
 
 
 
