@@ -412,7 +412,18 @@ for image_dir in test_img_directories:
         if int(image_label) == int(label_pred):
 
             # Then we check for counterfactuals
-            test_img_fts = np.load(os.path.join(features_dir, image_name.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+            # First, we get the features, by loading the feature vectors
+            if GENERATE_FEATURES:
+                test_img_fts = np.load(os.path.join(features_dir, image_name.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+            else:
+                test_img_fts = generate_image_features(
+                    image_path=test_img_path,
+                    baseline_model=baseline_model,
+                    device=DEVICE,
+                    transforms=transforms,
+                    feature_space=FEATURE_SPACE
+                )
+
 
             # Create lists to append temporary values
             counter_imgs_fnames = list()
@@ -446,8 +457,21 @@ for image_dir in test_img_directories:
 
                             # Only compute the distances to cases where both the ground-truth and the predicted label(s) of the counterfactual match
                             if int(ctf_prediction) == int(ctf_label):
+                                
                                 # Load the features of the counterfactual
-                                ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+                                if GENERATE_FEATURES:
+                                    ctf_fts = np.load(os.path.join(features_dir, ctf_fname.split('.')[0] + '.npy'), allow_pickle=True, fix_imports=True)
+                                # Or generate the vector, anyway    
+                                else:
+                                    ctf_fts = generate_image_features(
+                                        image_path=os.path.join(ctf_data_path, counterfact_dir, ctf_fname),
+                                        baseline_model=baseline_model,
+                                        device=DEVICE,
+                                        transforms=transforms,
+                                        feature_space=FEATURE_SPACE
+                                    )
+
+                                    
 
                                 # Compute the Euclidean Distance (L2-norm) between these feature vectors
                                 distance_img_ctf = np.linalg.norm(test_img_fts-ctf_fts)
