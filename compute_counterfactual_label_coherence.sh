@@ -2,7 +2,7 @@
 
 echo "Counterfactual Label Coherence | Started"
 
-model="ppnet"
+model="dppnet"
 
 if [ $model == "baseline" ]
 then
