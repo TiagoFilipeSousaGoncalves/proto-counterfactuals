@@ -5,10 +5,19 @@
 echo "PAPILA | Started | Counterfactual Retrieval"
 
 
-model="dppnet"
+model="baseline"
 
 
-if [ $model == "ppnet" ]
+if [ $model == "baseline" ]
+then
+    echo "PAPILA | Baseline | Convolution Feature Space"
+    python code/baseline/models_counterfactuals_retrieval.py --dataset PAPILA --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/densenet121/2023-01-16_00-08-15/ --feature_space conv_features
+    # python code/baseline/models_counterfactuals_retrieval.py --dataset PAPILA --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/densenet161/XXX/ --feature_space conv_features
+    python code/baseline/models_counterfactuals_retrieval.py --dataset PAPILA --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/resnet34/2023-01-16_07-33-46/ --feature_space conv_features
+    # python code/baseline/models_counterfactuals_retrieval.py --dataset PAPILA --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/resnet152/XXX/ --feature_space conv_features
+    python code/baseline/models_counterfactuals_retrieval.py --dataset PAPILA --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/vgg16/2023-01-16_13-44-00/ --feature_space conv_features
+    # python code/baseline/models_counterfactuals_retrieval.py --dataset PAPILA --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint papila/baseline/vgg19/XXX/ --feature_space conv_features
+elif [ $model == "ppnet" ]
 then
     echo "PAPILA | ProtoPNet | Convolution Feature Space"
     python code/protopnet/models_counterfactuals_retrieval.py --dataset PAPILA --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint papila/protopnet/densenet121/2022-12-23_11-33-39/ --generate_img_features --feature_space conv_features
