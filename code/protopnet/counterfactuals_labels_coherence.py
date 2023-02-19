@@ -109,12 +109,15 @@ for image_filename in label_coherence_dict.keys():
         # Get the set of nearest counterfactual labels
         counterfactual_labels_among_models = label_coherence_dict[image_filename]["Nearest Counterfactual Label"]
         counterfactual_labels_among_models = np.array(counterfactual_labels_among_models, dtype=np.int)
+
+        # Add another dimension so we have a single-column vector
+        counterfactual_labels_among_models = np.reshape(counterfactual_labels_among_models, (-1, 1))
         # print(counterfactual_labels_among_models)
         # print(counterfactual_labels_among_models.shape)
 
-        # Reshape the vector so we have the right format to compute the Fleiss Kappa
-        # counterfactual_labels_among_models = np.transpose(counterfactual_labels_among_models)
-        counterfactual_labels_among_models = np.reshape(counterfactual_labels_among_models, (1, -1))
+        # Transpose the vector so we have the right format to compute the Fleiss Kappa
+        counterfactual_labels_among_models = np.transpose(counterfactual_labels_among_models)
+        
         print(counterfactual_labels_among_models.dtype)
         print(counterfactual_labels_among_models)
 
@@ -122,7 +125,6 @@ for image_filename in label_coherence_dict.keys():
         fleiss_kappa_arr, categories_arr = aggregate_raters(data=counterfactual_labels_among_models, n_cat=N_CLASSES)
         fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
 
-        exit()
 
         # Add this to the dictionary
         label_coherence_dict[image_filename]["Counterfactual Label Coherence"] = fleiss_kappa_value
