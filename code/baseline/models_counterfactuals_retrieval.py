@@ -423,6 +423,7 @@ for image_dir in test_img_directories:
                     transforms=transforms,
                     feature_space=FEATURE_SPACE
                 )
+                test_img_fts = test_img_fts.detach().cpu().numpy()
 
 
             # Create lists to append temporary values
@@ -470,6 +471,7 @@ for image_dir in test_img_directories:
                                         transforms=transforms,
                                         feature_space=FEATURE_SPACE
                                     )
+                                    ctf_fts = ctf_fts.detach().cpu().numpy()
 
                                     
 
