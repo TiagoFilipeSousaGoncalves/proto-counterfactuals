@@ -89,7 +89,7 @@ for proto_stats_pr_df in proto_stats_df_list:
             label_coherence_dict[row["Image"]]["Image Label"] = row["Image Label"]
             label_coherence_dict[row["Image"]]["Nearest Counterfactual"] = list()
             label_coherence_dict[row["Image"]]["Nearest Counterfactual Label"] = list()
-            label_coherence_dict[row["Image"]["Counterfactual Label Coherence"]] = 0
+            label_coherence_dict[row["Image"]]["Counterfactual Label Coherence"] = 0
 
 
         # Get nearest counterfactual and nearest counterfactual label
