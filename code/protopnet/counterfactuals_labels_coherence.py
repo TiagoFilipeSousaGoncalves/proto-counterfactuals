@@ -112,6 +112,8 @@ for image_filename in label_coherence_dict.keys():
 
         # Transpose the vector so we have the right format to compute the Fleiss Kappa
         counterfactual_labels_among_models = np.transpose(counterfactual_labels_among_models)
+        print(counterfactual_labels_among_models.dtype)
+        print(counterfactual_labels_among_models)
         
         # Compute the fleiss kappa value
         fleiss_kappa_arr, categories_arr = aggregate_raters(data=counterfactual_labels_among_models, n_cat=N_CLASSES)
