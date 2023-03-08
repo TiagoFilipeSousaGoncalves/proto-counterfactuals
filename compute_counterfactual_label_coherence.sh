@@ -8,13 +8,13 @@ if [ $model == "baseline" ]
 then
     echo "Baseline"
     echo "Counterfactual Label Coherence | CUB2002011"
-    python code/baseline/counterfactuals_labels_coherence --dataset CUB2002011 --append-checkpoints cub2002011/baseline/densenet121/2023-01-17_03-44-38/ --append-checkpoints cub2002011/baseline/resnet34/2023-01-21_03-37-39/ --append-checkpoints cub2002011/baseline/vgg16/2023-01-24_01-40-54/
+    python code/baseline/counterfactuals_labels_coherence --dataset CUB2002011 --append-checkpoints cub2002011/baseline/densenet121/2023-01-17_03-44-38/ --append-checkpoints cub2002011/baseline/resnet34/2023-01-21_03-37-39/ --append-checkpoints cub2002011/baseline/vgg16/2023-01-24_01-40-54/ --feature_space conv_features
 
     echo "Counterfactual Label Coherence | PAPILA"
-    python code/baseline/counterfactuals_labels_coherence --dataset PAPILA --append-checkpoints papila/baseline/densenet121/2023-01-16_00-08-15/ --append-checkpoints papila/baseline/resnet34/2023-01-16_07-33-46/ --append-checkpoints papila/baseline/vgg16/2023-01-16_13-44-00/
+    python code/baseline/counterfactuals_labels_coherence --dataset PAPILA --append-checkpoints papila/baseline/densenet121/2023-01-16_00-08-15/ --append-checkpoints papila/baseline/resnet34/2023-01-16_07-33-46/ --append-checkpoints papila/baseline/vgg16/2023-01-16_13-44-00/ --feature_space conv_features
 
     echo "Counterfactual Label Coherence | PH2"
-    python code/baseline/counterfactuals_labels_coherence --dataset PH2 --append-checkpoints ph2/baseline/densenet121/2023-01-16_20-22-43/ --append-checkpoints ph2/baseline/resnet34/2023-01-16_22-56-35/ --append-checkpoints ph2/baseline/vgg16/2023-01-17_01-29-53/
+    python code/baseline/counterfactuals_labels_coherence --dataset PH2 --append-checkpoints ph2/baseline/densenet121/2023-01-16_20-22-43/ --append-checkpoints ph2/baseline/resnet34/2023-01-16_22-56-35/ --append-checkpoints ph2/baseline/vgg16/2023-01-17_01-29-53/ --feature_space conv_features
 elif [ $model == "ppnet" ]
 then
     echo "ProtoPNet"
