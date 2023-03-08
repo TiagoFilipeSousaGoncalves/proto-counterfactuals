@@ -752,7 +752,7 @@ if __name__ == "__main__":
             )
 
             # Training with Data Augmentation
-            train_set = PH2Dataset(
+            train_aug_set = PH2Dataset(
                 data_path=DATA_DIR,
                 subset="train",
                 cropped=True,
