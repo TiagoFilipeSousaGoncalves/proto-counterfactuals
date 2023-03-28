@@ -357,7 +357,7 @@ joint_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=
 
 # Warm Optimizer Learning Rates
 warm_optimizer_specs = [
-    {'params': baseline_model.features.parameters(), 'lr': JOINT_OPTIMIZER_LRS['features'], 'weight_decay': 1e-3},
+    {'params': baseline_model.last_layer.parameters(), 'lr': LAST_LAYER_OPTIMIZER_LR}
 ]
 warm_optimizer = torch.optim.Adam(warm_optimizer_specs)
 
