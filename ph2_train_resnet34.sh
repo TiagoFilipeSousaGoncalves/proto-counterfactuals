@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-#SBATCH -p titanxp_12GB                   # Partition
+#SBATCH -p gtx1080ti_11GB                 # Partition
+#SBATCH --qos=gtx1080ti                   # QOS
 #SBATCH --job-name=ph2_r34                # Job name
 #SBATCH -o slurm.%N.%j.out                # STDOUT
 #SBATCH -e slurm.%N.%j.err                # STDERR
