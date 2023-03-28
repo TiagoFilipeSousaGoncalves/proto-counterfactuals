@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 #SBATCH -p titanxp_12GB                     # Partition
+#SBATCH --qos=titanxp                       # QOS
 #SBATCH --job-name=cub_v16                  # Job name
 #SBATCH -o slurm.%N.%j.out                  # STDOUT
 #SBATCH -e slurm.%N.%j.err                  # STDERR
