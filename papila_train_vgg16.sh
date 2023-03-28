@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH -p titanxp_12GB                 # Partition
+#SBATCH -p gtx1080ti_11GB                 # Partition
 #SBATCH --job-name=pap_v16                # Job name
 #SBATCH -o slurm.%N.%j.out                # STDOUT
 #SBATCH -e slurm.%N.%j.err                # STDERR

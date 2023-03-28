@@ -206,10 +206,10 @@ def last_only(model):
 # Function: Activate gradients on parameters for warm-training phase
 def warm_only(model):
     for p in model.features.parameters():
-        p.requires_grad = True
+        p.requires_grad = False
     
     for p in model.last_layer.parameters():
-        p.requires_grad = False
+        p.requires_grad = True
 
 
 
