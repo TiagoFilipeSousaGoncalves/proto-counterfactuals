@@ -29,11 +29,11 @@ then
 elif [ $model == "baseline" ]
 then
     echo "PH2 | Baseline"
-    python code/baseline/models_test.py --dataset PH2 --base_architecture densenet121 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/densenet121/2023-01-16_20-22-43/
+    python code/baseline/models_test.py --dataset PH2 --base_architecture densenet121 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/densenet121/2023-03-28_13-59-31/
     # python code/baseline/models_test.py --dataset PH2 --base_architecture densenet161 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/densenet161/XXX/
-    python code/baseline/models_test.py --dataset PH2 --base_architecture resnet34 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/resnet34/2023-01-16_22-56-35/
+    python code/baseline/models_test.py --dataset PH2 --base_architecture resnet34 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/resnet34/2023-03-28_18-16-50/
     # python code/baseline/models_test.py --dataset PH2 --base_architecture resnet152 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/resnet152/XXX/
-    python code/baseline/models_test.py --dataset PH2 --base_architecture vgg16 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/vgg16/2023-01-17_01-29-53/
+    python code/baseline/models_test.py --dataset PH2 --base_architecture vgg16 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/vgg16/2023-03-29_15-36-45/
     # python code/baseline/models_test.py --dataset PH2 --base_architecture vgg19 --batchsize 16 --num_workers 2 --gpu_id 0 --checkpoint ph2/baseline/vgg19/XXX/
 
 else
