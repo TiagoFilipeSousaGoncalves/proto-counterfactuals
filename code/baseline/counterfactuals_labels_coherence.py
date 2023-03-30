@@ -3,8 +3,9 @@ import os
 import argparse
 import numpy as np
 import pandas as pd
-from statsmodels.stats.inter_rater import fleiss_kappa, aggregate_raters
 from itertools import combinations
+from scipy.stats import wasserstein_distance
+from statsmodels.stats.inter_rater import fleiss_kappa, aggregate_raters
 
 
 
@@ -138,21 +139,15 @@ for image_filename in label_coherence_dict.keys():
         # Coherence Metric is Earth Movers Distance
         elif COHERENCE_METRIC == "earth_movers_distance":
 
-            # Get all possible combinations
+            # Flatten the array to make it easier to manipulate
             counterfactual_labels_among_models = counterfactual_labels_among_models.flatten()
-            print(counterfactual_labels_among_models.shape)
+
+            # Get the combinations
+            idx_comb = combinations(range(len(counterfactual_labels_among_models)), 2)
+            idx_comb = list(idx_comb)
+            print(idx_comb)
 
             exit()
-            idx_comb = combinations(range())
-
-            # Use Earth Mover's Distance to 
-            # Get all combinations of [1, 2, 3]
-            # and length 2
-            comb = combinations([1, 2, 3], 2)
-
-            # Print the obtained combinations
-            for i in list(comb):
-                print (i)
 
 
 
