@@ -137,26 +137,21 @@ for image_filename in label_coherence_dict.keys():
 
         # Using Earth Movers Distance
         elif COHERENCE_METRIC == "earth_movers_distance":
-            print(prototypes_among_models.shape)
-            print(len(prototypes_among_models))
 
             # Get the combinations
             idx_comb = combinations(range(len(prototypes_among_models)), 2)
             idx_comb = list(idx_comb)
-
-            exit()
             
             # Iterate through these combinations
             wass_distances = list()
             for comb in idx_comb:
-                wd = wasserstein_distance([counterfactual_labels_among_models[comb[0]]], [counterfactual_labels_among_models[comb[1]]])
+                print(prototypes_among_models[comb[0]], prototypes_among_models[comb[1]])
+                wd = wasserstein_distance(prototypes_among_models[comb[0]], prototypes_among_models[comb[1]])
                 wass_distances.append(wd)
             
             # Compute coherence as the mean of these distances
             coherence_res = np.mean(wass_distances)
 
-
-            
 
 
         # Add this to the dictionary
