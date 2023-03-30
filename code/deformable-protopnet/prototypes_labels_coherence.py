@@ -122,14 +122,19 @@ for image_filename in label_coherence_dict.keys():
         prototypes_among_models = label_coherence_dict[image_filename]["Top-10 Prototypes Models"]
         prototypes_among_models = np.array(prototypes_among_models)
 
-        # Transpose the vector so we have the right format to compute the Fleiss Kappa
-        prototypes_among_models = np.transpose(prototypes_among_models)
         
+        # Using Fleiss Kappa
         if COHERENCE_METRIC == "fleiss_kappa":
+            
+            # Transpose the vector so we have the right format to compute the Fleiss Kappa
+            prototypes_among_models = np.transpose(prototypes_among_models)
+
             fleiss_kappa_arr, categories_arr = aggregate_raters(data=prototypes_among_models, n_cat=N_CLASSES)
             fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
             coherence_res = fleiss_kappa_value
         
+
+        # Using Earth Movers Distance
         elif COHERENCE_METRIC == "earth_movers_distance":
             print(prototypes_among_models.shape)
             exit()
