@@ -2,7 +2,7 @@
 
 echo "Prototype Label Coherence | Started"
 
-model="dppnet"
+model="ppnet"
 
 if [ $model == "ppnet" ]
 then
