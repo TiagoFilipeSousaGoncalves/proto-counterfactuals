@@ -129,6 +129,7 @@ for image_filename in label_coherence_dict.keys():
             # Transpose the vector so we have the right format to compute the Fleiss Kappa
             prototypes_among_models = np.transpose(prototypes_among_models)
 
+            # Compute the Fleiss Kappa
             fleiss_kappa_arr, categories_arr = aggregate_raters(data=prototypes_among_models, n_cat=N_CLASSES)
             fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
             coherence_res = fleiss_kappa_value
@@ -137,7 +138,25 @@ for image_filename in label_coherence_dict.keys():
         # Using Earth Movers Distance
         elif COHERENCE_METRIC == "earth_movers_distance":
             print(prototypes_among_models.shape)
+            print(len(prototypes_among_models))
+
+            # Get the combinations
+            idx_comb = combinations(range(len(prototypes_among_models)), 2)
+            idx_comb = list(idx_comb)
+
             exit()
+            
+            # Iterate through these combinations
+            wass_distances = list()
+            for comb in idx_comb:
+                wd = wasserstein_distance([counterfactual_labels_among_models[comb[0]]], [counterfactual_labels_among_models[comb[1]]])
+                wass_distances.append(wd)
+            
+            # Compute coherence as the mean of these distances
+            coherence_res = np.mean(wass_distances)
+
+
+            
 
 
         # Add this to the dictionary
