@@ -149,7 +149,7 @@ for image_filename in label_coherence_dict.keys():
             # Iterate through these combinations
             wass_distances = list()
             for comb in idx_comb:
-                wd = wasserstein_distance(counterfactual_labels_among_models[comb[0]], counterfactual_labels_among_models[comb[1]])
+                wd = wasserstein_distance([counterfactual_labels_among_models[comb[0]]], [counterfactual_labels_among_models[comb[1]]])
                 wass_distances.append(wd)
                 print(wass_distances)
             
