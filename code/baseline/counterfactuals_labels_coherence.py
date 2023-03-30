@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import pandas as pd
 from statsmodels.stats.inter_rater import fleiss_kappa, aggregate_raters
+from itertools import combinations
 
 
 
@@ -21,6 +22,8 @@ parser.add_argument('--append-checkpoints', action="append", type=str, required=
 # Feature space
 parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features"], help="Feature space: convolutional features (conv_features).")
 
+# Distance type
+parser.add_argument("--coherence_metric", type=str, required=True, choices=["fleiss_kappa", "earth_movers_distance"])
 
 
 # Parse the arguments
@@ -36,6 +39,9 @@ CHECKPOINTS = args.append_checkpoints
 
 # Feature space
 FEATURE_SPACE = args.feature_space
+
+# Coherence metric
+COHERENCE_METRIC = args.coherence_metric
 
 
 
@@ -115,13 +121,44 @@ for image_filename in label_coherence_dict.keys():
 
         # Transpose the vector so we have the right format to compute the Fleiss Kappa
         counterfactual_labels_among_models = np.transpose(counterfactual_labels_among_models)
+
+        print(counterfactual_labels_among_models.shape)
+
+        exit()
         
-        # Compute the fleiss kappa value
-        fleiss_kappa_arr, categories_arr = aggregate_raters(data=counterfactual_labels_among_models, n_cat=N_CLASSES)
-        fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
+
+
+        # Coherence Metric is Fleiss Kappa
+        if COHERENCE_METRIC == "fleiss_kappa":
+
+            # Compute the fleiss kappa value
+            fleiss_kappa_arr, categories_arr = aggregate_raters(data=counterfactual_labels_among_models, n_cat=N_CLASSES)
+            fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
+
+            # Coherence value is the fleiss_kappa_value
+            coherence_res = fleiss_kappa_value
+
+
+        # Coherence Metric is Earth Movers Distance
+        elif COHERENCE_METRIC == "earth_movers_distance":
+
+            # Get all possible combinations
+            idx_comb = combinations(range())
+
+            # Use Earth Mover's Distance to 
+            # Get all combinations of [1, 2, 3]
+            # and length 2
+            comb = combinations([1, 2, 3], 2)
+
+            # Print the obtained combinations
+            for i in list(comb):
+                print (i)
+
+
+
 
         # Add this to the dictionary
-        label_coherence_dict[image_filename]["Counterfactual Label Coherence"] = fleiss_kappa_value
+        label_coherence_dict[image_filename]["Counterfactual Label Coherence"] = coherence_res
 
         # Add this to the list of values
         coherence_values.append(fleiss_kappa_value)

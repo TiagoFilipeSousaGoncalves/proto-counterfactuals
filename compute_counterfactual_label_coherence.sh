@@ -11,10 +11,10 @@ then
     # python code/baseline/counterfactuals_labels_coherence.py --dataset CUB2002011 --append-checkpoints cub2002011/baseline/densenet121/2023-01-17_03-44-38/ --append-checkpoints cub2002011/baseline/resnet34/2023-01-21_03-37-39/ --append-checkpoints cub2002011/baseline/vgg16/2023-01-24_01-40-54/ --feature_space conv_features
 
     echo "Counterfactual Label Coherence | PAPILA"
-    python code/baseline/counterfactuals_labels_coherence.py --dataset PAPILA --append-checkpoints papila/baseline/densenet121/2023-03-28_13-59-11/ --append-checkpoints papila/baseline/resnet34/2023-03-28_13-59-15/ --append-checkpoints papila/baseline/vgg16/2023-03-28_13-59-24 --feature_space conv_features
+    python code/baseline/counterfactuals_labels_coherence.py --dataset PAPILA --append-checkpoints papila/baseline/densenet121/2023-03-28_13-59-11/ --append-checkpoints papila/baseline/resnet34/2023-03-28_13-59-15/ --append-checkpoints papila/baseline/vgg16/2023-03-28_13-59-24 --feature_space conv_features --coherence_metric earth_movers_distance
 
     echo "Counterfactual Label Coherence | PH2"
-    python code/baseline/counterfactuals_labels_coherence.py --dataset PH2 --append-checkpoints ph2/baseline/densenet121/2023-03-28_13-59-31/ --append-checkpoints ph2/baseline/resnet34/2023-03-28_18-16-50/ --append-checkpoints ph2/baseline/vgg16/2023-03-29_15-36-45/ --feature_space conv_features
+    python code/baseline/counterfactuals_labels_coherence.py --dataset PH2 --append-checkpoints ph2/baseline/densenet121/2023-03-28_13-59-31/ --append-checkpoints ph2/baseline/resnet34/2023-03-28_18-16-50/ --append-checkpoints ph2/baseline/vgg16/2023-03-29_15-36-45/ --feature_space conv_features --coherence_metric earth_movers_distance
 elif [ $model == "ppnet" ]
 then
     echo "ProtoPNet"
