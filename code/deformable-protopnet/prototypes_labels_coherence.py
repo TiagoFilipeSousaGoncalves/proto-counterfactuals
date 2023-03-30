@@ -148,9 +148,13 @@ for image_filename in label_coherence_dict.keys():
                 print(prototypes_among_models[comb[0]], prototypes_among_models[comb[1]])
                 wd = wasserstein_distance(prototypes_among_models[comb[0]], prototypes_among_models[comb[1]])
                 wass_distances.append(wd)
+                print(wass_distances)
             
             # Compute coherence as the mean of these distances
             coherence_res = np.mean(wass_distances)
+            print(coherence_res)
+
+            exit()
 
 
 
