@@ -121,11 +121,7 @@ for image_filename in label_coherence_dict.keys():
 
         # Transpose the vector so we have the right format to compute the Fleiss Kappa
         counterfactual_labels_among_models = np.transpose(counterfactual_labels_among_models)
-        print(counterfactual_labels_among_models)
-        print(counterfactual_labels_among_models.shape)
 
-        exit()
-        
 
 
         # Coherence Metric is Fleiss Kappa
@@ -143,6 +139,10 @@ for image_filename in label_coherence_dict.keys():
         elif COHERENCE_METRIC == "earth_movers_distance":
 
             # Get all possible combinations
+            counterfactual_labels_among_models = counterfactual_labels_among_models.flatten()
+            print(counterfactual_labels_among_models.shape)
+
+            exit()
             idx_comb = combinations(range())
 
             # Use Earth Mover's Distance to 
