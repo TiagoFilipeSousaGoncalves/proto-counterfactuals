@@ -151,13 +151,9 @@ for image_filename in label_coherence_dict.keys():
             for comb in idx_comb:
                 wd = wasserstein_distance([counterfactual_labels_among_models[comb[0]]], [counterfactual_labels_among_models[comb[1]]])
                 wass_distances.append(wd)
-                print(wass_distances)
             
+            # Compute coherence as the mean of these distances
             coherence_res = np.mean(wass_distances)
-            print(coherence_res)
-
-            exit()
-
 
 
 
@@ -181,7 +177,10 @@ report = open(os.path.join("results", DATASET.lower(), "baseline", f"{FEATURE_SP
 mean_value = np.mean(coherence_values)
 
 # Add this value to a report
-report.write(f"Coherence (Fleiss Kappa): {mean_value}\n")
+if COHERENCE_METRIC == "fleiss_kappa":
+    report.write(f"Coherence (Fleiss Kappa): {mean_value}\n")
+elif COHERENCE_METRIC == "earth_movers_distance":
+    report.write(f"Coherence (Earth Movers Distance): {mean_value}\n")
 
 # Close report
 report.close()
