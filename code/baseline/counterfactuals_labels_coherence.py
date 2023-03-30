@@ -145,7 +145,16 @@ for image_filename in label_coherence_dict.keys():
             # Get the combinations
             idx_comb = combinations(range(len(counterfactual_labels_among_models)), 2)
             idx_comb = list(idx_comb)
-            print(idx_comb)
+            
+            # Iterate through these combinations
+            wass_distances = list()
+            for comb in idx_comb:
+                wd = wasserstein_distance(counterfactual_labels_among_models[comb[0]], counterfactual_labels_among_models[comb[1]])
+                wass_distances.append(wd)
+                print(wass_distances)
+            
+            coherence_res = np.mean(wass_distances)
+            print(coherence_res)
 
             exit()
 
@@ -156,7 +165,7 @@ for image_filename in label_coherence_dict.keys():
         label_coherence_dict[image_filename]["Counterfactual Label Coherence"] = coherence_res
 
         # Add this to the list of values
-        coherence_values.append(fleiss_kappa_value)
+        coherence_values.append(coherence_res)
 
 
 
