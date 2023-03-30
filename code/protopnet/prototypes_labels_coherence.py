@@ -3,6 +3,8 @@ import os
 import argparse
 import numpy as np
 import pandas as pd
+from itertools import combinations
+from scipy.stats import wasserstein_distance
 from statsmodels.stats.inter_rater import fleiss_kappa, aggregate_raters
 
 
@@ -12,10 +14,14 @@ from statsmodels.stats.inter_rater import fleiss_kappa, aggregate_raters
 parser = argparse.ArgumentParser()
 
 # Add the arguments
-# Data directory
+# Dataset
 parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
+
+# Checkpoint(s)
 parser.add_argument('--append-checkpoints', action="append", type=str, required=True, help="Path to the model checkpoint(s).")
 
+# Distance type
+parser.add_argument("--coherence_metric", type=str, required=True, choices=["fleiss_kappa", "earth_movers_distance"])
 
 
 # Parse the arguments
@@ -27,7 +33,10 @@ DATASET = args.dataset
 
 # Get the path of the CSV that contains the analysis
 CHECKPOINTS = args.append_checkpoints
-# print(CHECKPOINTS)
+
+# Coherence metric
+COHERENCE_METRIC = args.coherence_metric
+
 
 
 # Get the number of classes for the computation of the coherence metric
@@ -108,25 +117,47 @@ for image_filename in label_coherence_dict.keys():
 
     # Compute only for the cases where we have all the n models
     if len(label_coherence_dict[image_filename]["Top-10 Prototypes Models"]) == len(CHECKPOINTS):
+        
         # Get the set of top-10 activated prototypes per image
         prototypes_among_models = label_coherence_dict[image_filename]["Top-10 Prototypes Models"]
         prototypes_among_models = np.array(prototypes_among_models)
-        # print(prototypes_among_models)
 
-        # Transpose the vector so we have the right format to compute the Fleiss Kappa
-        prototypes_among_models = np.transpose(prototypes_among_models)
-        # print(prototypes_among_models)
         
-        fleiss_kappa_arr, categories_arr = aggregate_raters(data=prototypes_among_models, n_cat=N_CLASSES)
-        # print(fleiss_kappa_arr)
-        fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
-        # print(fleiss_kappa_value)
+        # Using Fleiss Kappa
+        if COHERENCE_METRIC == "fleiss_kappa":
+            
+            # Transpose the vector so we have the right format to compute the Fleiss Kappa
+            prototypes_among_models = np.transpose(prototypes_among_models)
+
+            # Compute the Fleiss Kappa
+            fleiss_kappa_arr, categories_arr = aggregate_raters(data=prototypes_among_models, n_cat=N_CLASSES)
+            fleiss_kappa_value = fleiss_kappa(table=fleiss_kappa_arr, method='uniform')
+            coherence_res = fleiss_kappa_value
+        
+
+        # Using Earth Movers Distance
+        elif COHERENCE_METRIC == "earth_movers_distance":
+
+            # Get the combinations
+            idx_comb = combinations(range(len(prototypes_among_models)), 2)
+            idx_comb = list(idx_comb)
+            
+            # Iterate through these combinations
+            wass_distances = list()
+            for comb in idx_comb:
+                wd = wasserstein_distance(prototypes_among_models[comb[0]], prototypes_among_models[comb[1]])
+                wass_distances.append(wd)
+            
+            # Compute coherence as the mean of these distances
+            coherence_res = np.mean(wass_distances)
+
+
 
         # Add this to the dictionary
-        label_coherence_dict[image_filename]["Prototype Label Coherence"] = fleiss_kappa_value
+        label_coherence_dict[image_filename]["Prototype Label Coherence"] = coherence_res
 
         # Add this to the list of values
-        coherence_values.append(fleiss_kappa_value)
+        coherence_values.append(coherence_res)
 
 
 
@@ -142,7 +173,10 @@ report = open(os.path.join("results", DATASET.lower(), "protopnet", "prototype_l
 mean_value = np.mean(coherence_values)
 
 # Add this value to a report
-report.write(f"Coherence (Fleiss Kappa): {mean_value}\n")
+if COHERENCE_METRIC == "fleiss_kappa":
+    report.write(f"Coherence (Fleiss Kappa): {mean_value}\n")
+elif COHERENCE_METRIC == "earth_movers_distance":
+    report.write(f"Coherence (Earth Movers Distance)): {mean_value}\n")
 
 # Close report
 report.close()
