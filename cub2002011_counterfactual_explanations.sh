@@ -26,8 +26,15 @@ then
     # python code/protopnet/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/protopnet/vgg19/XXX/ --feature_space proto_features
 elif [ $model == 'dppnet' ]
 then
-    echo "CUB2002011 | Deformable ProtoPNet"
-    # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/densenet121/XXX/
+    echo "CUB2002011 | Deformable ProtoPNet | Convolution Feature Space"
+    python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/deformable-protopnet/densenet121/2023-01-09_01-07-48/ --feature_space conv_features
+    # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/densenet161/XXX/
+    # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/resnet34/XXX/
+    # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/resnet152/XXX/
+    # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/vgg16/XXX/
+    # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/vgg19/XXX/
+
+    python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint cub2002011/deformable-protopnet/densenet121/2023-01-09_01-07-48/ --feature_space proto_features
     # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/densenet161/XXX/
     # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/resnet34/XXX/
     # python code/protopnet_deform/counterfactuals_explanations.py --dataset CUB2002011 --checkpoint papila/deformable-protopnet/resnet152/XXX/
