@@ -81,7 +81,7 @@ def undo_preprocess_input_function(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.
 
 
 # Function: Save preprocessed image(s)
-def save_preprocessed_img(fname, preprocessed_imgs, index=0, save_img=False):
+def save_preprocessed_img(fname, preprocessed_imgs, index=0, save_img=True):
     
     # Make a copy of the image
     img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
@@ -107,7 +107,7 @@ def save_preprocessed_img(fname, preprocessed_imgs, index=0, save_img=False):
 
 
 # Function: Save image prototypes
-def save_prototype(fname, load_img_dir, index, save_img=False):
+def save_prototype(fname, load_img_dir, index, save_img=True):
     
     try:
         # Note: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imread.html
@@ -129,7 +129,7 @@ def save_prototype(fname, load_img_dir, index, save_img=False):
 
 
 # Function: Save prototype bbox
-def save_prototype_box(fname, load_img_dir, index, save_img=False):
+def save_prototype_box(fname, load_img_dir, index, save_img=True):
     
     try:
         # Note: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imread.html
@@ -152,7 +152,7 @@ def save_prototype_box(fname, load_img_dir, index, save_img=False):
 
 
 # Function: Save image with a bounding-box
-def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_width_start, bbox_width_end, color=(0, 255, 255), save_img=False):
+def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_width_start, bbox_width_end, color=(0, 255, 255), save_img=True):
     
 
     try:
@@ -179,7 +179,7 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_wi
 
 
 # Function: Save deformable prototype information
-def save_deform_info(model, offsets, input, activations, save_dir, prototype_img_filename_prefix, proto_index, prototype_layer_stride=1, save_img=False):
+def save_deform_info(model, offsets, input, activations, save_dir, prototype_img_filename_prefix, proto_index, prototype_layer_stride=1, save_img=True):
     
     # Get prototype shape
     prototype_shape = model.prototype_shape

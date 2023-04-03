@@ -17,7 +17,7 @@ from prototypes_utilities import find_high_activation_crop, get_deformation_info
 
 
 # Function: Retrieve prototypes from an image
-def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, img_size, most_k_activated=10, save_image=False):
+def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, img_size, most_k_activated=10, save_image=True):
 
     # Open a file to save a small report w/ .TXT extension
     report_path = os.path.join(save_analysis_path, "report.txt")
@@ -175,7 +175,8 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         prototype_img_bbox = save_prototype_box(
             fname=prototype_w_bbox_fname,
             load_img_dir=saved_prototypes_dir,
-            index=sorted_indices_act[-i].item()
+            index=sorted_indices_act[-i].item(),
+            save_img=save_image
         )
 
         # Append to the corresponding list
