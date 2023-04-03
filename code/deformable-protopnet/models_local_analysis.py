@@ -505,7 +505,7 @@ for image_directories, data_path, labels_dict in zip([train_img_directories, tes
                 test_image_name=image_name,
                 test_image_label=image_label,
                 img_size=IMG_SIZE,
-                save_image=False
+                save_image=True
             )
 
 

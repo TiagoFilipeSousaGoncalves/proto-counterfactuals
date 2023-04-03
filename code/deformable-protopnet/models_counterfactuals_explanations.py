@@ -124,6 +124,7 @@ if os.path.exists(os.path.join(counterfact_exp_dir, "err_report.txt")):
     os.remove(os.path.join(counterfact_exp_dir, "err_report.txt"))
 
 err_report = open(os.path.join(counterfact_exp_dir, "err_report.txt"), "at")
+best_cases_report = open(os.path.join(counterfact_exp_dir, "best_cases_report.txt"), "at")
 
 # Iterate through the rows of the image_retrieval_df
 for index, row in image_retrieval_df.iterrows():
