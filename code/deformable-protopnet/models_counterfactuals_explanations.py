@@ -46,7 +46,6 @@ FEATURE_SPACE = args.feature_space
 
 
 
-
 # Dataset
 # CUB2002011
 if DATASET == "CUB2002011":
@@ -62,8 +61,10 @@ if DATASET == "CUB2002011":
     test_map_dirs_dict = dict()
     for img_dir in test_img_directories:
         test_map_dirs_dict[img_dir.split('.')[1].lower()] = img_dir
-    
-    # print(test_map_dirs_dict)    
+
+
+    # Get the number of classes of this dataset
+    N_CLASSES = 200
 
 
 # PAPILA
@@ -75,6 +76,9 @@ elif DATASET == "PAPILA":
     # Get test image path
     test_data_path = os.path.join(DATA_DIR, "papila", "processed", "splits", "test")
 
+    # Get the number of classes of this dataset
+    N_CLASSES = 3
+
 
 # PH2
 elif DATASET == "PH2":
@@ -84,6 +88,9 @@ elif DATASET == "PH2":
 
     # Get test image path
     test_data_path = os.path.join(DATA_DIR, "ph2", "processed_images", "test", "cropped")
+
+    # Get the number of classes of this dataset
+    N_CLASSES = 3
 
 
 # STANFORDCARS
@@ -240,7 +247,7 @@ for index, row in image_retrieval_df.iterrows():
             
             # The other option is to check other naming styles
             else:
-                for j in range(100):
+                for j in range(N_CLASSES*10):
                     proto_path = os.path.join(query_img_prototypes_path, f"top-{i+1}_activated_prototype_{j}-with_box.png")
 
                     if os.path.exists(proto_path):
@@ -285,7 +292,7 @@ for index, row in image_retrieval_df.iterrows():
             
             # The other option is to check other naming styles
             else:
-                for j in range(100):
+                for j in range(N_CLASSES*10):
                     proto_path = os.path.join(counterfact_img_prototypes_path, f"top-{i+1}_activated_prototype_{j}-with_box.png")
 
                     if os.path.exists(proto_path):
