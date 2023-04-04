@@ -24,9 +24,9 @@ then
 elif [ $model == "baseline" ]
 then
     echo "CUB2002011 | Baseline"
-    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/densenet121/2023-01-17_03-44-38/
-    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/resnet34/2023-01-21_03-37-39/
-    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/vgg16/2023-01-24_01-40-54/
+    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture densenet121 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/densenet121/2023-03-28_14-00-03/
+    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture resnet34 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/resnet34/2023-03-29_23-07-14/
+    python code/baseline/models_test.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/vgg16/2023-03-29_23-07-14/
 else
     echo "Error"
 fi
