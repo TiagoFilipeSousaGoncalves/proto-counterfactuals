@@ -11,11 +11,11 @@ model="baseline"
 if [ $model == "baseline" ]
 then
     echo "CUB2002011 | Baseline | Convolution Feature Space"
-    python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/densenet121/2023-01-17_03-44-38/ --feature_space conv_features
+    python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture densenet121 --num_workers 4 --gpu_id 0 --checkpoint cub2002011/baseline/densenet121/2023-03-28_14-00-03/ --feature_space conv_features
     # python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/densenet161/XXX/ --feature_space conv_features
-    python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/resnet34/2023-01-21_03-37-39/ --feature_space conv_features
+    python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture resnet34 --num_workers 4 --gpu_id 0 --checkpoint cub2002011/baseline/resnet34/2023-03-29_23-07-14/ --feature_space conv_features
     # python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/resnet152/XXX/ --feature_space conv_features
-    python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/vgg16/2023-01-24_01-40-54/ --feature_space conv_features
+    python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture vgg16 --num_workers 4 --gpu_id 0 --checkpoint cub2002011/baseline/vgg16/2023-03-29_23-07-14/ --feature_space conv_features
     # python code/baseline/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/baseline/vgg19/XXX/ --feature_space conv_features
 elif [ $model == "ppnet" ]
 then

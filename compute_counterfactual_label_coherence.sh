@@ -8,7 +8,7 @@ if [ $model == "baseline" ]
 then
     echo "Baseline"
     echo "Counterfactual Label Coherence | CUB2002011"
-    # python code/baseline/counterfactuals_labels_coherence.py --dataset CUB2002011 --append-checkpoints cub2002011/baseline/densenet121/2023-01-17_03-44-38/ --append-checkpoints cub2002011/baseline/resnet34/2023-01-21_03-37-39/ --append-checkpoints cub2002011/baseline/vgg16/2023-01-24_01-40-54/ --feature_space conv_features --coherence_metric fleiss_kappa
+    python code/baseline/counterfactuals_labels_coherence.py --dataset CUB2002011 --append-checkpoints cub2002011/baseline/densenet121/2023-03-28_14-00-03/ --append-checkpoints cub2002011/baseline/resnet34/2023-03-29_23-07-14/ --append-checkpoints cub2002011/baseline/vgg16/2023-03-29_23-07-14/ --feature_space conv_features --coherence_metric fleiss_kappa
 
     echo "Counterfactual Label Coherence | PAPILA"
     python code/baseline/counterfactuals_labels_coherence.py --dataset PAPILA --append-checkpoints papila/baseline/densenet121/2023-03-28_13-59-11/ --append-checkpoints papila/baseline/resnet34/2023-03-28_13-59-15/ --append-checkpoints papila/baseline/vgg16/2023-03-28_13-59-24 --feature_space conv_features --coherence_metric fleiss_kappa

@@ -10,11 +10,11 @@ model="baseline"
 if [ $model == "baseline" ]
 then
     echo "PH2 | Baseline | Convolution Feature Space"
-    python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint ph2/baseline/densenet121/2023-03-28_13-59-31/ --feature_space conv_features
+    python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture densenet121 --num_workers 4 --gpu_id 0 --checkpoint ph2/baseline/densenet121/2023-03-28_13-59-31/ --feature_space conv_features
     # python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint ph2/baseline/densenet161/XXX/ --feature_space conv_features
-    python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint ph2/baseline/resnet34/2023-03-28_18-16-50/ --feature_space conv_features
+    python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture resnet34 --num_workers 4 --gpu_id 0 --checkpoint ph2/baseline/resnet34/2023-03-28_18-16-50/ --feature_space conv_features
     # python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint ph2/baseline/resnet152/XXX/ --feature_space conv_features
-    python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint ph2/baseline/vgg16/2023-03-29_15-36-45/ --feature_space conv_features
+    python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture vgg16 --num_workers 4 --gpu_id 0 --checkpoint ph2/baseline/vgg16/2023-03-29_15-36-45/ --feature_space conv_features
     # python code/baseline/models_counterfactuals_retrieval.py --dataset PH2 --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint ph2/baseline/vgg19/XXX/ --feature_space conv_features
 elif [ $model == "ppnet" ]
 then
