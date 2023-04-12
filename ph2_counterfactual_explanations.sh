@@ -29,16 +29,17 @@ then
     echo "PH2 | Deformable ProtoPNet | Convolution Feature Space"
     python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/ --feature_space conv_features
     # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/densenet161/XXX/ --feature_space conv_features
-    python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/ --feature_space conv_features
+    # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/ --feature_space conv_features
     # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/resnet152/XXX/ --feature_space conv_features
-    python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/ --feature_space conv_features
+    # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/ --feature_space conv_features
     # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/vgg19/XXX/ --feature_space conv_features
-    echo "PH2 | Deformable ProtoPNet | Prototype Feature Space"
-    python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/ --feature_space proto_features
+    
+    # echo "PH2 | Deformable ProtoPNet | Prototype Feature Space"
+    # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/ --feature_space proto_features
     # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/densenet161/XXX/ --feature_space proto_features
-    python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/ --feature_space proto_features
+    # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/ --feature_space proto_features
     # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/resnet152/XXX/ --feature_space proto_features
-    python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/ --feature_space proto_features
+    # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/ --feature_space proto_features
     # python code/deformable-protopnet/models_counterfactuals_explanations.py --dataset PH2 --checkpoint ph2/deformable-protopnet/vgg19/XXX/ --feature_space proto_features
 else
     echo "Error"

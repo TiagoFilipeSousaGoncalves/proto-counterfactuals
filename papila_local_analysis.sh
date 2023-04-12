@@ -20,9 +20,9 @@ then
     echo "PAPILA | Deformable ProtoPNet"
     python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture densenet121 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/densenet121/2023-01-04_12-12-15/
     # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture densenet161 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/densenet161/XXX/
-    python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture resnet34 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/resnet34/2023-01-04_16-02-21/
+    # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture resnet34 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/resnet34/2023-01-04_16-02-21/
     # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture resnet152 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/resnet152/XXX/
-    python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture vgg16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/vgg16/2023-01-04_18-47-51/
+    # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture vgg16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/vgg16/2023-01-04_18-47-51/
     # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture vgg19 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/vgg19/XXX/
 elif [ $model == "baseline" ]
 then
