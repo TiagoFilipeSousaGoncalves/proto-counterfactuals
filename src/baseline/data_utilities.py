@@ -243,7 +243,7 @@ class CUB2002011Dataset(Dataset):
 
 
         # Extract labels from data path
-        labels = np.genfromtxt(os.path.join((data_path, "CUB_200_2011", "classes.txt")), dtype=str)
+        labels = np.genfromtxt(os.path.join(data_path, "CUB_200_2011", "classes.txt"), dtype=str)
         labels_dict = dict()
         for label_info in labels:
             labels_dict[label_info[1]] = int(label_info[0]) - 1
