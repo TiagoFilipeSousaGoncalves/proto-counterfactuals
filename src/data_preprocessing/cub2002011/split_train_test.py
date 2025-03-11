@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     # Open images.txt
     images = np.genfromtxt(os.path.join(data_dir, "CUB_200_2011", "images.txt"), dtype=str)
-    print(images)
+    # print(images)
 
     # Note: We will build a train-test split with validation, so, we will do it from scratch
     # Open train_test_split.txt
@@ -44,8 +44,9 @@ if __name__ == "__main__":
         img_cl = img_fname.split('.')[0]
         images_ids.append(img_id)
         images_classes.append(img_cl)
-    print(images_ids)
-    print(images_classes)
+    # print(images_ids)
+    # print(images_classes)
+    print(len(images_ids), len(images_classes), np.unique(images_classes))
 
     """
     # Let's split the data
