@@ -1,22 +1,25 @@
 CUB2002011
 PPNet
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/cub2002011/protopnet/densenet121/2023-01-06_12-07-43/analysis/counterfac-exp/conv_features/130.Tree_Sparrow/Tree_Sparrow_0009_123294
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/cub2002011/protopnet/densenet121/2023-01-06_12-07-43/analysis/counterfac-exp/proto_features/107.Common_Raven/Common_Raven_0005_101347
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/cub2002011/protopnet/densenet121/2023-01-06_12-07-43/analysis/counterfac-exp/conv_features/130.Tree_Sparrow/Tree_Sparrow_0009_123294
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/cub2002011/protopnet/densenet121/2023-01-06_12-07-43/analysis/counterfac-exp/proto_features/107.Common_Raven/Common_Raven_0005_101347
 DPPNet
+/home/ctm/Desktop/GitHub/proto-counterfactuals/results/cub2002011/deformable-protopnet/densenet121/2023-01-09_01-07-48/analysis/counterfac-exp/conv_features/076.Dark_eyed_Junco/Dark_Eyed_Junco_0040_66689
+/home/ctm/Desktop/GitHub/proto-counterfactuals/results/cub2002011/deformable-protopnet/densenet121/2023-01-09_01-07-48/analysis/counterfac-exp/conv_features/048.European_Goldfinch/European_Goldfinch_0011_794676
+
 
 PAPILA
 PPNET
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/papila/protopnet/densenet121/2022-12-23_11-33-39/analysis/counterfac-exp/conv_features/RET281OD
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/papila/protopnet/densenet121/2022-12-23_11-33-39/analysis/counterfac-exp/proto_features/RET093OD
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/papila/protopnet/densenet121/2022-12-23_11-33-39/analysis/counterfac-exp/conv_features/RET281OD
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/papila/protopnet/densenet121/2022-12-23_11-33-39/analysis/counterfac-exp/proto_features/RET093OD
 DPPNET
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/papila/deformable-protopnet/densenet121/2023-01-04_12-12-15/analysis/counterfac-exp/conv_features/RET292OS
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/papila/deformable-protopnet/densenet121/2023-01-04_12-12-15/analysis/counterfac-exp/proto_features/RET125OD
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/papila/deformable-protopnet/densenet121/2023-01-04_12-12-15/analysis/counterfac-exp/conv_features/RET292OS
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/papila/deformable-protopnet/densenet121/2023-01-04_12-12-15/analysis/counterfac-exp/proto_features/RET125OD
 
 PH2
 PPNet
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/ph2/protopnet/densenet121/2022-12-06_15-51-53/analysis/counterfac-exp/proto_features/IMD402
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/ph2/protopnet/densenet121/2022-12-06_15-51-53/analysis/counterfac-exp/conv_features/IMD395
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/ph2/protopnet/densenet121/2022-12-06_15-51-53/analysis/counterfac-exp/proto_features/IMD402
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/ph2/protopnet/densenet121/2022-12-06_15-51-53/analysis/counterfac-exp/conv_features/IMD395
 DPPNet
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/analysis/counterfac-exp/conv_features/IMD162
-/home/ctm/Desktop/GitHub/proto-counterfactuals/results/ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/analysis/counterfac-exp/proto_features/IMD112
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/analysis/counterfac-exp/conv_features/IMD162
+# /home/ctm/Desktop/GitHub/proto-counterfactuals/results/ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/analysis/counterfac-exp/proto_features/IMD112
 
