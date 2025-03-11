@@ -8,7 +8,7 @@
 echo 'Started split train-val-test of CUB2002011.'
 
 python src/data_preprocessing/cub2002011/split_train_test.py \
- --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset/CUB_200_2011' \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --seed 42
 
 echo 'Finished split train-val-test of CUB2002011.'
