@@ -11,7 +11,8 @@ if __name__ == "__main__":
 
     # Command Line Interface
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
+    parser.add_argument('--data_dir', type=str, default="cub2002011-dataset", help="Directory of the data set.")
+    parser.add_argument('--seed', type=int, default=42, help="Set the random seed for determinism.")
     args = parser.parse_args()
 
 
@@ -26,14 +27,14 @@ if __name__ == "__main__":
 
 
     # Open images.txt
-    images = np.genfromtxt(os.path.join(data, cub_200_2011, source_data, images_txt), dtype=str)
-    # print(images)
+    images = np.genfromtxt(os.path.join(data_dir, "CUB_200_2011", "images.txt"), dtype=str)
+    print(images)
 
     # Open train_test_split.txt
-    train_test_split = np.genfromtxt(os.path.join(data, cub_200_2011, source_data, train_test_split_txt), dtype=str)
-    # print(train_test_split)
+    train_test_split = np.genfromtxt(os.path.join(data_dir, "CUB_200_2011", "train_test_split.txt"), dtype=str)
+    print(train_test_split)
 
-
+    """
     # Let's split the data
     # print(next(zip(images, train_test_split)))
     for image_info, train_test_info in tqdm.tqdm(zip(images, train_test_split)):
@@ -66,3 +67,4 @@ if __name__ == "__main__":
             src = os.path.join(data, cub_200_2011, source_data, "images", image_info[1])
             dst = os.path.join(data, cub_200_2011, processed_data, split, "images", image_info[1])
             shutil.copy(src, dst)
+        """
