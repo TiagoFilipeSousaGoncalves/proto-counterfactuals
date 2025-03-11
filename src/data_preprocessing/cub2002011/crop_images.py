@@ -2,7 +2,8 @@
 import argparse
 import os
 import tqdm
-import numpy as np 
+import numpy as np
+import pandas as pd
 from PIL import Image
 
 
@@ -36,42 +37,55 @@ if __name__ == "__main__":
                 image_ids.append(img_id)
                 image_fnames.append(img_fname)
                 bbox_coords.append(bbox_coord)
-    print(image_ids)
-    print(image_fnames)
-    print(bbox_coords)
+    # print(image_ids)
+    # print(image_fnames)
+    # print(bbox_coords)
 
 
+    # Open data splits
+    train_split = pd.read_csv(os.path.join(args.data_dir, "processed", "train.csv"))
+    train_images_fnames = train_split.values
+
+    val_split = pd.read_csv(os.path.join(args.data_dir, "processed", "val.csv"))
+    val_images_fnames = val_split.values
+
+    test_split = pd.read_csv(os.path.join(args.data_dir, "processed", "test.csv"))
+    test_images_fnames = test_split.values
 
 
-    """
     # Go through images, train_test_split and bounding boxes
-    for image_info, train_test_info, bounding_box_info in tqdm.tqdm(zip(images, train_test_split, bounding_boxes)):
+    for img_fname, img_bbox in tqdm.tqdm(zip(image_fnames, bbox_coords)):
 
-        # Assure Image IDs are the same
-        if (image_info[0] == train_test_info[0]) and (image_info[0] == bounding_box_info[0]):
+        # Check if image is for train or test
+        if img_fname in train_images_fnames:
+            split = "train"
+        elif img_fname in val_images_fnames:
+            split = "val"
+        else:
+            split = "test"
+        print(img_fname)
+        print(img_bbox)
+        print(split)
+        exit()
+        """
+        # Get bounding boxes info
+        x = float(bounding_box_info[1])
+        y = float(bounding_box_info[2])
+        width = float(bounding_box_info[3])
+        height = float(bounding_box_info[4])
 
-            # Check if image is for train or test
-            split = "train" if train_test_info[1] == '1' else "test"
 
+        # Open image
+        image_path = os.path.join(data, cub_200_2011, processed_data, split, "images", image_info[1])
+        pil_img = Image.open(image_path)
 
-            # Get bounding boxes info
-            x = float(bounding_box_info[1])
-            y = float(bounding_box_info[2])
-            width = float(bounding_box_info[3])
-            height = float(bounding_box_info[4])
+        # Crop image
+        crop_img = pil_img.crop((x, y, x+width, y+height))
 
+        # Save image
+        img_class_folder = image_info[1].split("/")[0]
+        if not os.path.isdir(os.path.join(data, cub_200_2011, processed_data, split, cropped, img_class_folder)):
+            os.makedirs(os.path.join(data, cub_200_2011, processed_data, split, cropped, img_class_folder))
 
-            # Open image
-            image_path = os.path.join(data, cub_200_2011, processed_data, split, "images", image_info[1])
-            pil_img = Image.open(image_path)
-
-            # Crop image
-            crop_img = pil_img.crop((x, y, x+width, y+height))
-
-            # Save image
-            img_class_folder = image_info[1].split("/")[0]
-            if not os.path.isdir(os.path.join(data, cub_200_2011, processed_data, split, cropped, img_class_folder)):
-                os.makedirs(os.path.join(data, cub_200_2011, processed_data, split, cropped, img_class_folder))
-
-            crop_img.save(os.path.join(data, cub_200_2011, processed_data, split, cropped, image_info[1]))"
-    """
+        crop_img.save(os.path.join(data, cub_200_2011, processed_data, split, cropped, image_info[1]))
+        """
