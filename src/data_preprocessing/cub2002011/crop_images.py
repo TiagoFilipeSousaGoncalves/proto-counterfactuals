@@ -30,7 +30,7 @@ if __name__ == "__main__":
             img_id = img[0]
             img_fname = img[1]
             bbox_id = bbox[0]
-            bbox_coord = bbox[1]
+            bbox_coord = bbox[1:4]
 
             if img_id == bbox_id:
                 image_ids.append(img_id)
