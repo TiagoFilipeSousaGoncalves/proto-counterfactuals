@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # Let's split the data
     for split_idx, data_split in enumerate([X_train, X_val, X_test]):
         for image_fname in tqdm.tqdm(data_split):
-            print(image_fname)
+            # print(image_fname)
 
             # Check if image is for train or test
             if split_idx == 0:
@@ -91,24 +91,23 @@ if __name__ == "__main__":
 
             # Create a folder for the complete images
             if not os.path.isdir(os.path.join(data_dir, "processed", split_dir, "images")):
-                print(os.path.join(data_dir, "processed", split_dir, "images"))
-                # os.makedirs(os.path.join(data_dir, "processed", split_dir, "images"))
+                # print(os.path.join(data_dir, "processed", split_dir, "images"))
+                os.makedirs(os.path.join(data_dir, "processed", split_dir, "images"))
             
 
             # Get image class folder
             img_class_folder = image_fname.split("/")[0]
-            print(img_class_folder)
+            # print(img_class_folder)
 
             # Create this folder (if it does not exist)
             if not os.path.isdir(os.path.join(data_dir, "processed", split_dir, "images", img_class_folder)):
-                print(os.path.join(data_dir, "processed", split_dir, "images", img_class_folder))
-                # os.makedirs(os.path.join(data_dir, "processed", split_dir, "images", img_class_folder))
+                # print(os.path.join(data_dir, "processed", split_dir, "images", img_class_folder))
+                os.makedirs(os.path.join(data_dir, "processed", split_dir, "images", img_class_folder))
 
             
             # Copy this image to this split folder
             src = os.path.join(data_dir, "CUB_200_2011", "images", image_fname)
             dst = os.path.join(data_dir, "processed", split_dir, "images", image_fname)
-            print(src)
-            print(dst)
-            # shutil.copy(src, dst)
-            exit()
+            # print(src)
+            # print(dst)
+            shutil.copy(src, dst)

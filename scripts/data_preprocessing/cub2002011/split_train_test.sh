@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -p debug_8gb                     # Partition
-#SBATCH --qos=debug_8gb                       # QOS
+#SBATCH -p cpu_8cores                     # Partition
+#SBATCH --qos=cpu_8cores                       # QOS
 #SBATCH --job-name=cub-p-tts                 # Job name
 #SBATCH -o cub2002011_tts.out                  # STDOUT
 #SBATCH -e cub2002011_tts.err                  # STDERR
