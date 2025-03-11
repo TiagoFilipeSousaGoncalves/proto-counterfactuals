@@ -192,7 +192,7 @@ class STANFORDCARSDataset(Dataset):
 
 # CUB2002011Dataset: Dataset Class
 class CUB2002011Dataset(Dataset):
-    def __init__(self, data_path, classes_txt, augmented, transform=None):
+    def __init__(self, data_path, split="train", augmented=True, transform=None):
 
         """
         Args:
@@ -201,33 +201,37 @@ class CUB2002011Dataset(Dataset):
             transform (callable, optional): Optional transform to be applied on a sample.
         """
 
+        assert split in ("train", "val", "test")
+        split_path = os.path.join(data_path, "processed", split, "cropped")
+
+        if augmented:
+            assert split == "train"
+
         # Data path (get images folders)
-        images_folders = [f for f in os.listdir(data_path) if not f.startswith('.')]
+        images_folders = [f for f in os.listdir(split_path) if not f.startswith('.')]
+        
+        
 
         # Enter each folder and add the image path to our images_fpaths variable
         images_fpaths = list()
         for folder in images_folders:
+            
+            img_fnames_aug = list()
+            img_fnames = list()
 
             # Get images
             if augmented:
-                img_fnames = [i for i in os.listdir(os.path.join(data_path, folder, "augmented")) if not i.startswith('.')]
-            else:
-                img_fnames = [i for i in os.listdir(os.path.join(data_path, folder)) if not i.startswith('.')]
+                img_fnames_aug += [i for i in os.listdir(os.path.join(split_path, folder, "augmented")) if not i.startswith('.')]
+            img_fnames += [i for i in os.listdir(os.path.join(split_path, folder)) if not i.startswith('.')]
 
 
             # Get each image
-            for img_name in img_fnames:
+            for img_name in img_fnames:                    
+                images_fpaths.append(os.path.join(folder, img_name))
+            if augmented:
+                for img_name in img_fnames_aug:
+                    images_fpaths.append(os.path.join(folder, "augmented", img_name))
 
-                # Build the complete path
-                if augmented:
-                    img_path = os.path.join(folder, "augmented", img_name)
-                else:
-                    img_path = os.path.join(folder, img_name)
-
-
-                # Append this path to our variable of images_fpaths
-                images_fpaths.append(img_path)
-            
 
         # Clean images_fpaths (to prevent IsADirectoryError errors)
         images_fpaths = [path for path in images_fpaths if not os.path.isdir(os.path.join(data_path, path))]
@@ -239,7 +243,7 @@ class CUB2002011Dataset(Dataset):
 
 
         # Extract labels from data path
-        labels = np.genfromtxt(classes_txt, dtype=str)
+        labels = np.genfromtxt(os.path.join((data_path, "CUB_200_2011", "classes.txt")), dtype=str)
         labels_dict = dict()
         for label_info in labels:
             labels_dict[label_info[1]] = int(label_info[0]) - 1
@@ -257,14 +261,12 @@ class CUB2002011Dataset(Dataset):
         # Augmented
         self.augmented = augmented
 
-
         return
 
 
 
     # Method: __len__
     def __len__(self):
-        
         return len(self.images_fpaths)
 
 

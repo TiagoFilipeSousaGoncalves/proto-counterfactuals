@@ -226,7 +226,6 @@ def joint(model):
 # Function: Get model predictions (i.e., inference)
 def model_predict(model, in_data):
 
-
     # Get the logits with the model in inference mode
     logits = model(in_data)
 
