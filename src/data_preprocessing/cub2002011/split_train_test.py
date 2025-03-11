@@ -59,7 +59,9 @@ if __name__ == "__main__":
     assert (args.train_size + args.val_size + args.test_size) == 1.0
     X_train_val, X_test, y_train_val, y_test = train_test_split(image_fnames, images_classes, train_size=(args.train_size + args.val_size), random_state=args.seed, stratify=images_classes)
     X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, train_size=(args.train_size/(args.train_size + args.val_size)), random_state=args.seed, stratify=y_train_val)
-    print(len(X_train)/len(image_fnames), len(X_val)/len(image_fnames), len(X_test)/len(image_fnames))
+    assert round(len(X_train)/len(image_fnames), 2) == args.train_size
+    assert round(len(X_val)/len(image_fnames), 2) == args.val_size
+    assert round(len(X_test)/len(image_fnames), 2) == args.test_size
 
     """
     # Let's split the data
