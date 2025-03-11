@@ -77,7 +77,7 @@ if __name__ == "__main__":
         # Open image
         image_path = os.path.join(args.data_dir, "processed", split, "images", img_fname)
         pil_img = Image.open(image_path)
-        print(image_path)
+        # print(image_path)
 
         # Crop image
         crop_img = pil_img.crop((x, y, x+width, y+height))
@@ -85,8 +85,8 @@ if __name__ == "__main__":
         # Save image
         img_class_folder = img_fname.split("/")[0]
         if not os.path.isdir(os.path.join(args.data_dir, "processed", split, "cropped", img_class_folder)):
-            print(os.path.join(args.data_dir, "processed", split, "cropped", img_class_folder))
-            # os.makedirs(os.path.join(args.data_dir, "processed", split, "cropped", img_class_folder))
+            # print(os.path.join(args.data_dir, "processed", split, "cropped", img_class_folder))
+            os.makedirs(os.path.join(args.data_dir, "processed", split, "cropped", img_class_folder))
         
-        print(os.path.join(args.data_dir, "processed", split, "cropped", img_fname))
-        # crop_img.save(os.path.join(args.data_dir, "processed", split, "cropped", img_fname))
+        # print(os.path.join(args.data_dir, "processed", split, "cropped", img_fname))
+        crop_img.save(os.path.join(args.data_dir, "processed", split, "cropped", img_fname))
