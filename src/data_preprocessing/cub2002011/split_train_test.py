@@ -30,9 +30,22 @@ if __name__ == "__main__":
     images = np.genfromtxt(os.path.join(data_dir, "CUB_200_2011", "images.txt"), dtype=str)
     print(images)
 
+    # Note: We will build a train-test split with validation, so, we will do it from scratch
     # Open train_test_split.txt
-    train_test_split = np.genfromtxt(os.path.join(data_dir, "CUB_200_2011", "train_test_split.txt"), dtype=str)
-    print(train_test_split)
+    # train_test_split = np.genfromtxt(os.path.join(data_dir, "CUB_200_2011", "train_test_split.txt"), dtype=str)
+    # print(train_test_split)
+
+    # Create a new list with the ID's and classes
+    images_ids = list()
+    images_classes = list()
+    for p in images:
+        img_id = p[0]
+        img_fname = p[1]
+        img_cl = img_fname.split('.')[0]
+        images_ids.append(img_id)
+        images_classes.append(img_cl)
+    print(images_ids)
+    print(images_classes)
 
     """
     # Let's split the data
