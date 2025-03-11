@@ -78,6 +78,7 @@ if __name__ == "__main__":
     # Let's split the data
     for split_idx, data_split in enumerate([X_train, X_val, X_test]):
         for image_fname in tqdm.tqdm(data_split):
+            print(image_fname)
 
             # Check if image is for train or test
             if split_idx == 0:
@@ -110,3 +111,4 @@ if __name__ == "__main__":
             print(src)
             print(dst)
             # shutil.copy(src, dst)
+            exit()
