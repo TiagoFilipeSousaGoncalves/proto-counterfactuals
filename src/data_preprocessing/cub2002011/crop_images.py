@@ -68,10 +68,10 @@ if __name__ == "__main__":
         # print(split)
 
         # Get bounding boxes info
-        x = float(img_bbox[1])
-        y = float(img_bbox[2])
-        width = float(img_bbox[3])
-        height = float(img_bbox[4])
+        x = float(img_bbox[0])
+        y = float(img_bbox[1])
+        width = float(img_bbox[2])
+        height = float(img_bbox[3])
 
 
         # Open image
