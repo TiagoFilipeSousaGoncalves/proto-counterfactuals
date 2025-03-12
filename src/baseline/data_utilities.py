@@ -202,6 +202,7 @@ class CUB2002011Dataset(Dataset):
         """
 
         assert split in ("train", "val", "test")
+        self.split = split
         split_path = os.path.join(data_path, "processed", split, "cropped")
 
         if augmented:
@@ -234,7 +235,7 @@ class CUB2002011Dataset(Dataset):
 
 
         # Clean images_fpaths (to prevent IsADirectoryError errors)
-        images_fpaths = [path for path in images_fpaths if not os.path.isdir(os.path.join(data_path, path))]
+        images_fpaths = [path for path in images_fpaths if not os.path.isdir(os.path.join(split_path, path))]
         
 
         # Add this to our variables
@@ -279,7 +280,7 @@ class CUB2002011Dataset(Dataset):
 
         # Get images
         img_path = self.images_fpaths[idx]
-        image = Image.open(os.path.join(self.data_path, img_path)).convert('RGB')
+        image = Image.open(os.path.join(self.data_path, "processed", self.split, "cropped", img_path)).convert('RGB')
 
         # Get labels
         folder = img_path.split("/")[0]
