@@ -12,6 +12,7 @@ echo "Started | CUB2002011 | Training"
 
 echo "CUB200211 | ProtoPNet DenseNet121"
 python src/protopnet/models_train.py \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture densenet121 \
  --batchsize 32 \

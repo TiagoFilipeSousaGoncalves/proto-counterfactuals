@@ -38,7 +38,7 @@ parser = argparse.ArgumentParser()
 
 # Add the arguments
 # Data directory
-parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
+parser.add_argument('--data_dir', type=str, required=True, help="Directory of the data set.")
 
 # Data set
 parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
