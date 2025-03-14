@@ -12,7 +12,6 @@ from sklearn.utils.class_weight import compute_class_weight
 import torch
 from torch.utils.data import DataLoader
 import torchvision
-from torch.utils.tensorboard import SummaryWriter
 
 # Weights and Biases (W&B) Imports
 import wandb
@@ -42,7 +41,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
@@ -252,8 +251,6 @@ img_width = IMG_SIZE
 # Train Transforms
 train_transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
-    # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(0.05, 0.1), scale=(0.95, 1.05), shear=0, resample=0, fillcolor=(0, 0, 0)),
-    # torchvision.transforms.RandomHorizontalFlip(p=0.5),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
@@ -267,7 +264,6 @@ train_push_transforms = torchvision.transforms.Compose([
 # Validation Transforms
 val_transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
-    torchvision.transforms.RandomCrop((IMG_SIZE, IMG_SIZE)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=MEAN, std=STD)
 ])
@@ -275,27 +271,27 @@ val_transforms = torchvision.transforms.Compose([
 
 # Dataset
 # CUB2002011
-if DATASET == "CUB2002011":
+if DATASET == "cub2002011":
     # Train Dataset
     train_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
-        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        data_path=DATA_DIR,
+        split="train",
         augmented=True,
         transform=train_transforms
     )
 
-    # Train Push Dataset (Prototypes)
+    # Train Dataset
     train_push_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "train", "cropped"),
-        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        data_path=DATA_DIR,
+        split="train",
         augmented=False,
         transform=train_push_transforms
     )
 
     # Validation Dataset
     val_set = CUB2002011Dataset(
-        data_path=os.path.join(DATA_DIR, "cub2002011", "processed_data", "test", "cropped"),
-        classes_txt=os.path.join(DATA_DIR, "cub2002011", "source_data", "classes.txt"),
+        data_path=DATA_DIR,
+        split='val',
         augmented=False,
         transform=val_transforms
     )
@@ -418,9 +414,6 @@ history_dir = os.path.join(results_dir, "history")
 if not os.path.isdir(history_dir):
     os.makedirs(history_dir)
 
-
-# Tensorboard
-tbwritter = SummaryWriter(log_dir=os.path.join(results_dir, "tensorboard"), flush_secs=30)
 
 
 # Choose GPU
@@ -659,27 +652,17 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_tr_metrics.npy")
     np.save(file=fname, arr=train_metrics, allow_pickle=True)
 
-    # Plot to Tensorboard
-    tbwritter.add_scalar("loss/train", metrics_dict["run_avg_loss"], global_step=epoch)
-    tbwritter.add_scalar("acc/train", metrics_dict['accuracy'], global_step=epoch)
-    tbwritter.add_scalar("rec/train", metrics_dict['recall'], global_step=epoch)
-    tbwritter.add_scalar("prec/train", metrics_dict['precision'], global_step=epoch)
-    tbwritter.add_scalar("f1/train", metrics_dict['f1'], global_step=epoch)
-    # tbwritter.add_scalar("auc/train", metrics_dict['auc'], global_step=epoch)
-
-
 
     # Log to W&B
     wandb_tr_metrics = {
-        "loss/train":metrics_dict["run_avg_loss"],
-        "acc/train":metrics_dict['accuracy'],
-        "rec/train":metrics_dict['recall'],
-        "prec/train":metrics_dict['precision'],
-        "f1/train":metrics_dict['f1'],
-        "epoch/train":epoch
+        "loss_train":metrics_dict["run_avg_loss"],
+        "acc_train":metrics_dict['accuracy'],
+        "rec_train":metrics_dict['recall'],
+        "prec_train":metrics_dict['precision'],
+        "f1_train":metrics_dict['f1'],
+        "epoch_train":epoch
     }
     wandb.log(wandb_tr_metrics)
-
 
 
 
@@ -714,24 +697,16 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
     fname = os.path.join(history_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_val_metrics.npy")
     np.save(file=fname, arr=val_metrics, allow_pickle=True)
 
-    # Plot to Tensorboard
-    tbwritter.add_scalar("loss/val", metrics_dict["run_avg_loss"], global_step=epoch)
-    tbwritter.add_scalar("acc/val", metrics_dict['accuracy'], global_step=epoch)
-    tbwritter.add_scalar("rec/val", metrics_dict['recall'], global_step=epoch)
-    tbwritter.add_scalar("prec/val", metrics_dict['precision'], global_step=epoch)
-    tbwritter.add_scalar("f1/val", metrics_dict['f1'], global_step=epoch)
-    # tbwritter.add_scalar("auc/val", metrics_dict['auc'], global_step=epoch)
-
 
 
     # Log to W&B
     wandb_val_metrics = {
-        "loss/val":metrics_dict["run_avg_loss"],
-        "acc/val":metrics_dict['accuracy'],
-        "rec/val":metrics_dict['recall'],
-        "prec/val":metrics_dict['precision'],
-        "f1/val":metrics_dict['f1'],
-        "epoch/val":epoch
+        "loss_val":metrics_dict["run_avg_loss"],
+        "acc_val":metrics_dict['accuracy'],
+        "rec_val":metrics_dict['recall'],
+        "prec_val":metrics_dict['precision'],
+        "f1_val":metrics_dict['f1'],
+        "epoch_val":epoch
     }
     wandb.log(wandb_val_metrics)
 
@@ -847,4 +822,3 @@ for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
 
 # Finish statement and W&B
 wandb.finish()
-print("Finished.")

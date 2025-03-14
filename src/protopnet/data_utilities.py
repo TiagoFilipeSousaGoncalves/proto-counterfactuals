@@ -1,12 +1,9 @@
 # Imports
 import os
-import copy
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import scipy.io as sio
-import cv2
 from PIL import Image
 
 # PyTorch Imports
@@ -33,147 +30,6 @@ def resize_images(datapath, newpath, newheight=512):
             new_img = img.resize((new_w, newheight), Image.ANTIALIAS)
             new_img.save(os.path.join(newpath, f))
 
-
-    return
-
-
-
-# Function: Preprocess base function 
-def preprocess(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
-    assert x.size(1) == 3
-    
-    y = torch.zeros_like(x)
-    
-    for i in range(3):
-        y[:, i, :, :] = (x[:, i, :, :] - mean[i]) / std[i]
-    
-    
-    return y
-
-
-
-# Function: Function to process inputs
-def preprocess_input_function(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
-    '''
-    allocate new tensor like x and apply the normalization used in the
-    pretrained model
-    '''
-    return preprocess(x=x, mean=mean, std=std)
-
-
-
-# Funtion: Revert processing function
-def undo_preprocess(x, mean, std):
-    assert x.size(1) == 3
-    y = torch.zeros_like(x)
-    
-    for i in range(3):
-        y[:, i, :, :] = x[:, i, :, :] * std[i] + mean[i]
-    
-    return y
-
-
-
-# Function: Apply revert processing function
-def undo_preprocess_input_function(x, mean, std):
-    '''
-    allocate new tensor like x and undo the normalization used in the
-    pretrained model
-    '''
-    
-    return undo_preprocess(x, mean=mean, std=std)
-
-
-
-# Function: Save preprocessed image
-def save_preprocessed_img(fname, preprocessed_imgs, mean, std, index=0):
-    
-    # Create copy of the image
-    img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
-    undo_preprocessed_img = undo_preprocess_input_function(x=img_copy, mean=mean, std=std)
-    
-    # print('Image index {0} in batch'.format(index))
-    
-    undo_preprocessed_img = undo_preprocessed_img[0]
-    undo_preprocessed_img = undo_preprocessed_img.detach().cpu().numpy()
-    undo_preprocessed_img = np.transpose(undo_preprocessed_img, [1,2,0])
-    
-    plt.imsave(fname, undo_preprocessed_img)
-    
-    return undo_preprocessed_img
-
-
-
-# Function: Save prototype
-def save_prototype(fname, load_img_dir, epoch, index):
-    
-    # Get prototype image
-    if epoch:
-        p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img'+str(index)+'.png'))
-    else:
-        p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img'+str(index)+'.png'))
-    
-    # plt.axis('off')
-    plt.imsave(fname, p_img)
-
-    return
-
-
-
-# Function: Save prototype self-activation
-def save_prototype_self_activation(fname, load_img_dir, epoch, index):
-
-    # Get prototype self-activation
-    if epoch:
-        p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original_with_self_act'+str(index)+'.png'))
-    else:
-        p_img = plt.imread(os.path.join(load_img_dir, 'prototype-img-original_with_self_act'+str(index)+'.png'))
-    
-    # plt.axis('off')
-    plt.imsave(fname, p_img)
-
-    return
-
-
-
-# Function: Save prototype image with bounding-box
-def save_prototype_original_img_with_bbox(fname, load_img_dir, epoch, index, bbox_height_start, bbox_height_end, bbox_width_start, bbox_width_end, color=(0, 255, 255)):
-    
-    # Load image with OpenCV
-    if epoch:
-        p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original'+str(index)+'.png'))
-    else:
-        p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'prototype-img-original'+str(index)+'.png'))
-
-    # Draw bounding-boc
-    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
-
-    # Get RGB image
-    p_img_rgb = p_img_bgr[...,::-1]
-    p_img_rgb = np.float32(p_img_rgb) / 255
-    # plt.imshow(p_img_rgb)
-    # plt.axis('off')
-    plt.imsave(fname, p_img_rgb)
-
-    return
-
-
-
-# Function: Save image with bounding-box
-def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end, bbox_width_start, bbox_width_end, color=(0, 255, 255)):
-    
-    # Load image with OpenCV
-    img_bgr_uint8 = cv2.cvtColor(np.uint8(255*img_rgb), cv2.COLOR_RGB2BGR)
-    
-    # Draw bounding-box
-    cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
-    
-    # Convert to RGB
-    img_rgb_uint8 = img_bgr_uint8[...,::-1]
-    img_rgb_float = np.float32(img_rgb_uint8) / 255
-    # plt.imshow(img_rgb_float)
-    # plt.axis('off')
-    plt.imsave(fname, img_rgb_float)
 
     return
 
@@ -336,7 +192,7 @@ class STANFORDCARSDataset(Dataset):
 
 # CUB2002011Dataset: Dataset Class
 class CUB2002011Dataset(Dataset):
-    def __init__(self, data_path, classes_txt, augmented, transform=None):
+    def __init__(self, data_path, split="train", augmented=True, transform=None):
 
         """
         Args:
@@ -345,36 +201,41 @@ class CUB2002011Dataset(Dataset):
             transform (callable, optional): Optional transform to be applied on a sample.
         """
 
+        assert split in ("train", "val", "test")
+        self.split = split
+        split_path = os.path.join(data_path, "processed", split, "cropped")
+
+        if augmented:
+            assert split == "train"
+
         # Data path (get images folders)
-        images_folders = [f for f in os.listdir(data_path) if not f.startswith('.')]
+        images_folders = [f for f in os.listdir(split_path) if not f.startswith('.')]
+        
+        
 
         # Enter each folder and add the image path to our images_fpaths variable
         images_fpaths = list()
         for folder in images_folders:
+            
+            img_fnames_aug = list()
+            img_fnames = list()
 
             # Get images
             if augmented:
-                img_fnames = [i for i in os.listdir(os.path.join(data_path, folder, "augmented")) if not i.startswith('.')]
-            else:
-                img_fnames = [i for i in os.listdir(os.path.join(data_path, folder)) if not i.startswith('.')]
+                img_fnames_aug += [i for i in os.listdir(os.path.join(split_path, folder, "augmented")) if not i.startswith('.')]
+            img_fnames += [i for i in os.listdir(os.path.join(split_path, folder)) if not i.startswith('.')]
 
 
             # Get each image
-            for img_name in img_fnames:
+            for img_name in img_fnames:                    
+                images_fpaths.append(os.path.join(folder, img_name))
+            if augmented:
+                for img_name in img_fnames_aug:
+                    images_fpaths.append(os.path.join(folder, "augmented", img_name))
 
-                # Build the complete path
-                if augmented:
-                    img_path = os.path.join(folder, "augmented", img_name)
-                else:
-                    img_path = os.path.join(folder, img_name)
-
-
-                # Append this path to our variable of images_fpaths
-                images_fpaths.append(img_path)
-            
 
         # Clean images_fpaths (to prevent IsADirectoryError errors)
-        images_fpaths = [path for path in images_fpaths if not os.path.isdir(os.path.join(data_path, path))]
+        images_fpaths = [path for path in images_fpaths if not os.path.isdir(os.path.join(split_path, path))]
         
 
         # Add this to our variables
@@ -383,7 +244,7 @@ class CUB2002011Dataset(Dataset):
 
 
         # Extract labels from data path
-        labels = np.genfromtxt(classes_txt, dtype=str)
+        labels = np.genfromtxt(os.path.join(data_path, "CUB_200_2011", "classes.txt"), dtype=str)
         labels_dict = dict()
         for label_info in labels:
             labels_dict[label_info[1]] = int(label_info[0]) - 1
@@ -401,14 +262,12 @@ class CUB2002011Dataset(Dataset):
         # Augmented
         self.augmented = augmented
 
-
         return
 
 
 
     # Method: __len__
     def __len__(self):
-        
         return len(self.images_fpaths)
 
 
@@ -421,7 +280,7 @@ class CUB2002011Dataset(Dataset):
 
         # Get images
         img_path = self.images_fpaths[idx]
-        image = Image.open(os.path.join(self.data_path, img_path)).convert('RGB')
+        image = Image.open(os.path.join(self.data_path, "processed", self.split, "cropped", img_path)).convert('RGB')
 
         # Get labels
         folder = img_path.split("/")[0]
