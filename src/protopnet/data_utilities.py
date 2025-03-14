@@ -12,6 +12,38 @@ from torch.utils.data import Dataset
 
 
 
+# Function: Pre-processing function
+def preprocess(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+    assert x.size(1) == 3
+    y = torch.zeros_like(x)
+    for i in range(3):
+        y[:, i, :, :] = (x[:, i, :, :] - mean[i]) / std[i]
+    return y
+
+
+
+# Function: Apply pre-processing function
+def preprocess_input_function(x):
+    return preprocess(x)
+
+
+
+# Function: Undo pre-processing
+def undo_preprocess(x, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+    assert x.size(1) == 3
+    y = torch.zeros_like(x)
+    for i in range(3):
+        y[:, i, :, :] = x[:, i, :, :] * std[i] + mean[i]
+    return y
+
+
+
+# Function: Undo pre-processing
+def undo_preprocess_input_function(x):
+    return undo_preprocess(x)
+
+
+
 # Function: Resize images
 def resize_images(datapath, newpath, newheight=512):
     
