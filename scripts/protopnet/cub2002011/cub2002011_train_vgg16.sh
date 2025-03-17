@@ -1,31 +1,22 @@
 #!/bin/bash
 #
-#SBATCH -p gtx1080ti_11GB                 # Partition
-#SBATCH --qos=gtx1080ti                   # QOS
+#SBATCH -p gpu_min32gb                 # Partition
+#SBATCH --qos=gpu_min32gb                   # QOS
 #SBATCH --job-name=cub_v16                  # Job name
-#SBATCH -o slurm.%N.%j.out                  # STDOUT
-#SBATCH -e slurm.%N.%j.err                  # STDERR
+#SBATCH -o cub_v16.out                  # STDOUT
+#SBATCH -e cub_v16.err                  # STDERR
 
 
 
 echo "Started | CUB2002011 | Training"
 
-model="baseline"
-
-if [ $model == "baseline" ]
-then
-    echo "CUB200211 | Baseline VGG16"
-    python code/baseline/models_train.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 32 --num_workers 0 --gpu_id 0
-elif [ $model == "ppnet" ]
-then
-    echo "CUB200211 | ProtoPNet VGG16"
-    python code/protopnet/models_train.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 32 --num_workers 0 --gpu_id 0
-elif [ $model == "dppnet" ]
-then
-    echo "CUB200211 | Deformable-ProtoPNet VGG16"
-    python code/protopnet_deform/models_train.py --dataset CUB2002011 --base_architecture vgg16 --batchsize 32 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0
-else
-    echo "Error"
-fi
+echo "CUB200211 | ProtoPNet VGG16"
+python src/protopnet/models_train.py \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
+ --dataset cub2002011 \
+ --base_architecture vgg16 \
+ --batchsize 32 \
+ --num_workers 4 \
+ --gpu_id 0
 
 echo "Finished | CUB2002011 | Training"
