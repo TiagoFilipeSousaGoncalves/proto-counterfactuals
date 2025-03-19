@@ -105,7 +105,7 @@ if __name__ == "__main__":
         # augment(source_dir=PH2_SRC_DIR)
         pass
     
-    elif args.dataset == "PAPILA":
+    elif args.dataset == "papila":
         source_dir = os.path.join(args.data_dir, "processed", "splits", "train")
 
     else:
