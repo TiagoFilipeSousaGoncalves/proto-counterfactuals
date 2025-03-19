@@ -478,16 +478,15 @@ class PAPILADataset(Dataset):
         """
 
 
-        assert subset in ("train", "test"), "Subset must be in ('train', 'test')."
+        assert subset in ("train", "val", "test"), "Subset must be in ('train', 'val', 'test')."
 
-
-        # Directories
-        papila_dir = os.path.join(data_path, "papila")
+        if augmented:
+            assert subset == "train"
 
 
         # Select if you want the cropped version or not
         if cropped:
-            self.images_dir = os.path.join(papila_dir, "processed", "splits", subset)
+            self.images_dir = os.path.join(data_path, "processed", "splits", subset)
         
         else:
             pass
@@ -500,8 +499,8 @@ class PAPILADataset(Dataset):
 
         # Read diagnostic labels
         labels, _, patID = self.get_diagnosis(
-            patient_data_od_path=os.path.join(papila_dir, "raw", "ClinicalData", "patient_data_od.xlsx"),
-            patient_data_os_path=os.path.join(papila_dir, "raw", "ClinicalData", "patient_data_os.xlsx")
+            patient_data_od_path=os.path.join(data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ClinicalData", "patient_data_od.xlsx"),
+            patient_data_os_path=os.path.join(data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ClinicalData", "patient_data_os.xlsx")
         )
 
 
@@ -553,11 +552,11 @@ class PAPILADataset(Dataset):
 
                     # Iterate through these files
                     for aug_img in augmented_files:
-                        papila_dataset_imgs.append(aug_img)
+                        papila_dataset_imgs.append(os.path.join(self.images_dir, img_name, "augmented", aug_img))
                         papila_dataset_labels.append(img_label)        
 
                 else:
-                    papila_dataset_imgs.append(img_name)
+                    papila_dataset_imgs.append(os.path.join(self.images_dir, img_name, f"{img_name}.png"))
                     papila_dataset_labels.append(img_label)
 
 
@@ -586,7 +585,6 @@ class PAPILADataset(Dataset):
 
     # Method: __len__
     def __len__(self):
-
         return len(self.images_names)
 
 
@@ -599,16 +597,7 @@ class PAPILADataset(Dataset):
 
         # Get images
         if self.cropped:
-
-            if self.augmented:
-                img_name = self.images_names[idx].split('_')[0]
-                img = self.images_names[idx]
-                img_path = os.path.join(self.images_dir, f"{img_name}", "augmented", img)
-            
-            else:
-                img_name = self.images_names[idx]
-                img_path = os.path.join(self.images_dir, img_name, f"{img_name}.png")
-        
+            img_path = self.images_names[idx]
         else:
             pass
         
