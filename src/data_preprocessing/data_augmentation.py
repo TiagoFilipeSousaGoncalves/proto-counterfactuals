@@ -6,6 +6,7 @@
 import os
 import argparse
 import Augmentor
+import shutil
 
 
 
@@ -44,37 +45,45 @@ def augment(source_dir):
         fd = source_folders[i]
         # tfd = target_folders[i]
 
-        # Rotation
-        p = Augmentor.Pipeline(source_directory=fd, output_directory="augmented")
-        p.rotate(probability=1, max_left_rotation=15, max_right_rotation=15)
-        p.flip_left_right(probability=0.5)
-        for i in range(10):
-            p.process()
-        del p
+        if os.path.exists(os.path.join(fd, "augmented")):
+            shutil.rmtree(os.path.join(fd, "augmented"))
+        
+        try:
 
-        # Skew
-        p = Augmentor.Pipeline(source_directory=fd, output_directory="augmented")
-        p.skew(probability=1, magnitude=0.2)  # max 45 degrees
-        p.flip_left_right(probability=0.5)
-        for i in range(10):
-            p.process()
-        del p
+            # Rotation
+            p = Augmentor.Pipeline(source_directory=fd, output_directory="augmented")
+            p.rotate(probability=1, max_left_rotation=15, max_right_rotation=15)
+            p.flip_left_right(probability=0.5)
+            for i in range(10):
+                p.process()
+            del p
 
-        # Shear
-        p = Augmentor.Pipeline(source_directory=fd, output_directory="augmented")
-        p.shear(probability=1, max_shear_left=10, max_shear_right=10)
-        p.flip_left_right(probability=0.5)
-        for i in range(10):
-            p.process()
-        del p
+            # Skew
+            p = Augmentor.Pipeline(source_directory=fd, output_directory="augmented")
+            p.skew(probability=1, magnitude=0.2)  # max 45 degrees
+            p.flip_left_right(probability=0.5)
+            for i in range(10):
+                p.process()
+            del p
 
-        # Random_distortion
-        p = Augmentor.Pipeline(source_directory=fd, output_directory="augmented")
-        p.random_distortion(probability=1.0, grid_width=10, grid_height=10, magnitude=5)
-        p.flip_left_right(probability=0.5)
-        for i in range(10):
-            p.process()
-        del p
+            # Shear
+            p = Augmentor.Pipeline(source_directory=fd, output_directory="augmented")
+            p.shear(probability=1, max_shear_left=10, max_shear_right=10)
+            p.flip_left_right(probability=0.5)
+            for i in range(10):
+                p.process()
+            del p
+
+            # Random_distortion
+            p = Augmentor.Pipeline(source_directory=fd, output_directory="augmented")
+            p.random_distortion(probability=1.0, grid_width=10, grid_height=10, magnitude=5)
+            p.flip_left_right(probability=0.5)
+            for i in range(10):
+                p.process()
+            del p
+
+        except:
+            print(f'Error: {fd}')
 
 
 
