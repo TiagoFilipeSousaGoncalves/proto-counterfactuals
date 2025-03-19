@@ -3,7 +3,7 @@ import argparse
 import os
 import shutil
 import numpy as np
-import pandas
+import pandas as pd
 
 # Project Imports
 from utilities import get_diagnosis
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # Command Line Interface
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default="cub2002011-dataset", help="Directory of the data set.")
+    parser.add_argument('--data_dir', type=str, required=True, help="Directory of the data set.")
     parser.add_argument('--seed', type=int, default=42, help="Set the random seed for determinism.")
     parser.add_argument('--train_size', type=float, default=0.70, help="Set the train size (%).")
     parser.add_argument('--val_size', type=float, default=0.10, help="Set the validation size (%)")
