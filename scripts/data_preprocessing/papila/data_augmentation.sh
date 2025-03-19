@@ -1,12 +1,14 @@
 #!/bin/bash
 #SBATCH -p cpu_8cores                     # Partition
 #SBATCH --qos=cpu_8cores                       # QOS
-#SBATCH --job-name=cub-p-crp                 # Job name
-#SBATCH -o cub-p-da.out                  # STDOUT
-#SBATCH -e cub-p-da.err                  # STDERR
+#SBATCH --job-name=pla-p-crp                 # Job name
+#SBATCH -o pla-p-da.out                  # STDOUT
+#SBATCH -e pla-p-da.err                  # STDERR
 
-echo 'Started data-augmentation of CUB2002011.'
+echo 'Started data-augmentation of PAPILA.'
 
-python src/data_preprocessing/data_augmentation.py --dataset 'cub2002011' --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset'
+python src/data_preprocessing/data_augmentation.py \
+ --dataset 'papila' \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images'
 
-echo 'Finished data-augmentation of CUB2002011.'
+echo 'Finished data-augmentation of PAPILA.'

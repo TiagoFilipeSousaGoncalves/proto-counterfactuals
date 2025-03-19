@@ -84,7 +84,7 @@ if __name__ == "__main__":
     # CLI Interface
     # Data set
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
+    parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
     parser.add_argument('--data_dir', type=str, required=True, help="Data directory for the dataset.")
 
     # Parse the arguments
@@ -106,10 +106,8 @@ if __name__ == "__main__":
         pass
     
     elif args.dataset == "PAPILA":
-        # PAPILA
-        # PAPILA_SRC_DIR = "data/papila/processed/splits/train"
-        # augment(source_dir=PAPILA_SRC_DIR)
-        pass
+        source_dir = os.path.join(args.data_dir, "processed", "splits", "train")
+
     else:
         pass
 
