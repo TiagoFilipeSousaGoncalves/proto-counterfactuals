@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
 
         # Open image
-        pil_img = Image.open(os.path.join(data_dir, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", image_name))
+        pil_img = Image.open(os.path.join(data_dir, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "FundusImages", image_name))
         npy_img = np.array(pil_img)
 
 
