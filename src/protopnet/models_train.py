@@ -302,7 +302,7 @@ if DATASET == "cub2002011":
 
 
 # PAPILA
-elif DATASET == "PAPILA":
+elif DATASET == "papila":
     # Train Dataset
     train_set = PAPILADataset(
         data_path=DATA_DIR,
@@ -312,7 +312,7 @@ elif DATASET == "PAPILA":
         transform=train_transforms
     )
 
-    # Train Push Dataset (Prototypes)
+    # Train Push Dataset
     train_push_set = PAPILADataset(
         data_path=DATA_DIR,
         subset="train",
@@ -324,7 +324,7 @@ elif DATASET == "PAPILA":
     # Validation Dataset
     val_set = PAPILADataset(
         data_path=DATA_DIR,
-        subset="test",
+        subset="val",
         cropped=True,
         augmented=False,
         transform=val_transforms
