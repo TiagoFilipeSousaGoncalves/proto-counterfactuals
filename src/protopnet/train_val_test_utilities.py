@@ -103,7 +103,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
                 # print(labels_)
 
                 # Note: We had to convert labels to torch.int64 to allow slicing
-                prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,labels.to(torch.int64)]).to(device)
+                prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,labels.to(torch.int64).cpu()]).to(device)
                 inverted_distances, _ = torch.max((max_dist - min_distances) * prototypes_of_correct_class, dim=1)
                 cluster_cost = torch.mean(max_dist - inverted_distances)
 
