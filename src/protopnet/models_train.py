@@ -41,7 +41,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, required=True, help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, resnet18, vgg19.')
