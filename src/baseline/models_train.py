@@ -40,7 +40,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
 
 # Data set
-parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "PH2", "STANFORDCARS"], help="Data set: cub2002011, PAPILA, PH2, STANFORDCARS.")
+parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "ph2", "STANFORDCARS"], help="Data set: cub2002011, PAPILA, PH2, STANFORDCARS.")
 
 # Model
 parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, densenet161, resnet34, resnet152, vgg16, vgg19.')
@@ -255,7 +255,7 @@ elif DATASET == "papila":
 
 
 # PH2
-elif DATASET == "PH2":
+elif DATASET == "ph2":
     # Train Dataset
     train_set = PH2Dataset(
         data_path=DATA_DIR,
@@ -268,7 +268,7 @@ elif DATASET == "PH2":
     # Validation Dataset
     val_set = PH2Dataset(
         data_path=DATA_DIR,
-        subset="test",
+        subset="val",
         cropped=True,
         augmented=False,
         transform=val_transforms
