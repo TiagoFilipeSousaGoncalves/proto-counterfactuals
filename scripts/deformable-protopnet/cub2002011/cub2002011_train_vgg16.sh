@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-#SBATCH -p gpu_min32gb                 # Partition
-#SBATCH --qos=gpu_min32gb                   # QOS
+#SBATCH -p gpu_min80gb                 # Partition
+#SBATCH --qos=gpu_min80gb                   # QOS
 #SBATCH --job-name=cub_v16                  # Job name
 #SBATCH -o cub_v16.out                  # STDOUT
 #SBATCH -e cub_v16.err                  # STDERR
@@ -15,7 +15,7 @@ python src/deformable-protopnet/models_train.py \
  --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture vgg16 \
- --batchsize 32 \
+ --batchsize 64 \
  --subtractive_margin \
  --using_deform \
  --last_layer_fixed \
