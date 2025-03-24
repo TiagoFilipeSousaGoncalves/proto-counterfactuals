@@ -93,7 +93,7 @@ if __name__ == "__main__":
     # CLI Interface
     # Data set
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
+    parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "ph2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
     parser.add_argument('--data_dir', type=str, required=True, help="Data directory for the dataset.")
 
     # Parse the arguments
@@ -107,13 +107,10 @@ if __name__ == "__main__":
         # STANFORDCARS_SRC_DIR = "data/stanfordcars/cars_train/images_cropped"
         # augment(source_dir=STANFORDCARS_SRC_DIR)
         pass
-    
-    elif args.dataset == "PH2":
-        # PH2
-        # PH2_SRC_DIR = "data/ph2/processed_images/train/cropped"
-        # augment(source_dir=PH2_SRC_DIR)
-        pass
-    
+
+    elif args.dataset == "ph2":
+        source_dir = os.path.join(args.data_dir, "processed", "images", "train", "cropped")
+
     elif args.dataset == "papila":
         source_dir = os.path.join(args.data_dir, "processed", "splits", "train")
 
