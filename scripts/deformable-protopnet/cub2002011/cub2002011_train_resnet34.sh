@@ -11,7 +11,7 @@
 echo "Started | CUB2002011 | Training"
 echo "CUB200211 | Deformable-ProtoPNet ResNet34"
 
-python code/protopnet_deform/models_train.py \
+python src/deformable-protopnet/models_train.py \
  --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture resnet34 \
