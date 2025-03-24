@@ -22,5 +22,4 @@ python src/deformable-protopnet/models_train.py \
  --num_workers 4 \
  --gpu_id 0
 
-
 echo "CUB2002011 | FINISHED"
