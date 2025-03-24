@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -p cpu_8cores                     # Partition
 #SBATCH --qos=cpu_8cores                       # QOS
-#SBATCH --job-name=pla-p-tts                 # Job name
+#SBATCH --job-name=ph2_tts                 # Job name
 #SBATCH -o ph2_tts.out                  # STDOUT
 #SBATCH -e ph2_tts.err                  # STDERR
 
