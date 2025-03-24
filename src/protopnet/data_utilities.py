@@ -328,7 +328,7 @@ class CUB2002011Dataset(Dataset):
 
 # PH2Dataset: Dataset Class
 class PH2Dataset(Dataset):
-    def __init__(self, data_path, subset, cropped, augmented, transform=None):
+    def __init__(self, data_path, subset, cropped=True, augmented=False, transform=None):
 
         """
         Args:
@@ -338,19 +338,15 @@ class PH2Dataset(Dataset):
         """
 
 
-        assert subset in ("train", "test"), "Subset must be in ('train', 'test')."
-
-
-        # Directories
-        ph2_dir = os.path.join(data_path, "ph2")
-
+        assert subset in ("train", "val", "test"), "Subset must be in ('train', 'val', 'test')."
+        if augmented:
+            assert subset == 'train'
 
         # Select if you want the cropped version or not
         if cropped:
-            self.images_dir = os.path.join(ph2_dir, "processed_images", subset, "cropped")
-        
+            self.images_dir = os.path.join(data_path, "processed", "images", subset, "cropped")
         else:
-            self.images_dir = os.path.join(ph2_dir, "processed_images", subset, "raw")
+            self.images_dir = os.path.join(data_path, "processed", "images", subset, "raw")
 
 
         # Get image names
@@ -360,7 +356,7 @@ class PH2Dataset(Dataset):
 
 
         # Get labels
-        ph2_xlsx = os.path.join(ph2_dir, "PH2_dataset.xlsx")
+        ph2_xlsx = os.path.join(data_path, "metadata", "PH2_dataset.xlsx")
 
         # Open PH2 XLSX file
         ph2_df = pd.read_excel(ph2_xlsx, skiprows=[i for i in range(12)])
@@ -424,12 +420,11 @@ class PH2Dataset(Dataset):
 
                     # Iterate through these files
                     for aug_img in augmented_files:
-                        ph2_dataset_imgs.append(aug_img)
+                        ph2_dataset_imgs.append(os.path.join(self.images_dir, img_name, 'augmented', aug_img))
                         ph2_dataset_labels.append(img_label)        
 
-                else:
-                    ph2_dataset_imgs.append(img_name)
-                    ph2_dataset_labels.append(img_label)
+                ph2_dataset_imgs.append(os.path.join(self.images_dir, img_name, f"{img_name}.png"))
+                ph2_dataset_labels.append(img_label)
 
 
         # Create final variables
@@ -457,7 +452,6 @@ class PH2Dataset(Dataset):
 
     # Method: __len__
     def __len__(self):
-
         return len(self.images_names)
 
 
@@ -467,22 +461,8 @@ class PH2Dataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-
         # Get images
-        if self.cropped:
-
-            if self.augmented:
-                img_name = self.images_names[idx].split('_')[0]
-                img = self.images_names[idx]
-                img_path = os.path.join(self.images_dir, f"{img_name}", "augmented", img)
-            
-            else:
-                img_name = self.images_names[idx]
-                img_path = os.path.join(self.images_dir, img_name, f"{img_name}.png")
-        
-        else:
-            img_path = os.path.join(self.images_dir, self.images_names[idx], f"{self.images_names[idx]}_Dermoscopic_Image", f"{self.images_names[idx]}.bmp")
-        
+        img_path = self.images_names[idx]
         
         # Open image
         image = Image.open(img_path).convert('RGB')
