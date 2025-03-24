@@ -81,7 +81,7 @@ def run_model(model, dataloader, mode, device, optimizer=None, class_specific=Tr
         with grad_req:
 
             # Note: nn.Module has implemented __call__() function so no need to call .forward
-            prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,labels]).to(device)
+            prototypes_of_correct_class = torch.t(model.prototype_class_identity[:,labels.cpu()]).to(device)
             prototypes_of_wrong_class = 1 - prototypes_of_correct_class
 
 
