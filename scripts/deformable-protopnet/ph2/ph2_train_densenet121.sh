@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-#SBATCH -p gpu_min32gb                     # Partition
-#SBATCH --qos=gpu_min32gb                       # QOS
+#SBATCH -p gpu_min11gb                     # Partition
+#SBATCH --qos=gpu_min11gb                       # QOS
 #SBATCH --job-name=ph2_d121                 # Job name
 #SBATCH -o ph2_d121.out           # STDOUT
 #SBATCH -e ph2_d121.err           # STDERR
@@ -15,7 +15,7 @@ python src/deformable-protopnet/models_train.py \
  --data_dir '/nas-ctm01/datasets/public/MEDICAL/ph2-database' \
  --dataset ph2 \
  --base_architecture densenet121 \
- --batchsize 64 \
+ --batchsize 16 \
  --subtractive_margin \
  --using_deform \
  --last_layer_fixed \
