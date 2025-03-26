@@ -19,7 +19,7 @@ python src/deformable-protopnet/models_train.py \
  --subtractive_margin \
  --using_deform \
  --last_layer_fixed \
- --num_workers 0 \
+ --num_workers 4 \
  --gpu_id 0
 
 echo "Finished | PAPILA | Training"
