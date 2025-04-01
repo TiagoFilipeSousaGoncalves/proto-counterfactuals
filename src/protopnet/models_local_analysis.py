@@ -275,13 +275,15 @@ if __name__ == "__main__":
     # Go through all image directories
     for images_fpaths, labels_dict in zip([train_images_fpaths, val_images_fpaths, test_images_fpaths], [train_labels_dict, val_labels_dict, test_labels_dict]):
         for eval_image_path in images_fpaths:
-            print(eval_image_path)
+            # print(eval_image_path)
 
             # Get image label
-            image_label = labels_dict[eval_image_path]
+            if DATASET == 'cub2002011':
+                eval_image_folder = eval_image_path.split("/")[-2]
+                eval_image_label = labels_dict[eval_image_folder]
 
             # Create image analysis path
-            image_analysis_path = os.path.join(save_analysis_path, image_dir, image_name.split('.')[0])
+            image_analysis_path = os.path.join(save_analysis_path, eval_image_folder, eval_image_path.split('/')[-1])
             if not os.path.isdir(image_analysis_path):
                 os.makedirs(image_analysis_path)
 
@@ -293,7 +295,7 @@ if __name__ == "__main__":
                 device=DEVICE,
                 eval_transforms=eval_transforms,
                 eval_image_path=eval_image_path,
-                eval_image_label=image_label,
+                eval_image_label=eval_image_label,
                 norm_params={"mean":MEAN, "std":STD},
                 img_size=IMG_SIZE
             )
