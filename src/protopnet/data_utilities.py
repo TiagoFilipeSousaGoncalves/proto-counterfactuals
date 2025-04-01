@@ -70,7 +70,7 @@ def resize_images(datapath, newpath, newheight=512):
 
 
 
-##### HELPER FUNCTIONS FOR PLOTTING
+# TODO/FIXME Function: Save preprocessed image
 def save_preprocessed_img(fname, preprocessed_imgs, index=0):
     img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
     undo_preprocessed_img = undo_preprocess_input_function(img_copy)
