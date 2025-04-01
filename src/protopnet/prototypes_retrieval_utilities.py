@@ -22,22 +22,19 @@ from prototypes_utilities import find_high_activation_crop
 
 
 # Function: Retrieve prototypes from an image
-def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, norm_params, img_size, most_k_activated=10):
+def retrieve_image_prototypes(image_analysis_path, prototypes_img_dir, ppnet_model, device, eval_transforms, eval_image_path, eval_image_label, norm_params, img_size, most_k_activated=10):
 
     # Open a file to save a small report w/ .TXT extension
-    if os.path.exists(os.path.join(save_analysis_path, "report.txt")):
-        os.remove(os.path.join(save_analysis_path, "report.txt"))
-
-    report = open(os.path.join(save_analysis_path, "report.txt"), "at")
-
-    # Specify the test image to be analyzed
-    test_image_path = os.path.join(test_image_dir, test_image_name)
+    if os.path.exists(os.path.join(image_analysis_path, "report.txt")):
+        os.remove(os.path.join(image_analysis_path, "report.txt"))
+    report = open(os.path.join(image_analysis_path, "report.txt"), "at")
 
     # Get the directory of the saved prototypes
-    saved_prototypes_dir = os.path.join(weights_dir, 'prototypes')
+    # saved_prototypes_dir = os.path.join(weights_dir, 'prototypes')
+    # saved_prototypes_dir -> prototypes_img_dir
 
     # Get prototype information and confirm prototype class identity
-    prototype_info = np.load(os.path.join(saved_prototypes_dir, 'bb.npy'))
+    prototype_info = np.load(os.path.join(prototypes_img_dir, 'bb.npy'))
     prototype_img_identity = prototype_info[:, -1]
 
 
@@ -72,15 +69,16 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
     # Load the image and labels
-    img_pil = Image.open(test_image_path).convert('RGB')
-    img_tensor = test_transforms(img_pil)
+    eval_image_name = eval_image_path.split('/')[-1]
+    img_pil = Image.open(eval_image_path).convert('RGB')
+    img_tensor = eval_transforms(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
-    images_test = img_variable.to(device)
+    images_eval = img_variable.to(device)
     # labels_test = torch.tensor([test_image_label])
 
     # Run inference with ppnet
-    logits, min_distances = ppnet_model(images_test)
-    _, distances = ppnet_model.push_forward(images_test)
+    logits, min_distances = ppnet_model(images_eval)
+    _, distances = ppnet_model.push_forward(images_eval)
     prototype_activations = ppnet_model.distance_2_similarity(min_distances)
     prototype_activation_patterns = ppnet_model.distance_2_similarity(distances)
     if ppnet_model.prototype_activation_function == 'linear':
@@ -110,7 +108,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
     # Get prediction
     predicted_cls = int(sorted_indices[0][-1].item())
-    correct_cls = int(test_image_label)
+    correct_cls = int(eval_image_label)
     
     
     
@@ -133,15 +131,15 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     # )
 
     # Get original image
-    original_img = undo_preprocess(images_test, norm_params["mean"], norm_params["std"])
+    original_img = undo_preprocess(images_eval, norm_params["mean"], norm_params["std"])
     original_img = original_img[0]
     original_img = original_img.detach().cpu().numpy()
     original_img = np.transpose(original_img, (1,2,0))
 
 
     # Get most activated (nearest) K prototypes of this image
-    if not os.path.isdir(os.path.join(save_analysis_path, 'most_activated_prototypes')):
-        os.makedirs(os.path.join(save_analysis_path, 'most_activated_prototypes'))
+    if not os.path.isdir(os.path.join(image_analysis_path, 'most_activated_prototypes')):
+        os.makedirs(os.path.join(image_analysis_path, 'most_activated_prototypes'))
 
     # Append information to the report
     # print('Most activated 10 prototypes of this image:')
@@ -160,22 +158,22 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
         # Save prototype
-        prototype_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i)
+        prototype_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i)
         report.write(f"Prototype: {prototype_fname}\n")
         save_prototype(
             fname=prototype_fname,
-            load_img_dir=saved_prototypes_dir,
+            prototypes_img_dir=prototypes_img_dir,
             epoch=None,
             index=sorted_indices_act[-i].item()
         )
 
 
         # Save prototype original image with bounding-box
-        prototype_bbox_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_in_original_pimg.png' % i)
+        prototype_bbox_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_in_original_pimg.png' % i)
         report.write(f"Prototype with bounding-box: {prototype_bbox_fname}\n")
         save_prototype_original_img_with_bbox(
             fname=prototype_bbox_fname,
-            load_img_dir=load_img_dir,
+            prototypes_img_dir=prototypes_img_dir,
             epoch=None,
             index=sorted_indices_act[-i].item(),
             bbox_height_start=prototype_info[sorted_indices_act[-i].item()][1],
@@ -187,11 +185,11 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
         # Save prototype self-activation
-        prototype_self_act_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_self_act.png' % i)
+        prototype_self_act_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_self_act.png' % i)
         report.write(f"Prototype self-activation: {prototype_self_act_fname}\n")
         save_prototype_self_activation(
             fname=prototype_self_act_fname,
-            load_img_dir=saved_prototypes_dir,
+            prototypes_img_dir=prototypes_img_dir,
             epoch=None,
             index=sorted_indices_act[-i].item()
         )
@@ -227,7 +225,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
         # Show the most highly activated patch of the image by this prototype
         high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
         high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
-        high_act_patch_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_by_top-%d_prototype.png' % i)
+        high_act_patch_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_by_top-%d_prototype.png' % i)
         # print ('most highly activated patch of the chosen image by this prototype:')
         report.write(f'Most highly activated patch of the chosen image by this prototype: {high_act_patch_fname}\n')
         # plt.axis('off')
@@ -235,7 +233,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
 
 
         # Show the most highly activated patch of the image by this prototype in the original image
-        high_act_patch_img_bbox_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % i)
+        high_act_patch_img_bbox_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % i)
         # print('most highly activated patch by this prototype shown in the original image:')
         print(f'Most highly activated patch by this prototype shown in the original image: {high_act_patch_img_bbox_fname}\n')
         imsave_with_bbox(
@@ -256,7 +254,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
         heatmap = np.float32(heatmap) / 255
         heatmap = heatmap[...,::-1]
         overlayed_img = 0.5 * original_img + 0.3 * heatmap
-        prototype_act_map_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'prototype_activation_map_by_top-%d_prototype.png' % i)
+        prototype_act_map_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'prototype_activation_map_by_top-%d_prototype.png' % i)
         # print('prototype activation map of the chosen image:')
         report.write(f'Prototype activation map of the chosen image: {prototype_act_map_fname}\n')
         # plt.axis('off')
@@ -269,12 +267,12 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, load_img_dir, ppn
     report.close()
 
 
-    return test_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident
+    return eval_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident
 
 
 
 # FIXME: Get prototypes from top-K classes
-def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_path, saved_prototypes_dir, prototype_activations, prototype_info, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls):
+def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, image_analysis_path, prototypes_img_dir, prototype_activations, prototype_info, prototype_img_identity, prototype_max_connection, prototype_activation_patterns, img_size, original_img, predicted_cls, correct_cls):
 
     # Get prototypes from top-K classes
     k = 50
@@ -282,8 +280,8 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
     topk_logits, topk_classes = torch.topk(logits[idx], k=k)
     for i, c in enumerate(topk_classes.detach().cpu().numpy()):
         # TODO: makedir(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)))
-        if not os.path.isdir(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1))):
-            os.makedirs(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1)))
+        if not os.path.isdir(os.path.join(image_analysis_path, 'top-%d_class_prototypes' % (i+1))):
+            os.makedirs(os.path.join(image_analysis_path, 'top-%d_class_prototypes' % (i+1)))
 
         print('top %d predicted class: %d' % (i+1, c))
         print('logit of the class: %f' % topk_logits[i])
@@ -297,8 +295,8 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
 
             # Save prototype
             save_prototype(
-                fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype.png' % prototype_cnt),
-                load_img_dir=saved_prototypes_dir,
+                fname=os.path.join(image_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype.png' % prototype_cnt),
+                prototypes_img_dir=prototypes_img_dir,
                 epoch=None,
                 index=prototype_index
             )
@@ -306,8 +304,8 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
 
             # Save prototype original image with bounding-box
             save_prototype_original_img_with_bbox(
-                fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype_in_original_pimg.png' % prototype_cnt),
-                load_img_dir=saved_prototypes_dir,
+                fname=os.path.join(image_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype_in_original_pimg.png' % prototype_cnt),
+                prototypes_img_dir=prototypes_img_dir,
                 epoch=None,
                 index=prototype_index,
                 bbox_height_start=prototype_info[prototype_index][1],
@@ -320,8 +318,8 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
 
             # Save prototype self-activation
             save_prototype_self_activation(
-                fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype_self_act.png' % prototype_cnt),
-                load_img_dir=saved_prototypes_dir,
+                fname=os.path.join(image_analysis_path, 'top-%d_class_prototypes' % (i+1), 'top-%d_activated_prototype_self_act.png' % prototype_cnt),
+                prototypes_img_dir=prototypes_img_dir,
                 epoch=None,
                 index=prototype_index
             )
@@ -344,12 +342,12 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
             high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
             print('most highly activated patch of the chosen image by this prototype:')
             # plt.axis('off')
-            plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'most_highly_activated_patch_by_top-%d_prototype.png' % prototype_cnt), high_act_patch)
+            plt.imsave(os.path.join(image_analysis_path, 'top-%d_class_prototypes' % (i+1), 'most_highly_activated_patch_by_top-%d_prototype.png' % prototype_cnt), high_act_patch)
             print('most highly activated patch by this prototype shown in the original image:')
             
             # Save image with bounding-box
             imsave_with_bbox(
-                fname=os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % prototype_cnt),
+                fname=os.path.join(image_analysis_path, 'top-%d_class_prototypes' % (i+1), 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % prototype_cnt),
                 img_rgb=original_img,
                 bbox_height_start=high_act_patch_indices[0],
                 bbox_height_end=high_act_patch_indices[1],
@@ -366,7 +364,7 @@ def get_prototypes_from_topk_classes(k, logits, idx, ppnet_model, save_analysis_
             overlayed_img = 0.5 * original_img + 0.3 * heatmap
             print('prototype activation map of the chosen image:')
             # plt.axis('off')
-            plt.imsave(os.path.join(save_analysis_path, 'top-%d_class_prototypes' % (i+1), 'prototype_activation_map_by_top-%d_prototype.png' % prototype_cnt), overlayed_img)
+            plt.imsave(os.path.join(image_analysis_path, 'top-%d_class_prototypes' % (i+1), 'prototype_activation_map_by_top-%d_prototype.png' % prototype_cnt), overlayed_img)
             print('--------------------------------------------------------------')
             prototype_cnt += 1
         print('***************************************************************')

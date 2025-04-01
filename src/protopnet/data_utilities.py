@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import scipy.io as sio
 from PIL import Image
+import matplotlib.pyplot as plt
+import copy
 
 # PyTorch Imports
 import torch
@@ -67,7 +69,55 @@ def resize_images(datapath, newpath, newheight=512):
 
 
 
-# Dataset
+##### HELPER FUNCTIONS FOR PLOTTING
+def save_preprocessed_img(fname, preprocessed_imgs, index=0):
+    img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
+    undo_preprocessed_img = undo_preprocess_input_function(img_copy)
+    print('image index {0} in batch'.format(index))
+    undo_preprocessed_img = undo_preprocessed_img[0]
+    undo_preprocessed_img = undo_preprocessed_img.detach().cpu().numpy()
+    undo_preprocessed_img = np.transpose(undo_preprocessed_img, [1,2,0])
+    
+    plt.imsave(fname, undo_preprocessed_img)
+    return undo_preprocessed_img
+
+def save_prototype(fname, epoch, index):
+    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img'+str(index)+'.png'))
+    #plt.axis('off')
+    plt.imsave(fname, p_img)
+    
+def save_prototype_self_activation(fname, epoch, index):
+    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch),
+                                    'prototype-img-original_with_self_act'+str(index)+'.png'))
+    #plt.axis('off')
+    plt.imsave(fname, p_img)
+
+def save_prototype_original_img_with_bbox(fname, epoch, index,
+                                          bbox_height_start, bbox_height_end,
+                                          bbox_width_start, bbox_width_end, color=(0, 255, 255)):
+    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original'+str(index)+'.png'))
+    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
+                  color, thickness=2)
+    p_img_rgb = p_img_bgr[...,::-1]
+    p_img_rgb = np.float32(p_img_rgb) / 255
+    #plt.imshow(p_img_rgb)
+    #plt.axis('off')
+    plt.imsave(fname, p_img_rgb)
+
+def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
+                     bbox_width_start, bbox_width_end, color=(0, 255, 255)):
+    img_bgr_uint8 = cv2.cvtColor(np.uint8(255*img_rgb), cv2.COLOR_RGB2BGR)
+    cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
+                  color, thickness=2)
+    img_rgb_uint8 = img_bgr_uint8[...,::-1]
+    img_rgb_float = np.float32(img_rgb_uint8) / 255
+    #plt.imshow(img_rgb_float)
+    #plt.axis('off')
+    plt.imsave(fname, img_rgb_float)
+
+
+
+# Datasets
 # STANFORDCARSDataset: Dataset Class
 class STANFORDCARSDataset(Dataset):
     def __init__(self, data_path, cars_subset, augmented, cropped=True, transform=None):
