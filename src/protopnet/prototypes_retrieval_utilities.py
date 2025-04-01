@@ -161,9 +161,8 @@ def retrieve_image_prototypes(image_analysis_path, prototypes_img_dir, ppnet_mod
         prototype_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i)
         report.write(f"Prototype: {prototype_fname}\n")
         save_prototype(
-            fname=prototype_fname,
+            prototype_fname=prototype_fname,
             prototypes_img_dir=prototypes_img_dir,
-            epoch=None,
             index=sorted_indices_act[-i].item()
         )
 
@@ -172,9 +171,8 @@ def retrieve_image_prototypes(image_analysis_path, prototypes_img_dir, ppnet_mod
         prototype_bbox_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_in_original_pimg.png' % i)
         report.write(f"Prototype with bounding-box: {prototype_bbox_fname}\n")
         save_prototype_original_img_with_bbox(
-            fname=prototype_bbox_fname,
+            prototype_bbox_fname=prototype_bbox_fname,
             prototypes_img_dir=prototypes_img_dir,
-            epoch=None,
             index=sorted_indices_act[-i].item(),
             bbox_height_start=prototype_info[sorted_indices_act[-i].item()][1],
             bbox_height_end=prototype_info[sorted_indices_act[-i].item()][2],
@@ -188,9 +186,8 @@ def retrieve_image_prototypes(image_analysis_path, prototypes_img_dir, ppnet_mod
         prototype_self_act_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_self_act.png' % i)
         report.write(f"Prototype self-activation: {prototype_self_act_fname}\n")
         save_prototype_self_activation(
-            fname=prototype_self_act_fname,
+            prototype_self_act_fname=prototype_self_act_fname,
             prototypes_img_dir=prototypes_img_dir,
-            epoch=None,
             index=sorted_indices_act[-i].item()
         )
 
@@ -237,7 +234,7 @@ def retrieve_image_prototypes(image_analysis_path, prototypes_img_dir, ppnet_mod
         # print('most highly activated patch by this prototype shown in the original image:')
         print(f'Most highly activated patch by this prototype shown in the original image: {high_act_patch_img_bbox_fname}\n')
         imsave_with_bbox(
-            fname=high_act_patch_img_bbox_fname,
+            high_act_patch_img_bbox_fname=high_act_patch_img_bbox_fname,
             img_rgb=original_img,
             bbox_height_start=high_act_patch_indices[0],
             bbox_height_end=high_act_patch_indices[1],

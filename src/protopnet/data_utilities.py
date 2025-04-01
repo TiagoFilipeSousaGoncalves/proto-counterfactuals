@@ -7,6 +7,7 @@ import scipy.io as sio
 from PIL import Image
 import matplotlib.pyplot as plt
 import copy
+import cv2
 
 # PyTorch Imports
 import torch
@@ -81,39 +82,60 @@ def save_preprocessed_img(fname, preprocessed_imgs, index=0):
     plt.imsave(fname, undo_preprocessed_img)
     return undo_preprocessed_img
 
-def save_prototype(fname, epoch, index):
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img'+str(index)+'.png'))
-    #plt.axis('off')
-    plt.imsave(fname, p_img)
-    
-def save_prototype_self_activation(fname, epoch, index):
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch),
-                                    'prototype-img-original_with_self_act'+str(index)+'.png'))
-    #plt.axis('off')
-    plt.imsave(fname, p_img)
 
-def save_prototype_original_img_with_bbox(fname, epoch, index,
-                                          bbox_height_start, bbox_height_end,
-                                          bbox_width_start, bbox_width_end, color=(0, 255, 255)):
-    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original'+str(index)+'.png'))
-    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
-                  color, thickness=2)
+
+# Function: Save prototype
+def save_prototype(prototype_fname, prototypes_img_dir, index):
+    p_img = plt.imread(os.path.join(prototypes_img_dir, 'prototype-img'+str(index)+'.png'))
+    plt.imsave(prototype_fname, p_img)
+    return
+
+
+
+# Function: Save prototype self activation
+def save_prototype_self_activation(prototype_self_act_fname, prototypes_img_dir, index):
+    p_img = plt.imread(os.path.join(prototypes_img_dir, 'prototype-img-original_with_self_act'+str(index)+'.png'))
+    plt.imsave(prototype_self_act_fname, p_img)
+    return
+
+
+
+# Function: Save prototype with bounding box
+def save_prototype_original_img_with_bbox(
+        prototype_bbox_fname, 
+        prototypes_img_dir, 
+        index, 
+        bbox_height_start, 
+        bbox_height_end,
+        bbox_width_start, 
+        bbox_width_end, 
+        color=(0, 255, 255)):
+    
+    p_img_bgr = cv2.imread(os.path.join(prototypes_img_dir, 'prototype-img-original'+str(index)+'.png'))
+    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
     p_img_rgb = p_img_bgr[...,::-1]
     p_img_rgb = np.float32(p_img_rgb) / 255
-    #plt.imshow(p_img_rgb)
-    #plt.axis('off')
-    plt.imsave(fname, p_img_rgb)
+    plt.imsave(prototype_bbox_fname, p_img_rgb)
+    return
 
-def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
-                     bbox_width_start, bbox_width_end, color=(0, 255, 255)):
+
+
+# Function: Save image with bounding box
+def imsave_with_bbox(
+        high_act_patch_img_bbox_fname,
+        img_rgb,
+        bbox_height_start,
+        bbox_height_end,
+        bbox_width_start,
+        bbox_width_end,
+        color=(0, 255, 255)):
+
     img_bgr_uint8 = cv2.cvtColor(np.uint8(255*img_rgb), cv2.COLOR_RGB2BGR)
-    cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
-                  color, thickness=2)
+    cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
     img_rgb_uint8 = img_bgr_uint8[...,::-1]
     img_rgb_float = np.float32(img_rgb_uint8) / 255
-    #plt.imshow(img_rgb_float)
-    #plt.axis('off')
-    plt.imsave(fname, img_rgb_float)
+    plt.imsave(high_act_patch_img_bbox_fname, img_rgb_float)
+    return
 
 
 
