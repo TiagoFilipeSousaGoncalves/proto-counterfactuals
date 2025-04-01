@@ -62,10 +62,10 @@ if __name__ == "__main__":
     for j in range(len(p_img_idx)):
 
         # Get predicted label
-        label = int(p_y[i])
+        label = int(p_y[j])
 
         # Get proposed counterfactual
-        cfact = int(p_cnt[i])
+        cfact = int(p_cnt[j])
 
         # Add this to the frequency matrix
         cf_freqs[label, cfact] += 1
