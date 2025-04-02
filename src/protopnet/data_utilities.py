@@ -70,15 +70,14 @@ def resize_images(datapath, newpath, newheight=512):
 
 
 
-# TODO/FIXME Function: Save preprocessed image
+# Function: Save preprocessed image
 def save_preprocessed_img(fname, preprocessed_imgs, index=0):
     img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
     undo_preprocessed_img = undo_preprocess_input_function(img_copy)
-    print('image index {0} in batch'.format(index))
+    # print('image index {0} in batch'.format(index))
     undo_preprocessed_img = undo_preprocessed_img[0]
     undo_preprocessed_img = undo_preprocessed_img.detach().cpu().numpy()
     undo_preprocessed_img = np.transpose(undo_preprocessed_img, [1,2,0])
-    
     plt.imsave(fname, undo_preprocessed_img)
     return undo_preprocessed_img
 
