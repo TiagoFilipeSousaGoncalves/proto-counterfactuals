@@ -42,7 +42,7 @@ if __name__ == "__main__":
             proto_stats_pr["Image Filename"].append(img_fnames[i])
             proto_stats_pr["Ground-Truth Label"].append(gt_labels[i])
             proto_stats_pr["Predicted Label"].append(pred_labels[i])
-            proto_stats_pr["Number of Prototypes Connected to the Class Identity"].append[nr_proto_cli[i]]
+            proto_stats_pr["Number of Prototypes Connected to the Class Identity"].append(nr_proto_cli[i])
             proto_stats_pr["Top-10 Prototypes Class Identities"].append(topk_proto_cli[i])
 
 
