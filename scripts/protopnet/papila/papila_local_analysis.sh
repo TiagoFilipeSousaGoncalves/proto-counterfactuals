@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -p debug_8gb                     # Partition
-#SBATCH --qos=debug_8gb                       # QOS
+#SBATCH -p gpu_min11gb                     # Partition
+#SBATCH --qos=gpu_min11gb                       # QOS
 #SBATCH --job-name=pla_lana                 # Job name
 #SBATCH -o pla_lana.out                  # STDOUT
 #SBATCH -e pla_lana.err                  # STDERR
