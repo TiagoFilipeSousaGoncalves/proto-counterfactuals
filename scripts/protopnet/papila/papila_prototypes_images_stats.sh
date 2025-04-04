@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH -p cpu_8cores                     # Partition
-#SBATCH --qos=cpu_8cores                       # QOS
-#SBATCH --job-name=pla_pis                # Job name
+#SBATCH -p cpu_8cores                   # Partition
+#SBATCH --qos=cpu_8cores                # QOS
+#SBATCH --job-name=pla_pis              # Job name
 #SBATCH -o pla_pis.out                  # STDOUT
 #SBATCH -e pla_pis.err                  # STDERR
 
