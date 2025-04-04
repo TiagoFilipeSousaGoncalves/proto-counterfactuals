@@ -102,6 +102,8 @@ if __name__ == "__main__":
             augmented=False,
             transform=eval_transforms
         )
+        train_images_fpaths = train_set.images_names
+        train_labels_dict = train_set.images_labels
 
         val_set = PAPILADataset(
             data_path=DATA_DIR,
@@ -110,6 +112,8 @@ if __name__ == "__main__":
             augmented=False,
             transform=eval_transforms
         )
+        val_images_fpaths = val_set.images_names
+        val_labels_dict = val_set.images_labels
 
         test_set = PAPILADataset(
             data_path=DATA_DIR,
@@ -118,6 +122,8 @@ if __name__ == "__main__":
             augmented=False,
             transform=eval_transforms
         )
+        test_images_fpaths = test_set.images_names
+        test_labels_dict = test_set.images_labels
 
         # Number of Classes
         NUM_CLASSES = len(np.unique(train_set.images_labels))
@@ -275,12 +281,14 @@ if __name__ == "__main__":
     # Go through all image directories
     for images_fpaths, labels_dict in zip([train_images_fpaths, val_images_fpaths, test_images_fpaths], [train_labels_dict, val_labels_dict, test_labels_dict]):
         for eval_image_path in images_fpaths:
-            # print(eval_image_path)
+            print(eval_image_path)
 
             # Get image label
             if DATASET == 'cub2002011':
                 eval_image_folder = eval_image_path.split("/")[-2]
                 eval_image_label = labels_dict[eval_image_folder]
+            elif DATASET == 'papila':
+                exit()
 
             # Create image analysis path
             image_analysis_path = os.path.join(save_analysis_path, eval_image_folder, eval_image_path.split('/')[-1])

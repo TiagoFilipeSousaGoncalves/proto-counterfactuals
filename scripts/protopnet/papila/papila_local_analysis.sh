@@ -1,34 +1,36 @@
 #!/bin/bash
+#SBATCH -p debug_8gb                     # Partition
+#SBATCH --qos=debug_8gb                       # QOS
+#SBATCH --job-name=pla_lana                 # Job name
+#SBATCH -o pla_lana.out                  # STDOUT
+#SBATCH -e pla_lana.err                  # STDERR
 
 
 
 echo "PAPILA | Started | Local Analysis"
+echo "PAPILA | ProtoPNet"
+python src/protopnet/models_local_analysis.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture densenet121 \
+ --num_workers 4 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/densenet121/2025-03-23_09-59-10/'
 
-model="dppnet"
+python src/protopnet/models_local_analysis.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture resnet34 \
+ --num_workers 4 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/resnet34/2025-03-23_09-59-09/'
 
-if [ $model == "ppnet" ]
-then
-    echo "PAPILA | ProtoPNet"
-    python code/protopnet/models_local_analysis.py --dataset PAPILA --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint papila/protopnet/densenet121/2022-12-23_11-33-39/
-    # python code/protopnet/models_local_analysis.py --dataset PAPILA --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/densenet161/XXX/
-    python code/protopnet/models_local_analysis.py --dataset PAPILA --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint papila/protopnet/resnet34/2022-12-23_18-42-05/
-    # python code/protopnet/models_local_analysis.py --dataset PAPILA --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/resnet152/XXX/
-    python code/protopnet/models_local_analysis.py --dataset PAPILA --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint papila/protopnet/vgg16/2022-12-23_18-10-15/
-    # python code/protopnet/models_local_analysis.py --dataset PAPILA --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/vgg19/XXX/
-elif [ $model == "dppnet" ]
-then
-    echo "PAPILA | Deformable ProtoPNet"
-    python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture densenet121 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/densenet121/2023-01-04_12-12-15/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture densenet161 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/densenet161/XXX/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture resnet34 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/resnet34/2023-01-04_16-02-21/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture resnet152 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/resnet152/XXX/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture vgg16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/vgg16/2023-01-04_18-47-51/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PAPILA --base_architecture vgg19 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint papila/deformable-protopnet/vgg19/XXX/
-elif [ $model == "baseline" ]
-then
-    echo "PAPILA | Baseline"
-else
-    echo "Error"
-fi
+python src/protopnet/models_local_analysis.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture vgg16 \
+ --num_workers 4 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/vgg16/2025-03-23_15-12-24'
 
 echo "PAPILA | Finished | Local Analysis"
