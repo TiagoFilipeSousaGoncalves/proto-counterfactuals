@@ -8,7 +8,6 @@
 
 
 echo "CUB2002011 | Started | Prototype Image Stats"
-echo "CUB2002011 | ProtoPNet"
 python src/protopnet/prototypes_images_stats.py \
  --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/cub2002011/protopnet/densenet121/2025-03-14_11-19-56/'
 
