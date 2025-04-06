@@ -139,6 +139,8 @@ if __name__ == "__main__":
             augmented=False,
             transform=eval_transforms
         )
+        train_images_fpaths = train_set.images_names
+        train_labels_dict = train_set.images_labels
 
         val_set = PH2Dataset(
             data_path=DATA_DIR,
@@ -147,6 +149,8 @@ if __name__ == "__main__":
             augmented=False,
             transform=eval_transforms
         )
+        val_images_fpaths = val_set.images_names
+        val_labels_dict = val_set.images_labels
 
         test_set = PH2Dataset(
             data_path=DATA_DIR,
@@ -155,6 +159,8 @@ if __name__ == "__main__":
             augmented=False,
             transform=eval_transforms
         )
+        test_images_fpaths = test_set.images_names
+        test_labels_dict = test_set.images_labels
 
         # Number of Classes
         NUM_CLASSES = len(train_set.diagnosis_dict)
@@ -287,7 +293,7 @@ if __name__ == "__main__":
             if DATASET == 'cub2002011':
                 eval_image_folder = eval_image_path.split("/")[-2]
                 eval_image_label = labels_dict[eval_image_folder]
-            elif DATASET == 'papila':
+            elif DATASET in ('papila', 'ph2'):
                 eval_image_folder = eval_image_path.split("/")[-2]
                 eval_image_label = labels_dict[idx]
 

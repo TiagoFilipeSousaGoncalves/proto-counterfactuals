@@ -1,37 +1,36 @@
 #!/bin/bash
+#SBATCH -p gpu_min11gb                   # Partition
+#SBATCH --qos=gpu_min11gb                # QOS
+#SBATCH --job-name=ph2_lana              # Job name
+#SBATCH -o ph2_lana.out                  # STDOUT
+#SBATCH -e ph2_lana.err                  # STDERR
 
 
 
 echo "Started | PH2 | Local Analysis"
+echo "PH2 | ProtoPNet"
+python src/protopnet/models_local_analysis.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/ph2-database' \
+ --dataset ph2 \
+ --base_architecture densenet121 \
+ --num_workers 4 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/ph2/protopnet/densenet121/2025-03-24_16-19-14/'
 
+python src/protopnet/models_local_analysis.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/ph2-database' \
+ --dataset ph2 \
+ --base_architecture resnet34 \
+ --num_workers 4 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/ph2/protopnet/resnet34/2025-03-24_18-30-11/'
 
-model="dppnet"
-
-
-if [ $model == "ppnet" ]
-then
-    echo "PH2 | ProtoPNet"
-    python code/protopnet/models_local_analysis.py --dataset PH2 --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/densenet121/2022-12-06_15-51-53/
-    python code/protopnet/models_local_analysis.py --dataset PH2 --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/densenet161/2022-12-06_19-46-07/
-    python code/protopnet/models_local_analysis.py --dataset PH2 --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/resnet34/2022-12-06_22-45-55/
-    python code/protopnet/models_local_analysis.py --dataset PH2 --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/resnet152/2022-12-07_00-40-00/
-    python code/protopnet/models_local_analysis.py --dataset PH2 --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/vgg16/2022-12-07_00-42-57/
-    python code/protopnet/models_local_analysis.py --dataset PH2 --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint ph2/protopnet/vgg19/2022-12-07_02-48-40/
-elif [ $model == "dppnet" ]
-then
-    echo "PH2 | Deformable ProtoPNet"
-    python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture densenet121 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/densenet121/2023-01-02_08-43-56/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture densenet161 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/densenet161/XXX/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture resnet34 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/resnet34/2023-01-02_10-08-37/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture resnet152 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/resnet152/XXX/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture vgg16 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/vgg16/2023-01-04_10-43-58/
-    # python code/deformable-protopnet/models_local_analysis.py --dataset PH2 --base_architecture vgg19 --subtractive_margin --using_deform --last_layer_fixed --num_workers 0 --gpu_id 0 --checkpoint ph2/deformable-protopnet/vgg19/XXX/
-elif [ $model == "baseline" ]
-then
-    echo "PH2 | Baseline"
-else
-    echo "Error"
-fi
-
+python src/protopnet/models_local_analysis.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/ph2-database' \
+ --dataset ph2 \
+ --base_architecture vgg16 \
+ --num_workers 4 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/ph2/protopnet/vgg16/2025-03-24_19-06-46/'
 
 echo "Finished | PH2 | Local Analysis"
