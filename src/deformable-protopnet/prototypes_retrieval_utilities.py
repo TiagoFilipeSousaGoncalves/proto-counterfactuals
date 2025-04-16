@@ -11,30 +11,35 @@ from torch.autograd import Variable
 import torch.utils.data
 
 # Project Imports
-from data_utilities import save_preprocessed_img, save_prototype, save_prototype_box, save_deform_info, imsave_with_bbox
+from data_utilities import save_preprocessed_img, save_prototype, save_prototype_box, save_deform_info, imsave_with_bbox, undo_preprocess
 from prototypes_utilities import find_high_activation_crop, get_deformation_info
 
 
 
 # Function: Retrieve prototypes from an image
-def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, device, test_transforms, test_image_dir, test_image_name, test_image_label, img_size, most_k_activated=10, save_image=True):
+def retrieve_image_prototypes(
+        image_analysis_path, 
+        prototypes_img_dir, 
+        ppnet_model, 
+        device, 
+        eval_transforms,
+        eval_image_path,
+        eval_image_label,
+        norm_params,
+        img_size, 
+        most_k_activated=10, 
+        save_original_images=False,
+        save_prototypes=False):
 
     # Open a file to save a small report w/ .TXT extension
-    report_path = os.path.join(save_analysis_path, "report.txt")
+    report_path = os.path.join(image_analysis_path, "report.txt")
     if os.path.exists(report_path):
         os.remove(report_path)
     report = open(report_path, "at")
 
-    # Specify the test image to be analyzed
-    test_image_path = os.path.join(test_image_dir, test_image_name)
-
-
-    # TODO: Review this path
-    # load_img_dir = os.path.join(load_model_dir, 'img')
-    saved_prototypes_dir = os.path.join(weights_dir, 'prototypes')
 
     # Get Prototype Information
-    prototype_info = np.load(os.path.join(saved_prototypes_dir, 'bb.npy'))
+    prototype_info = np.load(os.path.join(prototypes_img_dir, 'bb.npy'))
     prototype_img_identity = prototype_info[:, -1]
 
     # Append this information to the report
@@ -55,35 +60,25 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         report.write('WARNING: Not all prototypes connect most strongly to their respective classes.\n')
 
     
-    # Load image and labels
-    img_pil = Image.open(test_image_path).convert("RGB")
-    img_tensor = test_transforms(img_pil)
+    # Load the image and labels
+    eval_image_name = eval_image_path.split('/')[-1]
+    img_pil = Image.open(eval_image_path).convert('RGB')
+    img_tensor = eval_transforms(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
-    images_test = img_variable.to(device)
+    images_eval = img_variable.to(device)
+    # labels_test = torch.tensor([test_image_label])
 
 
     # Run inference with deform-ppnet
-    logits, additional_returns = ppnet_model(images_test)
+    logits, additional_returns = ppnet_model(images_eval)
     prototype_activations = additional_returns[3]
-    conv_output, prototype_activation_patterns = ppnet_model.push_forward(images_test)
+    conv_output, prototype_activation_patterns = ppnet_model.push_forward(images_eval)
 
 
     # Get offsets
     offsets, _ = get_deformation_info(conv_output, ppnet_model, device)
     offsets = offsets.detach()
 
-
-    # # Create tables of predictions and ground-truth
-    # tables = []
-    # for i in range(logits.size(0)):
-    #     tables.append((torch.argmax(logits, dim=1)[i].item(), labels_test[i].item()))
-    #     report.write(str(i) + ' ' + str(tables[-1]) + '\n')
-
-
-    # # Get prediction and ground-truth labels
-    # idx = 0
-    # predicted_cls = tables[idx][0]
-    # correct_cls = tables[idx][1]
 
     # Apply Softmax to obtain scaled logits
     s_logits = torch.nn.Softmax(dim=1)(logits)
@@ -94,25 +89,32 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
 
     # Get prediction
     predicted_cls = int(sorted_indices[0][-1].item())
-    correct_cls = int(test_image_label)
+    correct_cls = int(eval_image_label)
     
     # Append this information to the report
     report.write(f'Predicted: {str(predicted_cls)}\n')
     report.write(f'Actual: {str(correct_cls)}\n')
 
     # Get original image
-    original_img = save_preprocessed_img(
-        fname=os.path.join(save_analysis_path, 'original_img.png'),
-        preprocessed_imgs=images_test,
-        index=0,
-        save_img=False
-    )
+    if save_original_images:
+        save_preprocessed_img(
+            fname=os.path.join(image_analysis_path, 'original_img.png'),
+            preprocessed_imgs=images_eval,
+            index=0,
+            save_img=False
+        )
+    
+    # Get original image
+    original_img = undo_preprocess(images_eval, norm_params["mean"], norm_params["std"])
+    original_img = original_img[0]
+    original_img = original_img.detach().cpu().numpy()
+    original_img = np.transpose(original_img, (1,2,0))
 
 
 
     # Get most activated (nearest) K prototypes of this image
-    if not os.path.isdir(os.path.join(save_analysis_path, 'most_activated_prototypes')):
-        os.makedirs(os.path.join(save_analysis_path, 'most_activated_prototypes'))
+    if not os.path.isdir(os.path.join(image_analysis_path, 'most_activated_prototypes')):
+        os.makedirs(os.path.join(image_analysis_path, 'most_activated_prototypes'))
 
 
     # Append information to the report
@@ -156,31 +158,27 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
 
 
         # Save prototype
-        prototype_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i)
+        prototype_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i)
         report.write(f"Prototype: {prototype_fname}\n")
-        prototype_img = save_prototype(
-            fname=prototype_fname,
-            load_img_dir=saved_prototypes_dir,
-            index=sorted_indices_act[-i].item(),
-            save_img=save_image
-        )
-
-        # Append to the corresponding list
-        prototype_images.append(prototype_img)
+        if save_prototypes:
+            save_prototype(
+                fname=prototype_fname,
+                load_img_dir=prototypes_img_dir,
+                index=sorted_indices_act[-i].item()
+            )
+            # prototype_images.append(prototype_img)
 
 
         # Save prototype w/ bbox
-        prototype_w_bbox_fname = os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_with_box.png' % i)
+        prototype_w_bbox_fname = os.path.join(image_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_with_box.png' % i)
         report.write(f"Prototype with bbox: {prototype_w_bbox_fname}\n")
-        prototype_img_bbox = save_prototype_box(
-            fname=prototype_w_bbox_fname,
-            load_img_dir=saved_prototypes_dir,
-            index=sorted_indices_act[-i].item(),
-            save_img=save_image
-        )
-
-        # Append to the corresponding list
-        prototype_images_bboxes.append(prototype_img_bbox)
+        if save_prototypes:
+            save_prototype_box(
+                fname=prototype_w_bbox_fname,
+                load_img_dir=prototypes_img_dir,
+                index=sorted_indices_act[-i].item()
+            )
+            # prototype_images_bboxes.append(prototype_img_bbox)
         
 
         # Add some important information to the report
@@ -201,22 +199,22 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
         
         # Save deformable-prototype information
-        prototypes_just_this_box, prototypes_patches, original_img_j_with_boxes = save_deform_info(
-            model=ppnet_model,
-            offsets=offsets,
-            input=original_img,
-            activations=activation_pattern,
-            save_dir=os.path.join(save_analysis_path, 'most_activated_prototypes'),
-            prototype_img_filename_prefix='top-%d_activated_prototype_' % i,
-            proto_index=sorted_indices_act[-i].item(),
-            prototype_layer_stride=1,
-            save_img=save_image
-        )
+        if save_prototypes:
+            save_deform_info(
+                model=ppnet_model,
+                offsets=offsets,
+                input=original_img,
+                activations=activation_pattern,
+                save_dir=os.path.join(image_analysis_path, 'most_activated_prototypes'),
+                prototype_img_filename_prefix='top-%d_activated_prototype_' % i,
+                proto_index=sorted_indices_act[-i].item(),
+                prototype_layer_stride=1
+            )
 
         # Append to the corresponding lists
-        prototype_images_just_this_box.append(prototypes_just_this_box)
-        prototypes_patches_lists.append(prototypes_patches)
-        original_images_with_bboxes.append(original_img_j_with_boxes)
+        # prototype_images_just_this_box.append(prototypes_just_this_box)
+        # prototypes_patches_lists.append(prototypes_patches)
+        # original_images_with_bboxes.append(original_img_j_with_boxes)
 
         # Show the most highly activated patch of the image by this prototype
         high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
@@ -227,27 +225,25 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         high_activated_patches.append(high_act_patch)
         
         # Save image (if needed)
-        if save_image:
+        if save_prototypes:
             plt.imsave(
-                os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_by_top-%d_prototype.png' % i),
+                os.path.join(image_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_by_top-%d_prototype.png' % i),
                 high_act_patch
             )
 
 
         report.write('Most highly activated patch by this prototype shown in the original image:\n')
-        high_activated_patch_in_orig_img = imsave_with_bbox(
-            fname=os.path.join(save_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % i),
-            img_rgb=original_img,
-            bbox_height_start=high_act_patch_indices[0],
-            bbox_height_end=high_act_patch_indices[1],
-            bbox_width_start=high_act_patch_indices[2],
-            bbox_width_end=high_act_patch_indices[3],
-            color=(0, 255, 255),
-            save_img=save_image
-        )
-
-        # Append it to the corresponding list
-        high_activated_patches_in_orig_image.append(high_activated_patch_in_orig_img)
+        if save_prototypes:
+            imsave_with_bbox(
+                fname=os.path.join(image_analysis_path, 'most_activated_prototypes', 'most_highly_activated_patch_in_original_img_by_top-%d_prototype.png' % i),
+                img_rgb=original_img,
+                bbox_height_start=high_act_patch_indices[0],
+                bbox_height_end=high_act_patch_indices[1],
+                bbox_width_start=high_act_patch_indices[2],
+                bbox_width_end=high_act_patch_indices[3],
+                color=(0, 255, 255)
+            )
+            # high_activated_patches_in_orig_image.append(high_activated_patch_in_orig_img)
 
 
         # Show the image overlayed with prototype activation map
@@ -263,10 +259,8 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
         overlayed_images.append(overlayed_img)
 
         # Save image (if necessary)
-        if save_image:
-            # plt.axis('off')
-            plt.imsave(os.path.join(save_analysis_path, 'most_activated_prototypes', 'prototype_activation_map_by_top-%d_prototype.png' % i), overlayed_img)
-        # log('--------------------------------------------------------------')
+        if save_prototypes:
+            plt.imsave(os.path.join(image_analysis_path, 'most_activated_prototypes', 'prototype_activation_map_by_top-%d_prototype.png' % i), overlayed_img)
         report.write("\n")
     
 
@@ -274,7 +268,7 @@ def retrieve_image_prototypes(save_analysis_path, weights_dir, ppnet_model, devi
     report.close()
 
 
-    return test_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident, prototype_images, prototype_images_bboxes, prototype_images_just_this_box, prototypes_patches_lists, original_images_with_bboxes, high_activated_patches, high_activated_patches_in_orig_image, overlayed_images
+    return eval_image_name, correct_cls, predicted_cls, nr_prototypes_cls_ident, topk_proto_cls_ident
 
 
 
