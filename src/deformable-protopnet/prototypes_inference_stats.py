@@ -2,93 +2,100 @@
 import os
 import argparse
 import numpy as np
-import pandas as pd
+import pickle
 
 
 
-# Command Line Interface
-# Create the parser
-parser = argparse.ArgumentParser()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--results_dir', type=str, default="data", help="Path to the model results directory.")
+    args = parser.parse_args()
 
-# Add the arguments
-# Data directory
-parser.add_argument('--checkpoint', type=str, default="data", help="Path to the model checkpoint.")
-
-
-
-# Parse the arguments
-args = parser.parse_args()
+    # Constants
+    RESULTS_DIR = args.results_dir
 
 
 
-# Get the path of the CSV that contains the analysis
-CHECKPOINT = args.checkpoint
+    # Open the .PKL file
+    proto_stats_pkl_path = os.path.join(RESULTS_DIR, "analysis", "counterfac-inf", "inference_results.pkl")
+    with open(proto_stats_pkl_path, 'rb') as f: 
+        proto_stats_pkl = pickle.load(f)
+
+    # Get rows where ground-truth is equal to the predicted label
+    proto_stats_pr_pkl = {
+        "Image Index":list(),
+        "Ground-Truth Label":list(),
+        "Predicted Label":list(),
+        "Predicted Scores":list(),
+        "Counterfactuals":list()
+    }
+
+    # Get raw data
+    img_idx = proto_stats_pkl["Image Index"]
+    y = proto_stats_pkl["Ground-Truth Label"]
+    yh = proto_stats_pkl["Predicted Label"]
+    yh_s = proto_stats_pkl["Predicted Scores"]
+    cnt = proto_stats_pkl["Counterfactuals"]
+
+    # Build processed data
+    for i in range(len(img_idx)):
+        if int(y[i]) == int(yh[i]):
+            proto_stats_pr_pkl["Image Index"].append(img_idx[i])
+            proto_stats_pr_pkl["Ground-Truth Label"].append(y[i])
+            proto_stats_pr_pkl["Predicted Label"].append(yh[i])
+            proto_stats_pr_pkl["Predicted Scores"].append(yh_s[i])
+            proto_stats_pr_pkl["Counterfactuals"].append(cnt[i])
+
+
+    # Generate a matrix to get the frequencies
+    gt_labels = np.unique(proto_stats_pkl["Ground-Truth Label"])
+    cf_freqs = np.zeros(shape=(len(gt_labels), len(gt_labels)))
+
+
+    # Get processed data
+    p_img_idx = proto_stats_pr_pkl["Image Index"]
+    p_y = proto_stats_pr_pkl["Ground-Truth Label"]
+    p_yh = proto_stats_pr_pkl["Predicted Label"]
+    p_yh_s = proto_stats_pr_pkl["Predicted Scores"]
+    p_cnt = proto_stats_pr_pkl["Counterfactuals"]
+
+    for j in range(len(p_img_idx)):
+
+        # Get predicted label
+        label = int(p_y[j])
+
+        # Get proposed counterfactual
+        cfact = int(p_cnt[j])
+
+        # Add this to the frequency matrix
+        cf_freqs[label, cfact] += 1
+
+
+    # Open a file to save a small report w/ .TXT extension
+    if os.path.exists(os.path.join(RESULTS_DIR, "analysis", "counterfac-inf", "inf_stats.txt")):
+        os.remove(os.path.join(RESULTS_DIR, "analysis", "counterfac-inf", "inf_stats.txt"))
+
+    report = open(os.path.join(RESULTS_DIR, "analysis", "counterfac-inf", "inf_stats.txt"), "at")
 
 
 
-# Open the .CSV file
-proto_stats_df = pd.read_csv(filepath_or_buffer=os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", "inference_results.csv"), sep=",", header=0)
-# print(proto_stats_df.head())
+    # Iterate through frequencies
+    for idx, row in enumerate(cf_freqs):
 
+        # Label
+        # print(f"Label: {idx}")
+        report.write(f"Label: {idx}\n")
 
-# Get rows where ground-truth is equal to the predicted label
-proto_stats_pr_df = proto_stats_df.copy()[["Image Index", "Ground-Truth Label", "Predicted Label", "Predicted Scores", "Counterfactuals"]][proto_stats_df["Ground-Truth Label"]==proto_stats_df["Predicted Label"]]
-# print(proto_stats_pr_df.head())
+        # Counterfactuals
+        cfs = np.nonzero(row)
+        # print(f"Possible Counterfactuals: {cfs}")
+        report.write(f"Possible Counterfactuals: {cfs}\n")
 
-
-# Reset index so that indices match the number of rows
-proto_stats_pr_df = proto_stats_pr_df.reset_index()
-
-
-
-# Generate a matrix to get the frequencies
-gt_labels = np.unique(proto_stats_df.copy()["Ground-Truth Label"].values)
-# print(f"Range of gt_labels: {len(gt_labels)}")
-cf_freqs = np.zeros(shape=(len(gt_labels), len(gt_labels)))
-
-
-# Iterate through rows
-for index, row in proto_stats_pr_df.iterrows():
-
-    # Get predicted label
-    label = int(row["Ground-Truth Label"])
-
-    # Get proposed counterfactual
-    cfact = int(row["Counterfactuals"])
-
-    # Add this to the frequency matrix
-    cf_freqs[label, cfact] += 1
+        # Add line
+        # print("\n")
+        report.write("\n")
 
 
 
-# print(proto_stats_pr_df.head())
-
-
-# Open a file to save a small report w/ .TXT extension
-if os.path.exists(os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", "inf_stats.txt")):
-    os.remove(os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", "inf_stats.txt"))
-
-report = open(os.path.join("results", CHECKPOINT, "analysis", "counterfac-inf", "inf_stats.txt"), "at")
-
-
-
-# Iterate through frequencies
-for idx, row in enumerate(cf_freqs):
-
-    # Label
-    # print(f"Label: {idx}")
-    report.write(f"Label: {idx}\n")
-
-    # Counterfactuals
-    cfs = np.nonzero(row)
-    # print(f"Possible Counterfactuals: {cfs}")
-    report.write(f"Possible Counterfactuals: {cfs}\n")
-
-    # Add line
-    # print("\n")
-    report.write("\n")
-
-
-
-# Close report
-report.close()
+    # Close report
+    report.close()
