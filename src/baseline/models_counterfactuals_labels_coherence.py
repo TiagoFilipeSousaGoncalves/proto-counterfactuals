@@ -86,7 +86,7 @@ if __name__ == "__main__":
             
             # Get the set of nearest counterfactual labels
             counterfactual_labels_among_models = label_coherence_dict[image_filename]["Nearest Counterfactual Label"]
-            counterfactual_labels_among_models = np.array(counterfactual_labels_among_models, dtype=np.int)
+            counterfactual_labels_among_models = np.array(counterfactual_labels_among_models, dtype=int)
 
             # Add another dimension so we have a single-column vector
             counterfactual_labels_among_models = np.reshape(counterfactual_labels_among_models, (-1, 1))
