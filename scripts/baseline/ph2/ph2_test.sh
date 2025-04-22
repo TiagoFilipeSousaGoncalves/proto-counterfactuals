@@ -8,7 +8,6 @@
 
 
 echo "PH2 | Started | Testing"
-
 echo "PH2 | Baseline"
 python src/baseline/models_test.py \
  --data_dir '/nas-ctm01/datasets/public/MEDICAL/ph2-database' \
@@ -36,5 +35,4 @@ python src/baseline/models_test.py \
  --num_workers 4 \
  --gpu_id 0 \
  --results_dir /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/ph2/baseline/vgg16/2025-03-24_14-36-33
-
 echo "PH2 | Finished | Testing"
