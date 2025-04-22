@@ -27,11 +27,11 @@ if __name__ == "__main__":
 
 
     # Get the number of classes for the computation of the coherence metric
-    if DATASET == "CUB2002011": 
+    if DATASET == "cub2002011": 
         N_CLASSES = 200
-    elif DATASET == "PAPILA":
+    elif DATASET == "papila":
         N_CLASSES = 3
-    elif DATASET == "PH2":
+    elif DATASET == "ph2":
         N_CLASSES = 3
     elif DATASET == "STANFORDCARS":
         pass
