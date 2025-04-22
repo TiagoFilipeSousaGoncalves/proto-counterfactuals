@@ -10,7 +10,7 @@
 echo "Counterfactual Label Coherence | Started"
 echo "Baseline"
 echo "Counterfactual Label Coherence | PAPILA"
-python src/baseline/counterfactuals_labels_coherence.py \
+python src/baseline/models_counterfactuals_labels_coherence.py \
  --dataset papila \
  --result_dir_list /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/baseline/densenet121/2025-03-19_22-34-07/ \
  --result_dir_list /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/baseline/resnet34/2025-03-19_23-07-26/ \

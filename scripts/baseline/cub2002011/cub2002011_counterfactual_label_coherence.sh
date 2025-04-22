@@ -10,7 +10,7 @@
 echo "Counterfactual Label Coherence | Started"
 echo "Baseline"
 echo "Counterfactual Label Coherence | CUB2002011"
-python src/baseline/counterfactuals_labels_coherence.py \
+python src/baseline/models_counterfactuals_labels_coherence.py \
  --dataset cub2002011 \
  --result_dir_list /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/cub2002011/baseline/densenet121/2025-03-12_01-24-26/ \
  --result_dir_list /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/cub2002011/baseline/resnet34/2025-03-12_09-25-24/ \

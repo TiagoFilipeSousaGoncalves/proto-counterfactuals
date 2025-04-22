@@ -10,7 +10,7 @@
 echo "Counterfactual Label Coherence | Started"
 echo "Baseline"
 echo "Counterfactual Label Coherence | PH2"
-python src/baseline/counterfactuals_labels_coherence.py \
+python src/baseline/models_counterfactuals_labels_coherence.py \
  --dataset ph2 \
  --result_dir_list /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/ph2/baseline/densenet121/2025-03-24_11-14-24/ \
  --result_dir_list /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/ph2/baseline/resnet34/2025-03-24_11-59-55/ \
