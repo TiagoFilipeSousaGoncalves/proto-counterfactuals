@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -p cpu_8cores                   # Partition
-#SBATCH --qos=cpu_8cores                # QOS
+#SBATCH -p gpu_min8gb                   # Partition
+#SBATCH --qos=gpu_min8gb                # QOS
 #SBATCH --job-name=pla_clc              # Job name
 #SBATCH -o pla_clc.out                  # STDOUT
 #SBATCH -e pla_clc.err                  # STDERR
