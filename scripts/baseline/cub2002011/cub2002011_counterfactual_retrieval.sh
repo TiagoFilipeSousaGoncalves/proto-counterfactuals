@@ -9,7 +9,7 @@
 
 echo "CUB2002011 | Started | Counterfactual Retrieval"
 echo "CUB2002011 | Baseline | Convolution Feature Space"
-python code/baseline/models_counterfactuals_retrieval.py \
+python src/baseline/models_counterfactuals_retrieval.py \
  --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture densenet121 \
@@ -18,7 +18,7 @@ python code/baseline/models_counterfactuals_retrieval.py \
  --results_dir /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/cub2002011/baseline/densenet121/2025-03-12_01-24-26 \
  --feature_space conv_features
 
-python code/baseline/models_counterfactuals_retrieval.py \
+python src/baseline/models_counterfactuals_retrieval.py \
  --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture resnet34 \
@@ -27,7 +27,7 @@ python code/baseline/models_counterfactuals_retrieval.py \
  --results_dir /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/cub2002011/baseline/resnet34/2025-03-12_09-25-24 \
  --feature_space conv_features
 
-python code/baseline/models_counterfactuals_retrieval.py \
+python src/baseline/models_counterfactuals_retrieval.py \
  --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture vgg16 \
