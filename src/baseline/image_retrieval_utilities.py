@@ -4,19 +4,18 @@ from PIL import Image
 # PyTorch Imports
 import torch
 from torch.autograd import Variable
-import torch.utils.data
 
 
 
 # Function: Generate image counterfactual
-def get_image_counterfactual(image_path, baseline_model, device, transforms):
+def get_image_counterfactual(eval_image_path, baseline_model, device, eval_transforms):
 
     # Put model into evaluation mode
     baseline_model.eval()
 
     # Load the image and labels
-    img_pil = Image.open(image_path).convert('RGB')
-    img_tensor = transforms(img_pil)
+    img_pil = Image.open(eval_image_path).convert('RGB')
+    img_tensor = eval_transforms(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
     images_test = img_variable.to(device)
 
@@ -35,7 +34,7 @@ def get_image_counterfactual(image_path, baseline_model, device, transforms):
 
 
 # Function: Generate image features
-def generate_image_features(image_path, baseline_model, device, transforms, feature_space):
+def generate_image_features(eval_image_path, baseline_model, device, eval_transforms, feature_space):
 
     assert feature_space in ("conv_features"), "Please provide a valid feature space ('conv_features')."
 
@@ -45,8 +44,8 @@ def generate_image_features(image_path, baseline_model, device, transforms, feat
 
 
     # Load the image and labels
-    img_pil = Image.open(image_path).convert('RGB')
-    img_tensor = transforms(img_pil)
+    img_pil = Image.open(eval_image_path).convert('RGB')
+    img_tensor = eval_transforms(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
     image_test = img_variable.to(device)
 
@@ -60,14 +59,14 @@ def generate_image_features(image_path, baseline_model, device, transforms, feat
 
 
 # Function: Generate image prediction
-def get_image_prediction(image_path, baseline_model, device, transforms):
+def get_image_prediction(eval_image_path, baseline_model, device, eval_transforms):
 
     # Put model into evaluation mode
     baseline_model.eval()
 
     # Load the image and labels
-    img_pil = Image.open(image_path).convert('RGB')
-    img_tensor = transforms(img_pil)
+    img_pil = Image.open(eval_image_path).convert('RGB')
+    img_tensor = eval_transforms(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
     images_test = img_variable.to(device)
 
@@ -79,6 +78,5 @@ def get_image_prediction(image_path, baseline_model, device, transforms):
 
     # Get prediction
     label_pred = sorted_indices[0][-1].item()
-
 
     return label_pred
