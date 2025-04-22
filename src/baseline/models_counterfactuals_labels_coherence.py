@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     # Constants
     DATASET = args.dataset
-    RESULTS_DIR_LIST = args.append_checkpoints
+    RESULTS_DIR_LIST = args.result_dir_list
     FEATURE_SPACE = args.feature_space
     COHERENCE_METRIC = args.coherence_metric
 
