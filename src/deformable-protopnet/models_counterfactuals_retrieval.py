@@ -20,150 +20,52 @@ from model_utilities import construct_PPNet
 
 
 if __name__ == "__main__":
-    # Create the parser
     parser = argparse.ArgumentParser()
-
-    # Add the arguments
-    # Data directory
     parser.add_argument('--data_dir', type=str, default="data", help="Directory of the data set.")
-
-    # Data set
-    parser.add_argument('--dataset', type=str, required=True, choices=["CUB2002011", "PAPILA", "PH2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
-
-    # Model
+    parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "ph2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
     parser.add_argument('--base_architecture', type=str, required=True, choices=["densenet121", "densenet161", "resnet34", "resnet50", "resnet152", "vgg16", "vgg19"], help='Base architecture: densenet121, densenet161, resnet34, resnet50, resnet152, vgg16, vgg19.')
-
-    # Batch size
     parser.add_argument('--batchsize', type=int, default=4, help="Batch-size for training and validation.")
-
-    # Image size
     parser.add_argument('--img_size', type=int, default=224, help="Size of the image after transforms.")
-
-    # Margin (default=0.1)
     parser.add_argument('--margin', type=float, default=0.1)
-
-    # Subtractive margin
-    # subtractive_margin = True (default: True)
-    parser.add_argument('--subtractive_margin', action="store_true")
-
-    # Using deformable convolution (default: True)
-    parser.add_argument('--using_deform', action="store_true")
-
-    # Top-K (default=1)
+    parser.add_argument('--subtractive_margin', default=True, action="store_true")
+    parser.add_argument('--using_deform', default=True, action="store_true")
     parser.add_argument('--topk_k', type=int, default=1)
-
-    # Deformable Convolution Hidden Channels (default=128)
     parser.add_argument('--deformable_conv_hidden_channels', type=int, default=128)
-
-    # Number of Prototypes (default=1200)
     parser.add_argument('--num_prototypes', type=int, default=1200)
-
-    # Dilation
     parser.add_argument('--dilation', type=float, default=2)
-
-    # Incorrect class connection (default=-0.5)
     parser.add_argument('--incorrect_class_connection', type=float, default=-0.5)
-
-    # Add on layers type
-    # add_on_layers_type = 'regular'
     parser.add_argument('--add_on_layers_type', type=str, default='regular', help="Add on layers type.")
-
-    # Last layer fixed
-    # last_layer_fixed = True (default: True)
-    parser.add_argument('--last_layer_fixed', action="store_true")
-
-    # Class Weights (default: False)
-    parser.add_argument("--classweights", action="store_true", help="Weight loss with class imbalance.")
-
-    # Output directory
-    parser.add_argument("--output_dir", type=str, default="results", help="Output directory.")
-
-    # Number of workers
+    parser.add_argument('--last_layer_fixed', default=True, action="store_true")
+    parser.add_argument("--classweights", default=False, action="store_true", help="Weight loss with class imbalance.")
+    parser.add_argument("--results_dir", type=str, default="results", help="Results directory.")
     parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for dataloader.")
-
-    # GPU ID
     parser.add_argument("--gpu_id", type=int, default=0, help="The index of the GPU.")
-
-    # Checkpoint
-    parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training.")
-
-    # Generate test images' features
-    parser.add_argument("--generate_img_features", action="store_true", help="Generate features for the retrieval.")
-
-    # Decide the type of features to generate and to use in the retrieval
+    parser.add_argument("--generate_img_features", default=False, action="store_true", help="Generate features for the retrieval.")
     parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features", "proto_features"], help="Feature space: convolutional features (conv_features) or prototype layer features (proto_features).")
-
-
-
-    # Parse the arguments
     args = parser.parse_args()
 
 
-    # Read checkpoint
-    CHECKPOINT = args.checkpoint
-
-
-    # Data directory
+    # Constants
+    RESULTS_DIR = args.results_dir
     DATA_DIR = args.data_dir
-
-    # Dataset
     DATASET = args.dataset
-
-    # Base Architecture
     BASE_ARCHITECTURE = args.base_architecture
-
-    # Results Directory
-    OUTPUT_DIR = args.output_dir
-
-    # Number of workers (threads)
     WORKERS = args.num_workers
-
-    # Batch size
     BATCH_SIZE = args.batchsize
-
-    # Image size (after transforms)
     IMG_SIZE = args.img_size
-
-    # Add on layers type
     ADD_ON_LAYERS_TYPE = args.add_on_layers_type
-
-    # Last Layer Fixed
     LAST_LAYER_FIXED = args.last_layer_fixed
-
-    # Margin
     MARGIN = args.margin
-
-    # Using subtractive margin
     SUBTRACTIVE_MARGIN = args.subtractive_margin
-
-    # Using deformable convolution
     USING_DEFORM = args.using_deform
-
-    # TOPK_K
     TOPK_K = args.topk_k
-
-    # Deformable convolutional hidden channels
     DEFORMABLE_CONV_HIDDEN_CHANNELS = args.deformable_conv_hidden_channels
-
-    # Number of Prototypes
     NUM_PROTOTYPES = args.num_prototypes
-
-    # Dilation
     DILATION = args.dilation
-
-    # Incorrect class connection
     INCORRECT_CLASS_CONNECTION = args.incorrect_class_connection
-
-    # Generate features on the test set
     GENERATE_FEATURES = args.generate_img_features
-
-    # Feature space
     FEATURE_SPACE = args.feature_space
 
-
-
-    # Get the directory of results
-    results_dir = os.path.join(OUTPUT_DIR, CHECKPOINT)
 
 
     # Load data
@@ -352,22 +254,22 @@ if __name__ == "__main__":
 
 
     # Debug print
-    print("Add on layers type: ", ADD_ON_LAYERS_TYPE)
+    # print("Add on layers type: ", ADD_ON_LAYERS_TYPE)
 
 
     # Weights
-    weights_dir = os.path.join(results_dir, "weights")
+    weights_dir = os.path.join(RESULTS_DIR, "weights")
 
 
     # Features 
-    features_dir = os.path.join(results_dir, "features", FEATURE_SPACE)
+    features_dir = os.path.join(RESULTS_DIR, "features", FEATURE_SPACE)
     if not os.path.isdir(features_dir):
         os.makedirs(features_dir)
 
 
     # Choose GPU
     DEVICE = f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu"
-    print(f"Using device: {DEVICE}")
+    # print(f"Using device: {DEVICE}")
 
 
     # Construct the model
@@ -399,11 +301,11 @@ if __name__ == "__main__":
     # model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
     model_weights = torch.load(model_path_push, map_location=DEVICE)
     ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
-    print(f"Model weights loaded with success from: {model_path_push}.")
+    # print(f"Model weights loaded with success from: {model_path_push}.")
 
 
     # Create a local analysis path
-    save_analysis_path = os.path.join(results_dir, "analysis", "image-retrieval", FEATURE_SPACE)
+    save_analysis_path = os.path.join(RESULTS_DIR, "analysis", "image-retrieval", FEATURE_SPACE)
     if not os.path.isdir(save_analysis_path):
         os.makedirs(save_analysis_path)
 
@@ -431,7 +333,7 @@ if __name__ == "__main__":
                     # Generate features
                     features = generate_image_features(
                         eval_image_path=eval_image_path,
-                        baseline_model=baseline_model,
+                        ppnet_model=ppnet_model,
                         device=DEVICE,
                         eval_transforms=eval_transforms,
                         feature_space=FEATURE_SPACE
@@ -479,7 +381,7 @@ if __name__ == "__main__":
             # Get image counterfactual
             label_pred, counterfactual_pred = get_image_counterfactual(
                 eval_image_path=eval_image_path,
-                baseline_model=baseline_model,
+                ppnet_model=ppnet_model,
                 device=DEVICE,
                 eval_transforms=eval_transforms
             )
@@ -496,7 +398,7 @@ if __name__ == "__main__":
                 else:
                     eval_img_fts = generate_image_features(
                         eval_image_path=eval_image_path,
-                        baseline_model=baseline_model,
+                        ppnet_model=ppnet_model,
                         device=DEVICE,
                         eval_transforms=eval_transforms,
                         feature_space=FEATURE_SPACE
@@ -527,7 +429,7 @@ if __name__ == "__main__":
                             # Get the prediction of the model on this counterfactual
                             ctf_prediction = get_image_prediction(
                                 eval_image_path=ctf_image_path,
-                                baseline_model=baseline_model,
+                                ppnet_model=ppnet_model,
                                 device=DEVICE,
                                 eval_transforms=eval_transforms
                             )
@@ -543,7 +445,7 @@ if __name__ == "__main__":
                                 else:
                                     ctf_fts = generate_image_features(
                                         eval_image_path=ctf_image_path,
-                                        baseline_model=baseline_model,
+                                        ppnet_model=ppnet_model,
                                         device=DEVICE,
                                         eval_transforms=eval_transforms,
                                         feature_space=FEATURE_SPACE
