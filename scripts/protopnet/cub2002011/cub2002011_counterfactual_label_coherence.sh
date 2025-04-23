@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH -p cpu_8cores                   # Partition
 #SBATCH --qos=cpu_8cores                # QOS
-#SBATCH --job-name=cub_plc              # Job name
-#SBATCH -o cub_plc.out                  # STDOUT
-#SBATCH -e cub_plc.err                  # STDERR
+#SBATCH --job-name=cub_clc              # Job name
+#SBATCH -o cub_clc.out                  # STDOUT
+#SBATCH -e cub_clc.err                  # STDERR
 
 
 
