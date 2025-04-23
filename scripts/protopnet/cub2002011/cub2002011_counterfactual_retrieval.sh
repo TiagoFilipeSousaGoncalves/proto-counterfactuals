@@ -12,6 +12,7 @@ echo "CUB2002011 | Started | Counterfactual Retrieval"
 echo "CUB2002011 | ProtoPNet | Convolution Feature Space"
 python src/protopnet/models_counterfactuals_retrieval.py \
  --dataset cub2002011 \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --base_architecture densenet121 \
  --num_workers 0 \
  --gpu_id 0 \
@@ -20,6 +21,7 @@ python src/protopnet/models_counterfactuals_retrieval.py \
 
 python src/protopnet/models_counterfactuals_retrieval.py \
  --dataset cub2002011 \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --base_architecture resnet34 \
  --num_workers 0 \
  --gpu_id 0 \
@@ -28,6 +30,7 @@ python src/protopnet/models_counterfactuals_retrieval.py \
 
 python src/protopnet/models_counterfactuals_retrieval.py \
  --dataset cub2002011 \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --base_architecture vgg16 \
  --num_workers 0 \
  --gpu_id 0 \
@@ -37,6 +40,7 @@ python src/protopnet/models_counterfactuals_retrieval.py \
 echo "CUB2002011 | ProtoPNet | Prototype Feature Space"
 python src/protopnet/models_counterfactuals_retrieval.py \
  --dataset cub2002011 \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --base_architecture densenet121 \
  --num_workers 0 \
  --gpu_id 0 \
@@ -45,6 +49,7 @@ python src/protopnet/models_counterfactuals_retrieval.py \
 
 python src/protopnet/models_counterfactuals_retrieval.py \
  --dataset cub2002011 \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --base_architecture resnet34 \
  --num_workers 0 \
  --gpu_id 0 \
@@ -53,6 +58,7 @@ python src/protopnet/models_counterfactuals_retrieval.py \
 
 python src/protopnet/models_counterfactuals_retrieval.py \
  --dataset cub2002011 \
+ --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
  --base_architecture vgg16 \
  --num_workers 0 \
  --gpu_id 0 \
