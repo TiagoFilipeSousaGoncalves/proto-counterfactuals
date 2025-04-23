@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -p cpu_8cores                   # Partition
-#SBATCH --qos=cpu_8cores                # QOS
+#SBATCH -p debug_8gb                   # Partition
+#SBATCH --qos=debug_8gb                # QOS
 #SBATCH --job-name=cub_clc              # Job name
 #SBATCH -o cub_clc.out                  # STDOUT
 #SBATCH -e cub_clc.err                  # STDERR
