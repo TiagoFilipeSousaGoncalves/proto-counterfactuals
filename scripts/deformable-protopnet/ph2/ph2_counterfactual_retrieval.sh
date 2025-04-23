@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -p gpu_min32gb                     # Partition
-#SBATCH --qos=gpu_min32gb                  # QOS
+#SBATCH -p gpu_min12gb                     # Partition
+#SBATCH --qos=gpu_min12gb                  # QOS
 #SBATCH --job-name=ph2_cntret              # Job name
 #SBATCH -o ph2_cntret.out                  # STDOUT
 #SBATCH -e ph2_cntret.err                  # STDERR
