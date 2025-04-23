@@ -13,8 +13,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "ph2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
     parser.add_argument('--result_dir_list', action="append", type=str, required=True, help="Path to the model results directory(ies).")
-    parser.add_argument("--feature_space", type=str, required=True, choices=["conv_features"], help="Feature space: convolutional features (conv_features).")
-    parser.add_argument("--coherence_metric", type=str, required=True, choices=["fleiss_kappa", "earth_movers_distance"])
+    parser.add_argument('--feature_space', type=str, required=True, choices=["conv_features"], help="Feature space: convolutional features (conv_features).")
+    parser.add_argument('--coherence_metric', type=str, required=True, choices=["fleiss_kappa", "earth_movers_distance"])
     args = parser.parse_args()
 
 
