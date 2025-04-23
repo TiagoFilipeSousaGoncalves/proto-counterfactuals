@@ -9,23 +9,61 @@
 
 echo "PAPILA | Started | Counterfactual Retrieval"
 
+echo "PAPILA | ProtoPNet | Convolution Feature Space"
+python src/protopnet/models_counterfactuals_retrieval.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture densenet121 \
+ --num_workers 0 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/densenet121/2025-03-23_09-59-10/' \
+ --feature_space conv_features
+
+python src/protopnet/models_counterfactuals_retrieval.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture resnet34 \
+ --num_workers 0 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/resnet34/2025-03-23_09-59-09/' \
+ --feature_space conv_features
+
+python src/protopnet/models_counterfactuals_retrieval.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture vgg16 \
+ --num_workers 0 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/vgg16/2025-03-23_15-12-24/' \
+ --feature_space conv_features
 
 
-echo "CUB2002011 | ProtoPNet | Convolution Feature Space"
-python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/densenet121/2023-01-06_12-07-43/ --generate_img_features --feature_space conv_features
-# python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/densenet161/XXX/ --generate_img_features --feature_space conv_features
-python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/resnet34/2022-12-29_19-34-24/ --generate_img_features --feature_space conv_features
-# python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/resnet152/XXX/ --generate_img_features --feature_space conv_features
-python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/vgg16/2022-12-30_22-45-59/ --generate_img_features --feature_space conv_features
-# python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/vgg19/XXX/ --generate_img_features --feature_space conv_features
+echo "PAPILA | ProtoPNet | Prototype Feature Space"
+python src/protopnet/models_counterfactuals_retrieval.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture densenet121 \
+ --num_workers 0 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/densenet121/2025-03-23_09-59-10/' \
+ --feature_space proto_features
 
-echo "CUB2002011 | ProtoPNet | Prototype Feature Space"
-python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture densenet121 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/densenet121/2023-01-06_12-07-43/ --generate_img_features --feature_space proto_features
-# python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture densenet161 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/densenet161/XXX/ --generate_img_features --feature_space proto_features
-python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture resnet34 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/resnet34/2022-12-29_19-34-24/ --generate_img_features --feature_space proto_features
-# python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture resnet152 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/resnet152/XXX/ --generate_img_features --feature_space proto_features
-python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture vgg16 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/vgg16/2022-12-30_22-45-59/ --generate_img_features --feature_space proto_features
-# python code/protopnet/models_counterfactuals_retrieval.py --dataset CUB2002011 --base_architecture vgg19 --num_workers 0 --gpu_id 0 --checkpoint cub2002011/protopnet/vgg19/XXX/ --generate_img_features --feature_space proto_features
+python src/protopnet/models_counterfactuals_retrieval.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture resnet34 \
+ --num_workers 0 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/resnet34/2025-03-23_09-59-09/' \
+ --feature_space proto_features
 
+python src/protopnet/models_counterfactuals_retrieval.py \
+ --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --dataset papila \
+ --base_architecture vgg16 \
+ --num_workers 0 \
+ --gpu_id 0 \
+ --results_dir '/nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/protopnet/vgg16/2025-03-23_15-12-24/' \
+ --feature_space proto_features
 
 echo "CUB2002011 | Finished | Counterfactual Retrieval"
