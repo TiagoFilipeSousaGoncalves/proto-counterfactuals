@@ -8,4 +8,20 @@ version = "0.1.0"
 [tasks]
 
 [dependencies]
-python = ">=3.13.7,<3.14"
+# We need a python version that is compatible with pytorch
+python = ">=3.11,<3.13"
+
+[feature.gpu]
+system-requirements = { cuda = "12.0" }
+[feature.gpu.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu124" }
+
+[feature.cpu.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cpu" }
+
+[environments]
+gpu = { features = ["gpu"] }
+# Make CPU the default environment
+default = { features = ["cpu"] }
