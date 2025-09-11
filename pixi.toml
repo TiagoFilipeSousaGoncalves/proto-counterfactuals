@@ -14,6 +14,9 @@ python = ">=3.11,<3.13"
 [pypi-dependencies]
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu124" }
+torchinfo = ">=1.8.0, <2"
+scikit-learn = ">=1.7.2, <2"
+wandb = ">=0.21.3, <0.22"
 
 [target.osx.pypi-dependencies]
 # OSX has no CUDA support so use the CPU here
