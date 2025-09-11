@@ -1,9 +1,11 @@
 #!/bin/bash
-#SBATCH -p gpu_min32gb                     # Partition
-#SBATCH --qos=gpu_min32gb                       # QOS
-#SBATCH --job-name=cub_d121                 # Job name
-#SBATCH -o cub_d121.out                  # STDOUT
-#SBATCH -e cub_d121.err                  # STDERR
+#SBATCH --partition=gpu     
+#SBATCH --gres=gpu              
+#SBATCH --qos=gpu082112025    
+#SBATCH --mem=12288M                   
+#SBATCH --job-name=cub_d121
+#SBATCH -o cub_d121.out
+#SBATCH -e cub_d121.err
 
 
 
@@ -11,7 +13,7 @@ echo "Started | CUB2002011 | Training"
 
 echo "CUB200211 | Baseline DenseNet121"
 python src/baseline/models_train.py \
- --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
+ --data_dir 'data/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture densenet121 \
  --batchsize 32 \
