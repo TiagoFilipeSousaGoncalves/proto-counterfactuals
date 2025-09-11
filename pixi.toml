@@ -1,8 +1,8 @@
 [workspace]
 authors = ["TiagoFilipeSousaGoncalves <tiago.galves@hotmail.com>"]
-channels = ["conda-forge"]
+channels = ["conda-forge", "https://prefix.dev/conda-forge"]
 name = "protocounterfactuals"
-platforms = ["osx-arm64", "linux-64"]
+platforms = ["osx-arm64", "linux-64", "win-64"]
 version = "0.1.0"
 
 [tasks]
@@ -11,17 +11,11 @@ version = "0.1.0"
 # We need a python version that is compatible with pytorch
 python = ">=3.11,<3.13"
 
-[feature.gpu]
-system-requirements = { cuda = "12.0" }
-[feature.gpu.pypi-dependencies]
+[pypi-dependencies]
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu124" }
 
-[feature.cpu.pypi-dependencies]
+[target.osx.pypi-dependencies]
+# OSX has no CUDA support so use the CPU here
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cpu" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cpu" }
-
-[environments]
-gpu = { features = ["gpu"] }
-# Make CPU the default environment
-default = { features = ["cpu"] }
