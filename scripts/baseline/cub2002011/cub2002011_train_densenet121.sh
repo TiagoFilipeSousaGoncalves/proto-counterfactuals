@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=gpu     
+#SBATCH --partition=fct     
 #SBATCH --gres=gpu              
 #SBATCH --qos=gpu082112025    
 #SBATCH --mem=12288M                   
