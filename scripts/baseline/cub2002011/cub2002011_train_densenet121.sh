@@ -1,6 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=fct     
-#SBATCH --gres=gpu              
+#SBATCH --partition=fct                 
 #SBATCH --qos=gpu082112025    
 #SBATCH --mem=12288M                   
 #SBATCH --job-name=cub_d121
