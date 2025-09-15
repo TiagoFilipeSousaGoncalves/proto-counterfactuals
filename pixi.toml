@@ -11,6 +11,7 @@ version = "0.1.0"
 # We need a python version that is compatible with pytorch
 python = ">=3.11,<3.13"
 tqdm = ">=4.67.1,<5"
+pandas = ">=2.3.2,<3"
 
 [pypi-dependencies]
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
