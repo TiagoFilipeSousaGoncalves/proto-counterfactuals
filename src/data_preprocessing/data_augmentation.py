@@ -95,28 +95,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "ph2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
     parser.add_argument('--data_dir', type=str, required=True, help="Data directory for the dataset.")
-
-    # Parse the arguments
+    parser.add_argument('--n_folds', type=str, required=False, default=5, help="Number of folds for cross-validation (if needed).")
     args = parser.parse_args()
 
-    if args.dataset == "cub2002011":
-        source_dir = os.path.join(args.data_dir, "processed", "train", "cropped")
+    # Source directory
+    for fold in range(int(args.n_folds)):
+        if args.dataset == "cub2002011":
+            source_dir = os.path.join(args.data_dir, "processed", f"kf_{fold}", "train", "cropped")
 
-    elif args.dataset == "STANFORDCARS":
-        # STANFORDCARS
-        # STANFORDCARS_SRC_DIR = "data/stanfordcars/cars_train/images_cropped"
-        # augment(source_dir=STANFORDCARS_SRC_DIR)
-        pass
+        elif args.dataset == "STANFORDCARS":
+            # STANFORDCARS
+            # STANFORDCARS_SRC_DIR = "data/stanfordcars/cars_train/images_cropped"
+            # augment(source_dir=STANFORDCARS_SRC_DIR)
+            pass
 
-    elif args.dataset == "ph2":
-        source_dir = os.path.join(args.data_dir, "processed", "images", "train", "cropped")
+        elif args.dataset == "ph2":
+            source_dir = os.path.join(args.data_dir, "processed", "images", "train", "cropped")
 
-    elif args.dataset == "papila":
-        source_dir = os.path.join(args.data_dir, "processed", "splits", "train")
+        elif args.dataset == "papila":
+            source_dir = os.path.join(args.data_dir, "processed", "splits", "train")
 
-    else:
-        pass
+        else:
+            pass
 
-    # Run data augmentation
-    assert os.path.exists(source_dir)
-    augment(source_dir=source_dir)
+        # Run data augmentation
+        assert os.path.exists(source_dir)
+        augment(source_dir=source_dir)
