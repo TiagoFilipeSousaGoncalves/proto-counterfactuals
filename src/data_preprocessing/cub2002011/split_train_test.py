@@ -27,13 +27,6 @@ if __name__ == "__main__":
     # Directories and Files
     data_dir = args.data_dir
 
-    # TODO: Remove this uppon testing
-    # for directory in ["train", "val", "test"]:
-    #     if not os.path.isdir(os.path.join(data_dir, "processed", directory, "cropped")):
-    #         os.makedirs(os.path.join(data_dir, "processed", directory, "cropped"))
-
-
-
     # Open images.txt
     images = np.genfromtxt(os.path.join(data_dir, "CUB_200_2011", "images.txt"), dtype=str)
     # print(images)

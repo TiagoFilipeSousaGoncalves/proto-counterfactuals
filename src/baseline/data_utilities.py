@@ -192,7 +192,7 @@ class STANFORDCARSDataset(Dataset):
 
 # CUB2002011Dataset: Dataset Class
 class CUB2002011Dataset(Dataset):
-    def __init__(self, data_path, split="train", augmented=True, transform=None):
+    def __init__(self, data_path, fold=0, split="train", augmented=True, transform=None):
 
         """
         Args:
@@ -202,8 +202,9 @@ class CUB2002011Dataset(Dataset):
         """
 
         assert split in ("train", "val", "test")
+        self.fold = fold
         self.split = split
-        split_path = os.path.join(data_path, "processed", split, "cropped")
+        split_path = os.path.join(data_path, "processed", f"kf_{fold}", split, "cropped")
 
         if augmented:
             assert split == "train"
@@ -280,7 +281,7 @@ class CUB2002011Dataset(Dataset):
 
         # Get images
         img_path = self.images_fpaths[idx]
-        image = Image.open(os.path.join(self.data_path, "processed", self.split, "cropped", img_path)).convert('RGB')
+        image = Image.open(os.path.join(self.data_path, "processed", f"kf_{self.fold}", self.split, "cropped", img_path)).convert('RGB')
 
         # Get labels
         folder = img_path.split("/")[0]

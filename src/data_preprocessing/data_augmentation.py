@@ -95,11 +95,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True, choices=["cub2002011", "papila", "ph2", "STANFORDCARS"], help="Data set: CUB2002011, PAPILA, PH2, STANFORDCARS.")
     parser.add_argument('--data_dir', type=str, required=True, help="Data directory for the dataset.")
-    parser.add_argument('--n_folds', type=str, required=False, default=5, help="Number of folds for cross-validation (if needed).")
+    parser.add_argument('--folds', nargs='+', type=int, required=True, help="Folds for cross-validation which we want to augment.")
     args = parser.parse_args()
 
+
     # Source directory
-    for fold in range(int(args.n_folds)):
+    for fold in args.folds:
         if args.dataset == "cub2002011":
             source_dir = os.path.join(args.data_dir, "processed", f"kf_{fold}", "train", "cropped")
 
