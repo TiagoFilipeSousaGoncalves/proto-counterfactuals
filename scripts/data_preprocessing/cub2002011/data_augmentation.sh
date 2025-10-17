@@ -10,7 +10,7 @@ echo 'Started data-augmentation of CUB2002011.'
 
 python src/data_preprocessing/data_augmentation.py \
  --dataset 'cub2002011' \
- --data_dir '/users5/cpca082112025/tgoncalves/proto-counterfactuals/data/cub2002011-dataset' \
- --folds 0
+ --data_dir '/users5/cpca082112025/shared/datasets/cub2002011-dataset' \
+ --folds 0 1 2 3 4
 
 echo 'Finished data-augmentation of CUB2002011.'

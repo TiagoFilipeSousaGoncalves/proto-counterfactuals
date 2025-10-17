@@ -9,6 +9,7 @@
 echo 'Started split crop-images of CUB2002011.'
 
 python src/data_preprocessing/cub2002011/crop_images.py \
- --data_dir '/users5/cpca082112025/tgoncalves/proto-counterfactuals/data/cub2002011-dataset'
+ --data_dir '/users5/cpca082112025/shared/datasets/cub2002011-dataset' \
+ --n_folds 5
 
 echo 'Finished split crop-images of CUB2002011.'
