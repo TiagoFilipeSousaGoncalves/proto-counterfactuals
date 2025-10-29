@@ -12,7 +12,7 @@ echo "Started | CUB2002011 | Training"
 
 echo "CUB200211 | Baseline DenseNet121"
 python src/baseline/models_train.py \
- --data_dir '/nas-ctm01/datasets/public/cub2002011-dataset' \
+ --data_dir '/users5/cpca082112025/shared/datasets/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture vgg16 \
  --batchsize 32 \
