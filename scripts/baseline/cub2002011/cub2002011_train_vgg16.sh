@@ -1,9 +1,10 @@
 #!/bin/bash
-#SBATCH -p gpu_min32gb                     # Partition
-#SBATCH --qos=gpu_min32gb                       # QOS
-#SBATCH --job-name=cub_v16                # Job name
-#SBATCH -o cub_v16.out                  # STDOUT
-#SBATCH -e cubcub_v16_d121.err                  # STDERR
+#SBATCH --partition=gpu                 
+#SBATCH --qos=gpu082112025    
+#SBATCH --mem=12288M  
+#SBATCH --job-name=cub_v16
+#SBATCH -o cub_v16.out
+#SBATCH -e cubcub_v16_d121.err
 
 
 
@@ -15,7 +16,9 @@ python src/baseline/models_train.py \
  --dataset cub2002011 \
  --base_architecture vgg16 \
  --batchsize 32 \
- --num_workers 4 \
- --gpu_id 0
+ --num_workers 0 \
+ --gpu_id 0 \
+ --folds 0 \
+ --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
 
 echo "CUB2002011 | FINISHED"
