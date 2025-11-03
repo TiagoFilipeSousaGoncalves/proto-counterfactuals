@@ -18,7 +18,7 @@ python src/baseline/models_train.py \
  --batchsize 64 \
  --num_workers 0 \
  --gpu_id 0 \
- --folds 0 \
+ --folds 1 \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
 
 echo "CUB2002011 | FINISHED"
