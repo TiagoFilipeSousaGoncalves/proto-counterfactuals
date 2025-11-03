@@ -15,7 +15,7 @@ python src/baseline/models_train.py \
  --data_dir '/users5/cpca082112025/shared/datasets/cub2002011-dataset' \
  --dataset cub2002011 \
  --base_architecture vgg16 \
- --batchsize 32 \
+ --batchsize 16 \
  --num_workers 0 \
  --gpu_id 0 \
  --folds 0 \
