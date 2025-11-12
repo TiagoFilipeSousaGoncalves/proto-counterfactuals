@@ -4,7 +4,7 @@
 #SBATCH --mem=12288M  
 #SBATCH --job-name=cub_v16
 #SBATCH -o cub_v16.out
-#SBATCH -e cubcub_v16_d121.err
+#SBATCH -e cub_v16.err
 
 
 
