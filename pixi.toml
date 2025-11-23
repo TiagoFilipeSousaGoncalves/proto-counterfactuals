@@ -20,6 +20,7 @@ torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/
 torchinfo = ">=1.8.0, <2"
 scikit-learn = ">=1.7.2, <2"
 wandb = ">=0.21.3, <0.22"
+opencv-contrib-python-headless = ">=4.11.0.86, <5"
 
 [target.osx.pypi-dependencies]
 # OSX has no CUDA support so use the CPU here
