@@ -23,6 +23,7 @@ scikit-learn = ">=1.7.2, <2"
 wandb = ">=0.21.3, <0.22"
 opencv-contrib-python-headless = ">=4.11.0.86, <5"
 scikit-image = ">=0.25.2, <0.26"
+openpyxl = ">=3.1.5, <4"
 
 [target.osx.pypi-dependencies]
 # OSX has no CUDA support so use the CPU here
