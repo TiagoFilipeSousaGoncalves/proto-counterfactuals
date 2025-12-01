@@ -96,16 +96,16 @@ if __name__ == "__main__":
             'images_classes': [y[i] for i in test_index]
         }
     for fold in range(args.n_folds):
-        X = trainval_dict[fold]['image_fnames']
-        y = trainval_dict[fold]['images_classes']
-        for _, (train_index, test_index) in enumerate(sss_train_val.split(X, y)):
+        X_ = trainval_dict[fold]['image_fnames']
+        y_ = trainval_dict[fold]['images_classes']
+        for _, (train_index, test_index) in enumerate(sss_train_val.split(X_, y_)):
             train_dict[fold] = {
-                'image_fnames': [X[i] for i in train_index],
-                'images_classes': [y[i] for i in train_index]
+                'image_fnames': [X_[i] for i in train_index],
+                'images_classes': [y_[i] for i in train_index]
             }
             val_dict[fold] = {
-                'image_fnames': [X[i] for i in test_index],
-                'images_classes': [y[i] for i in test_index]
+                'image_fnames': [X_[i] for i in test_index],
+                'images_classes': [y_[i] for i in test_index]
             }
 
 
