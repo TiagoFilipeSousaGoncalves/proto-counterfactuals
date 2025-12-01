@@ -1,6 +1,7 @@
 #!/bin/bash
-#SBATCH -p cpu_8cores                     # Partition
-#SBATCH --qos=cpu_8cores                       # QOS
+#SBATCH --partition=fct                 
+#SBATCH --qos=gpu082112025    
+#SBATCH --mem=12288M  
 #SBATCH --job-name=pla-p-crp                 # Job name
 #SBATCH -o pla-p-da.out                  # STDOUT
 #SBATCH -e pla-p-da.err                  # STDERR
@@ -9,6 +10,6 @@ echo 'Started data-augmentation of PAPILA.'
 
 python src/data_preprocessing/data_augmentation.py \
  --dataset 'papila' \
- --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images'
+ --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images'
 
 echo 'Finished data-augmentation of PAPILA.'

@@ -114,7 +114,7 @@ if __name__ == "__main__":
             source_dir = os.path.join(args.data_dir, "processed", "images", "train", "cropped")
 
         elif args.dataset == "papila":
-            source_dir = os.path.join(args.data_dir, "processed", "splits", "train")
+            source_dir = os.path.join(args.data_dir, "processed", f"kf_{fold}", "splits", "train")
 
         else:
             pass
