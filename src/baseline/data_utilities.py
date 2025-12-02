@@ -449,7 +449,7 @@ class PH2Dataset(Dataset):
 
 # PAPILADataset: Dataset Class
 class PAPILADataset(Dataset):
-    def __init__(self, data_path, subset, cropped, augmented, transform=None):
+    def __init__(self, data_path, fold, subset, cropped, augmented, transform=None):
 
         """
         Args:
@@ -467,7 +467,7 @@ class PAPILADataset(Dataset):
 
         # Select if you want the cropped version or not
         if cropped:
-            self.images_dir = os.path.join(data_path, "processed", "splits", subset)
+            self.images_dir = os.path.join(data_path, "processed", f"kf_{fold}", "splits", subset)
         
         else:
             pass
