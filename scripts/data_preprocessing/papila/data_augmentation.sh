@@ -11,6 +11,6 @@ echo 'Started data-augmentation of PAPILA.'
 python src/data_preprocessing/data_augmentation.py \
  --dataset 'papila' \
  --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images' \
-  --folds 4
+ --folds 4
 
 echo 'Finished data-augmentation of PAPILA.'
