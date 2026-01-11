@@ -1,11 +1,10 @@
 # Imports
 import argparse
 import os
-import shutil
 import pandas as pd
 
 # Sklearn Imports
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedShuffleSplit
 
 
 
@@ -18,21 +17,14 @@ if __name__ == "__main__":
     parser.add_argument('--train_size', type=float, default=0.70, help="Set the train size (%).")
     parser.add_argument('--val_size', type=float, default=0.10, help="Set the validation size (%)")
     parser.add_argument('--test_size', type=float, default=0.20, help="Set the test size (%).")
+    parser.add_argument('--n_folds', type=int, default=5, help="Set the number of folds for cross-validation.")
     args = parser.parse_args()
 
-    data_dir = args.data_dir
 
-    # Open PH2 XLSX file
-    ph2_df = pd.read_excel(os.path.join(data_dir, "metadata", "PH2_dataset.xlsx"), skiprows=[i for i in range(12)])
-    # print(ph2_df.head())
-    # print(ph2_df.columns)
 
-    # Get only classification columns
+    # Load and process the PH2 metadata file
+    ph2_df = pd.read_excel(os.path.join(args.data_dir, "metadata", "PH2_dataset.xlsx"), skiprows=[i for i in range(12)])
     ph2_df = ph2_df.copy()[['Image Name', 'Common Nevus', 'Atypical Nevus', 'Melanoma']]
-    # print(ph2_df.head())
-
-
-    # Add an extra column
     diagnosis_dict = {
         "Common Nevus":0,
         "Atypical Nevus":1,
@@ -41,85 +33,105 @@ if __name__ == "__main__":
 
     # Add column "Label"
     ph2_df["Label"] = -1
-    # print(ph2_df.head())
-
 
     # Go through the DataFrame
     ph2_df = ph2_df.copy().reset_index()
-
     for index, row in ph2_df.iterrows():
-        
+
         # Get values
         if row['Common Nevus'] == "X":
             ph2_df.iloc[index, -1] = diagnosis_dict['Common Nevus']
 
         elif row['Atypical Nevus'] == "X":
             ph2_df.iloc[index, -1] = diagnosis_dict['Atypical Nevus']
-        
+
         elif row['Melanoma'] == "X":
             ph2_df.iloc[index, -1] = diagnosis_dict['Melanoma']
-        
-
-        # print(ph2_df.iloc[index])
-
-
-
-    # Create a directory for processed data
-    processed_images_dir = os.path.join(args.data_dir, "processed")
-    if not os.path.isdir(processed_images_dir):
-        os.makedirs(processed_images_dir)
 
 
 
     # Get X, y
     X, y = ph2_df.copy()['Image Name'].values, ph2_df.copy()['Label'].values
-    # print(X, y)
 
-    # Split into train and test
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=42)
+    # Apply 5-fold cross validation split strategy
     assert (args.train_size + args.val_size + args.test_size) == 1.0
-    X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, train_size=(args.train_size + args.val_size), random_state=args.seed, stratify=y)
-    X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, train_size=(args.train_size/(args.train_size + args.val_size)), random_state=args.seed, stratify=y_train_val)
-    assert round(len(X_train)/len(X), 2) == args.train_size
-    assert round(len(X_val)/len(X), 2) == args.val_size
-    assert round(len(X_test)/len(X), 2) == args.test_size
-    # print(X_train, y_train)
-    # print(X_test, y_test)
 
-    # Save this into .CSVs
-    X_train_df = pd.DataFrame.from_dict({'train':list(X_train)})
-    X_train_df.to_csv(os.path.join(data_dir, "processed", "train.csv"), index=False)
+    # Create dictionaries to save the splits
+    trainval_dict = dict()
+    test_dict = dict()
+    train_dict = dict()
+    val_dict = dict()
 
-    X_val_df = pd.DataFrame.from_dict({'val':list(X_val)})
-    X_val_df.to_csv(os.path.join(data_dir, "processed", "val.csv"), index=False)
+    sss_trainval_test = StratifiedShuffleSplit(
+        n_splits=args.n_folds,
+        train_size=args.train_size + args.val_size,
+        random_state=args.seed
+    )
+    sss_train_val = StratifiedShuffleSplit(
+        n_splits=1,
+        train_size=(args.train_size / (args.train_size + args.val_size)),
+        random_state=args.seed
+    )
 
-    X_test_df = pd.DataFrame.from_dict({'test':list(X_test)})
-    X_test_df.to_csv(os.path.join(data_dir, "processed", "test.csv"), index=False)
+    for fold, (train_index, test_index) in enumerate(sss_trainval_test.split(X, y)):
+        trainval_dict[fold] = {
+            'image_name': [X[i] for i in train_index],
+            'image_label': [y[i] for i in train_index]
+        }
+        test_dict[fold] = {
+            'image_name': [X[i] for i in test_index],
+            'image_label': [y[i] for i in test_index]
+        }
+    for fold in range(args.n_folds):
+        X_ = trainval_dict[fold]['image_name']
+        y_ = trainval_dict[fold]['image_label']
+        for _, (train_index, test_index) in enumerate(sss_train_val.split(X_, y_)):
+            train_dict[fold] = {
+                'image_name': [X_[i] for i in train_index],
+                'image_label': [y_[i] for i in train_index]
+            }
+            val_dict[fold] = {
+                'image_name': [X_[i] for i in test_index],
+                'image_label': [y_[i] for i in test_index]
+            }
 
 
-    # Create a directory for processed data
-    processed_images_dir = os.path.join(args.data_dir, "processed", "images")
-    if not os.path.isdir(processed_images_dir):
-        os.makedirs(processed_images_dir)
+    # Create a CSV file with the data splits and save it into the processed folder
+    data_splits = {
+        'image_name':list(),
+        'image_label':list(),
+        'split':list(),
+        'fold':list()
+    }
+
+    # Go through each fold
+    for fold in range(args.n_folds):
+        assert len(X) == len(train_dict[fold]['image_name']) + len(val_dict[fold]['image_name']) + len(test_dict[fold]['image_name'])
+
+        # Create fold directory
+        os.makedirs(os.path.join(args.data_dir, "processed"), exist_ok=True)
 
 
-    # Create a directory for each data split and split images among folders
-    for split, image_names in zip(["train", "val", "test"], [X_train, X_val, X_test]):
-        
-        # Get the split path
-        split_dir = os.path.join(processed_images_dir, split, "raw")
+        # Populate data_splits dictionary
+        # Train
+        data_splits['image_name'].extend(train_dict[fold]['image_name'])
+        data_splits['image_label'].extend(train_dict[fold]['image_label'])
+        data_splits['split'].extend(['train'] * len(train_dict[fold]['image_name']))
+        data_splits['fold'].extend([fold] * len(train_dict[fold]['image_name']))
+
+        # Val
+        data_splits['image_name'].extend(val_dict[fold]['image_name'])
+        data_splits['image_label'].extend(val_dict[fold]['image_label'])
+        data_splits['split'].extend(['val'] * len(val_dict[fold]['image_name']))
+        data_splits['fold'].extend([fold] * len(val_dict[fold]['image_name']))
+
+        # Test
+        data_splits['image_name'].extend(test_dict[fold]['image_name'])
+        data_splits['image_label'].extend(test_dict[fold]['image_label'])
+        data_splits['split'].extend(['test'] * len(test_dict[fold]['image_name']))
+        data_splits['fold'].extend([fold] * len(test_dict[fold]['image_name']))
 
 
-        # Create directory
-        if not os.path.isdir(split_dir):
-            os.makedirs(split_dir)
-
-        # print(split, image_names)
-
-        # Go through the image names
-        for img_name in image_names:
-
-            # Copy folder to the split directory
-            source = os.path.join(args.data_dir, "images", img_name)
-            destination = os.path.join(split_dir, img_name)
-            _ = shutil.copytree(source, destination)
+    # Save a dataframe with the splits
+    splits_df = pd.DataFrame.from_dict(data_splits)
+    splits_df.to_csv(os.path.join(args.data_dir, "processed", "data_splits.csv"), index=False)
