@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --partition=fct                 
-#SBATCH --qos=gpu082112025    
-#SBATCH --mem=12288M                   
+#SBATCH --partition=fct
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
 #SBATCH --job-name=cub-p-tts                 # Job name
 #SBATCH -o cub2002011_tts.out                  # STDOUT
 #SBATCH -e cub2002011_tts.err                  # STDERR

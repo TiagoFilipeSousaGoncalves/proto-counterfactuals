@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     # Open images.txt
     images = np.genfromtxt(os.path.join(data_dir, "CUB_200_2011", "images.txt"), dtype=str)
-    # print(images)
+
 
     # Create a new list with the ID's and classes
     images_ids = list()
@@ -89,66 +89,43 @@ if __name__ == "__main__":
                 'images_classes': [y[i] for i in test_index]
             }
 
-    # TODO: Remove after testing
-    # X_train_val, X_test, y_train_val, y_test = train_test_split(image_fnames, images_classes, train_size=(args.train_size + args.val_size), random_state=args.seed, stratify=images_classes)
-    # X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, train_size=(args.train_size/(args.train_size + args.val_size)), random_state=args.seed, stratify=y_train_val)
-    # assert round(len(X_train)/len(image_fnames), 2) == args.train_size
-    # assert round(len(X_val)/len(image_fnames), 2) == args.val_size
-    # assert round(len(X_test)/len(image_fnames), 2) == args.test_size
 
+    # Create a CSV file with the data splits and save it into the processed folder
+    data_splits = {
+        'image_fnames':list(),
+        'images_classes':list(),
+        'split':list(),
+        'fold':list()
+    }
 
     # Go through each fold
     for fold in range(args.n_folds):
         assert len(image_fnames) == len(train_dict[fold]['image_fnames']) + len(val_dict[fold]['image_fnames']) + len(test_dict[fold]['image_fnames'])
 
         # Create fold directory
-        os.makedirs(os.path.join(data_dir, "processed", f"kf_{fold}"), exist_ok=True)
+        os.makedirs(os.path.join(data_dir, "processed"), exist_ok=True)
 
-        # Get the data splits
-        X_train = train_dict[fold]['image_fnames']
-        X_val = val_dict[fold]['image_fnames']
-        X_test = test_dict[fold]['image_fnames']
+        # Populate data_splits dictionary
+        # Train
+        data_splits['image_fnames'].extend(train_dict[fold]['image_fnames'])
+        data_splits['images_classes'].extend(train_dict[fold]['images_classes'])
+        data_splits['split'].extend(['train'] * len(train_dict[fold]['image_fnames']))
+        data_splits['fold'].extend([fold] * len(train_dict[fold]['image_fnames']))
 
-        # Save this into .CSVs
-        X_train_df = pd.DataFrame.from_dict({'train':list(X_train)})
-        X_train_df.to_csv(os.path.join(data_dir, "processed", f"kf_{fold}", "train.csv"), index=False)
+        # Val
+        data_splits['image_fnames'].extend(val_dict[fold]['image_fnames'])
+        data_splits['images_classes'].extend(val_dict[fold]['images_classes'])
+        data_splits['split'].extend(['val'] * len(val_dict[fold]['image_fnames']))
+        data_splits['fold'].extend([fold] * len(val_dict[fold]['image_fnames']))
 
-        X_val_df = pd.DataFrame.from_dict({'val':list(X_val)})
-        X_val_df.to_csv(os.path.join(data_dir, "processed", f"kf_{fold}", "val.csv"), index=False)
+        # Test
+        data_splits['image_fnames'].extend(test_dict[fold]['image_fnames'])
+        data_splits['images_classes'].extend(test_dict[fold]['images_classes'])
+        data_splits['split'].extend(['test'] * len(test_dict[fold]['image_fnames']))
+        data_splits['fold'].extend([fold] * len(test_dict[fold]['image_fnames']))
 
-        X_test_df = pd.DataFrame.from_dict({'test':list(X_test)})
-        X_test_df.to_csv(os.path.join(data_dir, "processed", f"kf_{fold}", "test.csv"), index=False)
 
 
-        # Let's split the data
-        for split_idx, data_split in enumerate([X_train, X_val, X_test]):
-            for image_fname in tqdm.tqdm(data_split):
-                # print(image_fname)
-
-                # Check if image is for train or test
-                if split_idx == 0:
-                    split_dir = "train"
-                elif split_idx == 1:
-                    split_dir = "val"
-                else:
-                    split_dir = "test"
-                
-
-                # Create a folder for the complete images
-                os.makedirs(os.path.join(data_dir, "processed", f"kf_{fold}", split_dir, "images"), exist_ok=True)
-                
-
-                # Get image class folder
-                img_class_folder = image_fname.split("/")[0]
-                # print(img_class_folder)
-
-                # Create this folder (if it does not exist)
-                os.makedirs(os.path.join(data_dir, "processed", f"kf_{fold}", split_dir, "images", img_class_folder), exist_ok=True)
-
-                
-                # Copy this image to this split folder
-                src = os.path.join(data_dir, "CUB_200_2011", "images", image_fname)
-                dst = os.path.join(data_dir, "processed", f"kf_{fold}", split_dir, "images", image_fname)
-                # print(src)
-                # print(dst)
-                shutil.copy(src, dst)
+    # Save a dataframe with the splits
+    splits_df = pd.DataFrame.from_dict(data_splits)
+    splits_df.to_csv(os.path.join(data_dir, "processed", "data_splits.csv"), index=False)
