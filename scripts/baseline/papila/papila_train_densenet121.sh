@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --partition=gpu                 
-#SBATCH --qos=gpu082112025    
-#SBATCH --mem=12288M  
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
 #SBATCH --job-name=pla_d121                 # Job name
 #SBATCH -o pla_d121.out                  # STDOUT
 #SBATCH -e pla_d121.err                  # STDERR

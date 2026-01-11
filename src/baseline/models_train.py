@@ -225,9 +225,7 @@ if __name__ == "__main__":
             train_set = PAPILADataset(
                 data_path=DATA_DIR,
                 fold=fold,
-                subset="train",
-                cropped=True,
-                augmented=True,
+                split="train",
                 transform=train_transforms
             )
 
@@ -235,9 +233,7 @@ if __name__ == "__main__":
             val_set = PAPILADataset(
                 data_path=DATA_DIR,
                 fold=fold,
-                subset="val",
-                cropped=True,
-                augmented=False,
+                split="val",
                 transform=val_transforms
             )
 

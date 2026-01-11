@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import scipy.io as sio
 from PIL import Image
+import cv2
+import skimage.draw as drw
 
 # PyTorch Imports
 import torch
@@ -287,114 +289,32 @@ class PH2Dataset(Dataset):
 
 # PAPILADataset: Dataset Class
 class PAPILADataset(Dataset):
-    def __init__(self, data_path, fold, subset, cropped, augmented, transform=None):
+    def __init__(self, data_path, fold=0, split='train', transform=None):
 
         """
         Args:
             data_path (string): Data directory.
-            cropped (boolean): If we want the cropped version of the data set.
+            fold (int): Fold number.
+            split (string): Data split ('train', 'val', 'test').
             transform (callable, optional): Optional transform to be applied on a sample.
         """
 
 
-        assert subset in ("train", "val", "test"), "Subset must be in ('train', 'val', 'test')."
+        assert split in ("train", "val", "test"), "Split must be in ('train', 'val', 'test')."
 
-        if augmented:
-            assert subset == "train"
-
-
-        # Select if you want the cropped version or not
-        if cropped:
-            self.images_dir = os.path.join(data_path, "processed", f"kf_{fold}", "splits", subset)
-
-        else:
-            pass
-
-
-        # Get image names
-        image_names = [i for i in os.listdir(self.images_dir) if not i.startswith('.')]
-
-
-
-        # Read diagnostic labels
-        labels, _, patID = self.get_diagnosis(
-            patient_data_od_path=os.path.join(data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ClinicalData", "patient_data_od.xlsx"),
-            patient_data_os_path=os.path.join(data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ClinicalData", "patient_data_os.xlsx")
-        )
-
-
-        # Get X, y
-        # Get the unique patient indices
-        _, unique_indices, _, _ = np.unique(ar=patID,  return_index=True, return_inverse=True, return_counts=True)
-        # print(unique_indices)
-
-
-        # Get X and y
-        X = patID[unique_indices]
-        y = labels[unique_indices]
-        # print(X, y)
-
-
-        # Create temporary variables with image names and labels
-        papila_images, papila_labels = list(), list()
-
-
-        # Go through each patient ID
-        for p_id, p_label in zip(X, y):
-
-            # Get folder name for the image of the right eye
-            right_img = "RET%03dOD" % p_id
-            papila_images.append(right_img)
-            papila_labels.append(p_label)
-
-
-            # Get the folder name for the image of the left eye
-            left_img = "RET%03dOS" % p_id
-            papila_images.append(left_img)
-            papila_labels.append(p_label)
-
-
-        # Create the variables we will use to create the dataset
-        papila_dataset_imgs, papila_dataset_labels = list(), list()
-
-        # Iterate through X and y
-        for img_name, img_label in zip(papila_images, papila_labels):
-
-            # If it exists in our directory, append it to the dataset
-            if img_name in image_names:
-
-                # Check augmented files
-                if augmented:
-                    augmented_files = [i for i in os.listdir(os.path.join(self.images_dir, img_name, "augmented"))]
-                    augmented_files = [i for i in augmented_files if not i.startswith('.')]
-
-
-                    # Iterate through these files
-                    for aug_img in augmented_files:
-                        papila_dataset_imgs.append(os.path.join(self.images_dir, img_name, "augmented", aug_img))
-                        papila_dataset_labels.append(img_label)
-
-                else:
-                    papila_dataset_imgs.append(os.path.join(self.images_dir, img_name, f"{img_name}.png"))
-                    papila_dataset_labels.append(img_label)
-
-
-        # Create final variables
-        self.images_names = papila_dataset_imgs.copy()
-        self.images_labels = papila_dataset_labels.copy()
-        self.cropped = cropped
-        self.augmented = augmented
-
+        # Get the path of the split
+        splits_df = pd.read_csv(os.path.join(data_path, "processed", "data_splits.csv"))
+        dataset = splits_df[(splits_df['fold'] == fold) & (splits_df['split'] == split)]
 
         # Labels Dictionary
         labels_dict = dict()
-        for img, label in zip(papila_dataset_imgs.copy(), papila_dataset_labels.copy()):
+        for img, label in zip(dataset["images_fnames"].values,dataset["images_labels"].values):
             labels_dict[img] = label
 
+
+        self.data_path = data_path
+        self.dataset = dataset
         self.labels_dict = labels_dict
-
-
-        # Transforms
         self.transform = transform
 
 
@@ -404,28 +324,23 @@ class PAPILADataset(Dataset):
 
     # Method: __len__
     def __len__(self):
-        return len(self.images_names)
+        return len(self.dataset)
 
 
 
     # Method: __getitem__
     def __getitem__(self, idx):
+
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-
-        # Get images
-        if self.cropped:
-            img_path = self.images_names[idx]
-        else:
-            pass
-
-
-        # Open image
-        image = Image.open(img_path).convert('RGB')
+        # Load and crop image
+        image_name = self.dataset.iloc[idx]['images_fnames']
+        image = Image.open(os.path.join(self.data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "FundusImages", image_name))
+        image = self.crop_image(image=image, image_name=image_name)
 
         # Get labels
-        label = self.images_labels[idx]
+        label = self.dataset.iloc[idx]['images_labels']
 
         # Apply transformation
         if self.transform:
@@ -434,50 +349,92 @@ class PAPILADataset(Dataset):
         return image, label
 
 
+    # Method: Crop image
+    def crop_image(self, image, image_name):
 
-    # Function: Prepare the Data Frame to be readable
-    def _fix_df(self, df):
+        # Convert to NumPy
+        npy_img = np.array(image)
+
+        # Get ROIs (We use both expert annotations)
+        cup_path1 = os.path.join(self.data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ExpertsSegmentations", "Contours", image_name.split(".")[0] + "_cup_exp1.txt")
+        disc_path1 = os.path.join(self.data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ExpertsSegmentations", "Contours", image_name.split(".")[0] + "_disc_exp1.txt")
+        cup_path2 = os.path.join(self.data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ExpertsSegmentations", "Contours", image_name.split(".")[0] + "_cup_exp2.txt")
+        disc_path2 = os.path.join(self.data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ExpertsSegmentations", "Contours", image_name.split(".")[0] + "_disc_exp2.txt")
+
+
+        # Generate ROIs
+        cup_mask1 = self.contour_to_mask(cup_path1, npy_img.shape)
+        disc_mask1 = self.contour_to_mask(disc_path1, npy_img.shape)
+        cup_mask2 = self.contour_to_mask(cup_path2, npy_img.shape)
+        disc_mask2 = self.contour_to_mask(disc_path2, npy_img.shape)
+
+        # Generate final mask
+        final_mask = np.zeros_like(cup_mask1)
+        final_mask[cup_mask1==1] = 1
+        final_mask[disc_mask1==1] = 1
+        final_mask[cup_mask2==1] = 1
+        final_mask[disc_mask2==1] = 1
+        # final_mask *= 255
+
+        # Some debug operations
+        # image = apply_mask(image=npy_img, mask=final_mask, color=(1.0, 1.0, 1.0))
+        # plt.imshow(image, cmap="gray")
+        # plt.show()
+
+
+        # We have to be sure we are working with binary image
+        ret, binary = cv2.threshold(final_mask*255, 127, 255, cv2.THRESH_BINARY)
+        # plt.imshow(binary, cmap="gray")
+        # plt.show()
+
+        # Get countours of this image
+        contours, hierarchy = cv2.findContours(binary,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+
+        # Extract bounding box from mask
+        x, y, w, h = cv2.boundingRect(contours[0])
+
+
+        # Crop image
+        crop_img = image.crop((x, y, x+w, y+h))
+        # plt.imshow(np.array(crop_img), cmap="gray")
+        # plt.show()
+
+
+        # Some debug tests using OpenCV
+        # crop_img = npy_img[y:y+h, x:x+w]
+        # plt.imshow(np.array(crop_img), cmap="gray")
+        # plt.show()
+
+        return crop_img
+
+    # Function: Return mask given a contour and the shape of image
+    # contour_to_mask() and apply_mask() functions taken from https://github.com/matterport/Mask_RCNN
+    def contour_to_mask(self, contour_txt_path, img_shape):
         """
-        Prepare the Data Frame to be readable
+        Return mask given a contour and the shape of image
         """
 
-        df_new = df.drop(['ID'], axis=0)
-        df_new.columns = df_new.iloc[0,:]
-        df_new.drop([np.nan], axis=0, inplace=True)
-        df_new.columns.name = 'ID'
+        # Get coordinates
+        c = np.loadtxt(contour_txt_path)
 
-        return df_new
+        # Generate mask
+        mask = np.zeros(img_shape[:-1], dtype=np.uint8)
+        rr, cc = drw.polygon(c[:,1], c[:,0])
+        mask[rr, cc] = 1
+
+        return mask
 
 
-    # Function: Read clinical data
-    def read_clinical_data(self, patient_data_od_path, patient_data_os_path):
+
+    # Function: Apply the given mask to the image
+    def apply_mask(self, image, mask, color, alpha=0.5):
         """
-        Return excel data as pandas Data Frame
-        """
-
-        df_od = pd.read_excel(patient_data_od_path, index_col=[0])
-        df_os = pd.read_excel(patient_data_os_path, index_col=[0])
-
-
-        return self._fix_df(df=df_od), self._fix_df(df=df_os)
-
-
-
-    # Function: Return three arrays of shape 488 with the diagnosis tag, eye ID (od, os) and patient ID
-    def get_diagnosis(self, patient_data_od_path, patient_data_os_path):
-        """
-        Return three arrays of shape 488 with the diagnosis tag, eye ID (od, os)
-        and patient ID
+        Apply the given mask to the image.
         """
 
-        df_od, df_os = self.read_clinical_data(patient_data_od_path, patient_data_os_path)
 
-        index_od = np.ones(df_od.iloc[:,2].values.shape, dtype=np.int8)
-        index_os = np.zeros(df_os.iloc[:,2].values.shape, dtype=np.int8)
-
-        eyeID = np.array(list(zip(index_od, index_os))).reshape(-1)
-        tag = np.array(list(zip(df_od.iloc[:,2].values, df_os.iloc[:,2].values))).reshape(-1)
-        patID = np.array([[int(i.replace('#', ''))] * 2 for i in df_od.index]).reshape(-1)
+        for c in range(3):
+            image[:, :, c] = np.where(mask == 1, image[:, :, c] * (1 - alpha) + alpha * color[c] * 255, image[:, :, c])
 
 
-        return tag, eyeID, patID
+        return image
