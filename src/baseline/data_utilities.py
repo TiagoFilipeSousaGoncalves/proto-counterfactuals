@@ -14,11 +14,11 @@ from torch.utils.data import Dataset
 
 # Function: Resize images
 def resize_images(datapath, newpath, newheight=512):
-    
+
     # Create new directories (if necessary)
     if not os.path.exists(newpath):
         os.makedirs(newpath)
-    
+
 
     # Go through data directory and generate new (resized) images
     for f in tqdm(os.listdir(datapath)):
@@ -35,164 +35,9 @@ def resize_images(datapath, newpath, newheight=512):
 
 
 
-# Dataset
-# STANFORDCARSDataset: Dataset Class
-class STANFORDCARSDataset(Dataset):
-    def __init__(self, data_path, cars_subset, augmented, cropped=True, transform=None):
-        
-        """
-        Args:
-            data_path (string): Data directory.
-            cars_subset (string): Subset of data for training.
-            cropped (Boolean): Specify if we want the cropped version fo the data set.
-            transform (callable, optional): Optional transform to be applied on a sample.
-        """
-
-
-        # Assert if cars_subset is available
-        assert cars_subset in ("cars_train", "cars_test"), "Please provide a valid subset (cars_train, cars_test)."
-
-
-        # Get the directory of images
-        if cropped:
-            self.images_path = os.path.join(data_path, "stanfordcars", cars_subset, "images_cropped")
-        else:
-            self.images_path = os.path.join(data_path, "stanfordcars", cars_subset, "images")
-
-
-        # Get the correspondent .MAT file
-        if cars_subset == "cars_train":
-            mat_file = sio.loadmat(os.path.join(data_path, "stanfordcars", "car_devkit", "devkit", f"{cars_subset}_annos.mat"))
-        else:
-            mat_file = sio.loadmat(os.path.join(data_path, "stanfordcars", "car_devkit", "devkit", f"{cars_subset}_annos_withlabels.mat"))
-
-
-        # Create lists to append stuff
-        image_fnames = list()
-        image_labels = list()
-        image_bboxes = list()
-
-        # Go through data points
-        for entries in mat_file['annotations']:
-            for sample in entries:
-                # dtype=[('bbox_x1', 'O'), ('bbox_y1', 'O'), ('bbox_x2', 'O'), ('bbox_y2', 'O'), ('class', 'O'), ('fname', 'O')])}
-                bbox_x1 = sample[0][0,0]
-                bbox_y1 = sample[1][0,0]
-                bbox_x2 = sample[2][0,0]
-                bbox_y2 = sample[3][0,0]
-                label = sample[4][0,0]
-                fname = sample[5][0]
-
-                # Append fname
-                image_fnames.append(fname)
-
-                # Append label
-                image_labels.append(label)
-
-                # Append bbox
-                image_bboxes.append((bbox_x1, bbox_y1, bbox_x2, bbox_y2))
-
-
-
-        # Add these variables to the class
-        # image_fnames = image_fnames
-        image_labels = np.array(image_labels) - 1
-        # self.image_bboxes = image_bboxes
-
-
-        # Get the right path and labels of the augmented version of the dataset
-        images_fpaths, images_flabels = list(), list()
-
-
-        # Create labels dictionary
-        labels_dict = dict()
-
-            
-        # Go to folder
-        for fname, label in zip(image_fnames, image_labels):
-            
-            # Enter the path of images
-            if augmented:
-                image_folder_path = os.path.join(self.images_path, fname.split('.')[0], "augmented")
-            else:
-                image_folder_path = os.path.join(self.images_path, fname.split('.')[0])
-
-
-
-
-            # Get images in this folder
-            images = [i for i in os.listdir(image_folder_path) if not i.startswith('.')]
-
-            # Clean directories (if needed)
-            images = [path for path in images if not os.path.isdir(os.path.join(image_folder_path, path))]
-
-
-            # Add to labels dictionary
-            labels_dict[fname.split('.')[0]] = label
-
-
-            # Go through these images
-            for img in images:
-
-                # Get image path
-                img_path = os.path.join(image_folder_path, img)
-
-                # Append path and label to the proper list
-                images_fpaths.append(img_path)
-                images_flabels.append(label)
-
-
-
-        # Extra variables
-        self.images_fpaths = images_fpaths
-        self.images_flabels = images_flabels
-        self.class_names = sio.loadmat(os.path.join(data_path, "stanfordcars", "car_devkit", "devkit", "cars_meta.mat"), squeeze_me=True)["class_names"].tolist()
-        self.class_to_idx = {cls: i for i, cls in enumerate(self.class_names)}
-        self.idx_to_class = {i:cls for i, cls in enumerate(self.class_names)}
-        self.labels_dict = labels_dict
-
-
-        # Transforms
-        self.transform = transform
-
-
-        return
-
-
-
-    # Method: __len__
-    def __len__(self):
-        
-        return len(self.images_fpaths)
-
-
-
-    # Method: __getitem__
-    def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-        
-
-        # Get images
-        # Open the file
-        image = Image.open(self.images_fpaths[idx]).convert('RGB')
-
-        # Get labels
-        label = self.images_flabels[idx]
-
-
-        # Apply transformation
-        if self.transform:
-            image = self.transform(image)
-
-
-        return image, label
-
-
-
 # CUB2002011Dataset: Dataset Class
 class CUB2002011Dataset(Dataset):
-    def __init__(self, data_path, fold=0, split="train", augmented=True, transform=None):
+    def __init__(self, data_path, fold=0, split="train", transform=None):
 
         """
         Args:
@@ -204,45 +49,12 @@ class CUB2002011Dataset(Dataset):
         assert split in ("train", "val", "test")
         self.fold = fold
         self.split = split
-        split_path = os.path.join(data_path, "processed", f"kf_{fold}", split, "cropped")
-
-        if augmented:
-            assert split == "train"
-
-        # Data path (get images folders)
-        images_folders = [f for f in os.listdir(split_path) if not f.startswith('.')]
-        
-        
-
-        # Enter each folder and add the image path to our images_fpaths variable
-        images_fpaths = list()
-        for folder in images_folders:
-            
-            img_fnames_aug = list()
-            img_fnames = list()
-
-            # Get images
-            if augmented:
-                img_fnames_aug += [i for i in os.listdir(os.path.join(split_path, folder, "augmented")) if not i.startswith('.')]
-            img_fnames += [i for i in os.listdir(os.path.join(split_path, folder)) if not i.startswith('.')]
-
-
-            # Get each image
-            for img_name in img_fnames:                    
-                images_fpaths.append(os.path.join(folder, img_name))
-            if augmented:
-                for img_name in img_fnames_aug:
-                    images_fpaths.append(os.path.join(folder, "augmented", img_name))
-
-
-        # Clean images_fpaths (to prevent IsADirectoryError errors)
-        images_fpaths = [path for path in images_fpaths if not os.path.isdir(os.path.join(split_path, path))]
-        
-
-        # Add this to our variables
         self.data_path = data_path
-        self.images_fpaths = images_fpaths
 
+
+        # Get the path of the split
+        splits_df = pd.read_csv(os.path.join(data_path, "processed", "data_splits.csv"))
+        dataset = splits_df[(splits_df['fold'] == fold) & (splits_df['split'] == split)]
 
         # Extract labels from data path
         labels = np.genfromtxt(os.path.join(data_path, "CUB_200_2011", "classes.txt"), dtype=str)
@@ -251,17 +63,27 @@ class CUB2002011Dataset(Dataset):
             labels_dict[label_info[1]] = int(label_info[0]) - 1
 
 
-        # print(f"Number of Labels: {len(labels_dict)}")
-        # print(f"Labels dict: {labels_dict}")
+        # Extract bounding box information
+        images = np.genfromtxt(os.path.join(data_path, "CUB_200_2011", "images.txt"), dtype=str)
+        bounding_boxes = np.genfromtxt(os.path.join(data_path, "CUB_200_2011", "bounding_boxes.txt"), dtype=str)
 
+        # Create a list with all info
+        bbox_dict = dict()
+        for img in images:
+            for bbox in bounding_boxes:
+                img_id = img[0]
+                img_fname = img[1]
+                bbox_id = bbox[0]
+                bbox_coord = bbox[1::]
+
+                if img_id == bbox_id:
+                    bbox_dict[img_fname] = bbox_coord
+
+
+        self.dataset = dataset
         self.labels_dict = labels_dict
-
-
-        # Transforms
+        self.bbox_dict = bbox_dict
         self.transform = transform
-
-        # Augmented
-        self.augmented = augmented
 
         return
 
@@ -269,7 +91,7 @@ class CUB2002011Dataset(Dataset):
 
     # Method: __len__
     def __len__(self):
-        return len(self.images_fpaths)
+        return len(self.dataset)
 
 
 
@@ -277,11 +99,27 @@ class CUB2002011Dataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        
 
-        # Get images
-        img_path = self.images_fpaths[idx]
-        image = Image.open(os.path.join(self.data_path, "processed", f"kf_{self.fold}", self.split, "cropped", img_path)).convert('RGB')
+
+        # Get image
+        img_path = self.dataset.iloc[idx]['image_fnames']
+
+        # Load image
+        image = Image.open(os.path.join(self.data_path, "CUB_200_2011", "images", img_path)).convert('RGB')
+
+        # Load bounding box
+        img_bbox = self.bbox_dict[img_path.split('/')[-1]]
+
+
+        # Get bounding boxes info
+        x = float(img_bbox[0])
+        y = float(img_bbox[1])
+        width = float(img_bbox[2])
+        height = float(img_bbox[3])
+
+        # Crop image
+        image = image.crop((x, y, x+width, y+height))
+
 
         # Get labels
         folder = img_path.split("/")[0]
@@ -390,7 +228,7 @@ class PH2Dataset(Dataset):
                     # Iterate through these files
                     for aug_img in augmented_files:
                         ph2_dataset_imgs.append(os.path.join(self.images_dir, img_name, 'augmented', aug_img))
-                        ph2_dataset_labels.append(img_label)        
+                        ph2_dataset_labels.append(img_label)
 
                 ph2_dataset_imgs.append(os.path.join(self.images_dir, img_name, f"{img_name}.png"))
                 ph2_dataset_labels.append(img_label)
@@ -407,9 +245,9 @@ class PH2Dataset(Dataset):
         labels_dict = dict()
         for img, label in zip(ph2_dataset_imgs.copy(), ph2_dataset_labels.copy()):
             labels_dict[img] = label
-        
+
         self.labels_dict = labels_dict
-        
+
 
         # Transforms
         self.transform = transform
@@ -432,7 +270,7 @@ class PH2Dataset(Dataset):
 
         # Get images
         img_path = self.images_names[idx]
-        
+
         # Open image
         image = Image.open(img_path).convert('RGB')
 
@@ -468,7 +306,7 @@ class PAPILADataset(Dataset):
         # Select if you want the cropped version or not
         if cropped:
             self.images_dir = os.path.join(data_path, "processed", f"kf_{fold}", "splits", subset)
-        
+
         else:
             pass
 
@@ -534,7 +372,7 @@ class PAPILADataset(Dataset):
                     # Iterate through these files
                     for aug_img in augmented_files:
                         papila_dataset_imgs.append(os.path.join(self.images_dir, img_name, "augmented", aug_img))
-                        papila_dataset_labels.append(img_label)        
+                        papila_dataset_labels.append(img_label)
 
                 else:
                     papila_dataset_imgs.append(os.path.join(self.images_dir, img_name, f"{img_name}.png"))
@@ -552,9 +390,9 @@ class PAPILADataset(Dataset):
         labels_dict = dict()
         for img, label in zip(papila_dataset_imgs.copy(), papila_dataset_labels.copy()):
             labels_dict[img] = label
-        
+
         self.labels_dict = labels_dict
-        
+
 
         # Transforms
         self.transform = transform
@@ -581,8 +419,8 @@ class PAPILADataset(Dataset):
             img_path = self.images_names[idx]
         else:
             pass
-        
-        
+
+
         # Open image
         image = Image.open(img_path).convert('RGB')
 
@@ -594,7 +432,7 @@ class PAPILADataset(Dataset):
             image = self.transform(image)
 
         return image, label
-    
+
 
 
     # Function: Prepare the Data Frame to be readable
@@ -602,12 +440,12 @@ class PAPILADataset(Dataset):
         """
         Prepare the Data Frame to be readable
         """
-        
+
         df_new = df.drop(['ID'], axis=0)
         df_new.columns = df_new.iloc[0,:]
         df_new.drop([np.nan], axis=0, inplace=True)
         df_new.columns.name = 'ID'
-        
+
         return df_new
 
 
@@ -616,7 +454,7 @@ class PAPILADataset(Dataset):
         """
         Return excel data as pandas Data Frame
         """
-        
+
         df_od = pd.read_excel(patient_data_od_path, index_col=[0])
         df_os = pd.read_excel(patient_data_os_path, index_col=[0])
 
@@ -631,9 +469,9 @@ class PAPILADataset(Dataset):
         Return three arrays of shape 488 with the diagnosis tag, eye ID (od, os)
         and patient ID
         """
-        
+
         df_od, df_os = self.read_clinical_data(patient_data_od_path, patient_data_os_path)
-            
+
         index_od = np.ones(df_od.iloc[:,2].values.shape, dtype=np.int8)
         index_os = np.zeros(df_os.iloc[:,2].values.shape, dtype=np.int8)
 

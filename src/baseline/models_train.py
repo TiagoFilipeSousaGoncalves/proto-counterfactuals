@@ -17,16 +17,8 @@ import torchvision
 # Weights and Biases (W&B) Imports
 import wandb
 
-# Log in to W&B Account
-wandb.login()
-
-# Fix Random Seeds
-random_seed = 42
-torch.manual_seed(random_seed)
-np.random.seed(random_seed)
-
 # Project Imports
-from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset, STANFORDCARSDataset
+from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset
 from model_utilities import DenseNet, ResNet, VGG
 from train_val_test_utilities import model_train, model_validation, last_only, warm_only, joint, print_metrics
 
@@ -85,6 +77,9 @@ if __name__ == "__main__":
 
     # Set seed
     set_seed(seed=args.seed)
+
+    # Log in to W&B Account
+    wandb.login()
 
 
     # Resume training
@@ -158,7 +153,7 @@ if __name__ == "__main__":
 
         # Set the W&B project
         wandb.init(
-            project="proto-counterfactuals", 
+            project="proto-counterfactuals",
             name=timestamp,
             config={
                 "architecture": "baseline-" + BASE_ARCHITECTURE.lower(),
@@ -183,6 +178,11 @@ if __name__ == "__main__":
         # Train Transforms
         train_transforms = torchvision.transforms.Compose([
             torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
+            torchvision.transforms.RandomAffine(degrees=15, translate=(5, 15), scale=(0.8, 1.2), shear=45),
+            torchvision.transforms.ElasticTransform(),
+            torchvision.transforms.RandomHorizontalFlip(p=0.5),
+            torchvision.transforms.RandomVerticalFlip(p=0.5),
+            torchvision.transforms.RandomPerspective(),
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize(mean=MEAN, std=STD)
         ])
@@ -203,7 +203,6 @@ if __name__ == "__main__":
                 data_path=DATA_DIR,
                 fold=fold,
                 split="train",
-                augmented=True,
                 transform=train_transforms
             )
 
@@ -212,7 +211,6 @@ if __name__ == "__main__":
                 data_path=DATA_DIR,
                 fold=fold,
                 split="val",
-                augmented=False,
                 transform=val_transforms
             )
 
@@ -270,31 +268,6 @@ if __name__ == "__main__":
 
             # Number of Classes
             NUM_CLASSES = len(train_set.diagnosis_dict)
-
-
-
-        # STANFORDCARS
-        elif DATASET == "STANFORDCARS":
-            # Train Dataset
-            train_set = STANFORDCARSDataset(
-                data_path=DATA_DIR,
-                cars_subset="cars_train",
-                augmented=True,
-                cropped=True,
-                transform=train_transforms
-            )
-
-            # Validation Dataset
-            val_set = STANFORDCARSDataset(
-                data_path=DATA_DIR,
-                cars_subset="cars_test",
-                augmented=False,
-                cropped=True,
-                transform=val_transforms
-            )
-
-            # Number of classes
-            NUM_CLASSES = len(train_set.class_names)
 
 
 
@@ -445,9 +418,9 @@ if __name__ == "__main__":
 
         # Go through the number of Epochs
         for epoch in range(init_epoch, NUM_TRAIN_EPOCHS):
-            # Epoch 
+            # Epoch
             print(f"Epoch: {epoch+1}")
-            
+
             # Training Phase
             print("Training Phase")
 
@@ -506,7 +479,7 @@ if __name__ == "__main__":
 
 
 
-            # Validation Phase 
+            # Validation Phase
             print("Validation Phase")
             metrics_dict = model_validation(model=baseline_model, dataloader=val_loader, device=DEVICE)
 
@@ -577,13 +550,13 @@ if __name__ == "__main__":
 
                 print("Optimizing last layer...")
                 last_only(model=baseline_model)
-                
+
                 for i in range(20):
                     print(f'Step {i+1} of {20}')
                     print("Training")
                     metrics_dict = model_train(model=baseline_model, dataloader=train_loader, device=DEVICE, optimizer=last_layer_optimizer)
                     print_metrics(metrics_dict=metrics_dict)
-                    
+
                     print("Validation")
                     metrics_dict = model_validation(model=baseline_model, dataloader=val_loader, device=DEVICE)
                     print_metrics(metrics_dict=metrics_dict)
