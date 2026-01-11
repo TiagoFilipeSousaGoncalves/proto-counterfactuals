@@ -1,7 +1,6 @@
 # Imports
 import argparse
 import os
-import shutil
 import numpy as np
 import pandas as pd
 
@@ -36,35 +35,12 @@ if __name__ == "__main__":
         patient_data_os_path=os.path.join(data_dir, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "ClinicalData", "patient_data_os.xlsx")
     )
 
-
-    # Some debug prints
-    # print(y)
-    # print(patID)
-    # print(eyeID)
-
-
     # Get the unique patient indices
     unique, unique_indices, unique_inverse, unique_counts = np.unique(ar=patID,  return_index=True, return_inverse=True, return_counts=True)
-    # print(unique_indices)
-
 
     # Get X and y
     X = patID[unique_indices]
     y = labels[unique_indices]
-    # print(X, y)
-
-
-    # TODO: Erase after testing
-    # Split into train and test
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=42)
-    # assert (args.train_size + args.val_size + args.test_size) == 1.0
-    # X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, train_size=(args.train_size + args.val_size), random_state=args.seed, stratify=y)
-    # X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, train_size=(args.train_size/(args.train_size + args.val_size)), random_state=args.seed, stratify=y_train_val)
-    # assert round(len(X_train)/len(X), 2) == args.train_size
-    # assert round(len(X_val)/len(X), 2) == args.val_size
-    # assert round(len(X_test)/len(X), 2) == args.test_size
-    # print(X_train, y_train)
-    # print(X_test, y_test)
 
     # Apply 5-fold cross validation split strategy
     assert (args.train_size + args.val_size + args.test_size) == 1.0
@@ -88,78 +64,70 @@ if __name__ == "__main__":
 
     for fold, (train_index, test_index) in enumerate(sss_trainval_test.split(X, y)):
         trainval_dict[fold] = {
-            'image_fnames': [X[i] for i in train_index],
-            'images_classes': [y[i] for i in train_index]
+            'patient_ids': [X[i] for i in train_index],
+            'images_labels': [y[i] for i in train_index]
         }
         test_dict[fold] = {
-            'image_fnames': [X[i] for i in test_index],
-            'images_classes': [y[i] for i in test_index]
+            'patient_ids': [X[i] for i in test_index],
+            'images_labels': [y[i] for i in test_index]
         }
     for fold in range(args.n_folds):
-        X_ = trainval_dict[fold]['image_fnames']
-        y_ = trainval_dict[fold]['images_classes']
+        X_ = trainval_dict[fold]['patient_ids']
+        y_ = trainval_dict[fold]['images_labels']
         for _, (train_index, test_index) in enumerate(sss_train_val.split(X_, y_)):
             train_dict[fold] = {
-                'image_fnames': [X_[i] for i in train_index],
-                'images_classes': [y_[i] for i in train_index]
+                'patient_ids': [X_[i] for i in train_index],
+                'images_labels': [y_[i] for i in train_index]
             }
             val_dict[fold] = {
-                'image_fnames': [X_[i] for i in test_index],
-                'images_classes': [y_[i] for i in test_index]
+                'patient_ids': [X_[i] for i in test_index],
+                'images_labels': [y_[i] for i in test_index]
             }
 
 
+    # Create a CSV file with the data splits and save it into the processed folder
+    data_splits = {
+        'patient_ids':list(),
+        'images_fnames':list(),
+        'images_labels':list(),
+        'split':list(),
+        'fold':list()
+    }
 
     # Go through each fold
     for fold in range(args.n_folds):
-        assert len(X) == len(train_dict[fold]['image_fnames']) + len(val_dict[fold]['image_fnames']) + len(test_dict[fold]['image_fnames'])
+        assert len(X) == len(train_dict[fold]['patient_ids']) + len(val_dict[fold]['patient_ids']) + len(test_dict[fold]['patient_ids'])
 
         # Create fold directory
-        os.makedirs(os.path.join(data_dir, "processed", f"kf_{fold}"), exist_ok=True)
+        os.makedirs(os.path.join(data_dir, "processed"), exist_ok=True)
 
-        # Get the data splits
-        X_train = train_dict[fold]['image_fnames']
-        X_val = val_dict[fold]['image_fnames']
-        X_test = test_dict[fold]['image_fnames']
+        # Go through the number of image anatomic locations (2 per patient)
+        for anatomic_location in ['OD', 'OS']:
 
-        # Save this into .CSVs
-        X_train_df = pd.DataFrame.from_dict({'train':list(X_train)})
-        X_train_df.to_csv(os.path.join(data_dir, "processed", f"kf_{fold}", "train.csv"), index=False)
+            # Populate data_splits dictionary
+            # Train
+            data_splits['patient_ids'].extend(train_dict[fold]['patient_ids'])
+            data_splits['images_fnames'].extend(["RET%03d%s.png" % (p_id, anatomic_location) for p_id in train_dict[fold]['patient_ids']])
+            data_splits['images_labels'].extend(train_dict[fold]['images_labels'])
+            data_splits['split'].extend(['train'] * len(train_dict[fold]['patient_ids']))
+            data_splits['fold'].extend([fold] * len(train_dict[fold]['patient_ids']))
 
-        X_val_df = pd.DataFrame.from_dict({'val':list(X_val)})
-        X_val_df.to_csv(os.path.join(data_dir, "processed", f"kf_{fold}", "val.csv"), index=False)
+            # Val
+            data_splits['patient_ids'].extend(val_dict[fold]['patient_ids'])
+            data_splits['images_fnames'].extend(["RET%03d%s.png" % (p_id, anatomic_location) for p_id in val_dict[fold]['patient_ids']])
+            data_splits['images_labels'].extend(val_dict[fold]['images_labels'])
+            data_splits['split'].extend(['val'] * len(val_dict[fold]['patient_ids']))
+            data_splits['fold'].extend([fold] * len(val_dict[fold]['patient_ids']))
 
-        X_test_df = pd.DataFrame.from_dict({'test':list(X_test)})
-        X_test_df.to_csv(os.path.join(data_dir, "processed", f"kf_{fold}", "test.csv"), index=False)
-
-
-        # Create a directory for each data split and split images among folders
-        for split, patient_ids in zip(["train", "val", "test"], [X_train, X_val, X_test]):
-            
-            # Get the split path
-            split_dir = os.path.join(data_dir, "processed", f"kf_{fold}", "splits", split)
-
-
-            # Create directory
-            if not os.path.isdir(split_dir):
-                os.makedirs(split_dir)
-            
-
-            # Go through each patient ID
-            for p_id in patient_ids:
-
-                # Create folder images in split directory
-                right_img = "RET%03dOD.png" % p_id
-                left_img = "RET%03dOS.png" % p_id
+            # Test
+            data_splits['patient_ids'].extend(test_dict[fold]['patient_ids'])
+            data_splits['images_fnames'].extend(["RET%03d%s.png" % (p_id, anatomic_location) for p_id in test_dict[fold]['patient_ids']])
+            data_splits['images_labels'].extend(test_dict[fold]['images_labels'])
+            data_splits['split'].extend(['test'] * len(test_dict[fold]['patient_ids']))
+            data_splits['fold'].extend([fold] * len(test_dict[fold]['patient_ids']))
 
 
-                # Go through each image
-                for img in [right_img, left_img]:
-                    
-                    # Copy folder to the split directory
-                    source = os.path.join(data_dir, "processed", "rois", img)
-                    destination = os.path.join(data_dir, "processed", f"kf_{fold}", "splits", split, img.split('.')[0], img)
-                    if not os.path.isdir(os.path.join(data_dir, "processed", f"kf_{fold}", "splits", split, img.split('.')[0])):
-                        os.makedirs(os.path.join(data_dir, "processed", f"kf_{fold}", "splits", split, img.split('.')[0]))
 
-                    _ = shutil.copyfile(source, destination)
+    # Save a dataframe with the splits
+    splits_df = pd.DataFrame.from_dict(data_splits)
+    splits_df.to_csv(os.path.join(data_dir, "processed", "data_splits.csv"), index=False)

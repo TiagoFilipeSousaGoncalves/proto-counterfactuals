@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --partition=fct                 
-#SBATCH --qos=gpu082112025    
-#SBATCH --mem=12288M  
+#SBATCH --partition=fct
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
 #SBATCH -o papila_tts.out                  # STDOUT
 #SBATCH -e papila_tts.err                  # STDERR
 
