@@ -1,6 +1,7 @@
 #!/bin/bash
-#SBATCH -p gpu_min32gb                     # Partition
-#SBATCH --qos=gpu_min32gb                       # QOS
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
 #SBATCH --job-name=ph2_d121                 # Job name
 #SBATCH -o ph2_d121.out                  # STDOUT
 #SBATCH -e ph2_d121.err                  # STDERR
@@ -11,11 +12,13 @@ echo "PH2 | Started | Training"
 
 echo "Baseline | DenseNet121"
 python src/baseline/models_train.py \
- --data_dir '/nas-ctm01/datasets/public/MEDICAL/ph2-database' \
+ --data_dir '/users5/cpca082112025/shared/datasets/ph2-database' \
  --dataset ph2 \
  --base_architecture densenet121 \
- --batchsize 32 \
- --num_workers 4 \
- --gpu_id 0
+ --batchsize 64 \
+ --num_workers 0 \
+ --gpu_id 0 \
+ --folds 0 \
+ --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
 
 echo "PH2 | Finished | Training"

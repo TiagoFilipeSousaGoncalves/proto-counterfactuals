@@ -198,71 +198,54 @@ if __name__ == "__main__":
         # Dataset
         # CUB2002011
         if DATASET == "cub2002011":
-            # Train Dataset
             train_set = CUB2002011Dataset(
                 data_path=DATA_DIR,
                 fold=fold,
                 split="train",
                 transform=train_transforms
             )
-
-            # Validation Dataset
             val_set = CUB2002011Dataset(
                 data_path=DATA_DIR,
                 fold=fold,
                 split="val",
                 transform=val_transforms
             )
-
-            # Number of classes
             NUM_CLASSES = len(train_set.labels_dict)
 
 
 
         # PAPILA
         elif DATASET == "papila":
-            # Train Dataset
             train_set = PAPILADataset(
                 data_path=DATA_DIR,
                 fold=fold,
                 split="train",
                 transform=train_transforms
             )
-
-            # Validation Dataset
             val_set = PAPILADataset(
                 data_path=DATA_DIR,
                 fold=fold,
                 split="val",
                 transform=val_transforms
             )
-
-            # Number of Classes
             NUM_CLASSES = len(np.unique(train_set.images_labels))
 
 
 
         # PH2
         elif DATASET == "ph2":
-            # Train Dataset
             train_set = PH2Dataset(
                 data_path=DATA_DIR,
-                subset="train",
-                cropped=True,
-                augmented=True,
+                fold=fold,
+                split="train",
                 transform=train_transforms
             )
-
-            # Validation Dataset
             val_set = PH2Dataset(
                 data_path=DATA_DIR,
-                subset="val",
-                cropped=True,
-                augmented=False,
+                fold=fold,
+                split="val",
                 transform=val_transforms
             )
-
-            # Number of Classes
             NUM_CLASSES = len(train_set.diagnosis_dict)
 
 
