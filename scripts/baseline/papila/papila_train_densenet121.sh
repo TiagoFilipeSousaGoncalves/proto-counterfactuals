@@ -12,7 +12,7 @@ echo "PAPILA | Started | Training"
 
 echo "Baseline | DenseNet121"
 python src/baseline/models_train.py \
- --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images' \
  --dataset papila \
  --base_architecture densenet121 \
  --batchsize 64 \
