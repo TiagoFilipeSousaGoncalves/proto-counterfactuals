@@ -178,7 +178,7 @@ if __name__ == "__main__":
         # Train Transforms
         train_transforms = torchvision.transforms.Compose([
             torchvision.transforms.Resize((IMG_SIZE, IMG_SIZE)),
-            torchvision.transforms.RandomAffine(degrees=15, translate=(5, 15), scale=(0.8, 1.2), shear=45),
+            torchvision.transforms.RandomAffine(degrees=15, translate=(0.2, 0.2), scale=(0.8, 1.2), shear=45),
             torchvision.transforms.ElasticTransform(),
             torchvision.transforms.RandomHorizontalFlip(p=0.5),
             torchvision.transforms.RandomVerticalFlip(p=0.5),
