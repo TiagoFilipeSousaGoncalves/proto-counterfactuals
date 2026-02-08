@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --partition=gpu                 
-#SBATCH --qos=gpu082112025    
-#SBATCH --mem=12288M  
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
 #SBATCH --job-name=cub_v16
 #SBATCH -o cub_v16.out
 #SBATCH -e cub_v16.err
@@ -18,7 +18,7 @@ python src/baseline/models_train.py \
  --batchsize 16 \
  --num_workers 0 \
  --gpu_id 0 \
- --folds 3 \
+ --folds 0 \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
 
 echo "CUB2002011 | FINISHED"
