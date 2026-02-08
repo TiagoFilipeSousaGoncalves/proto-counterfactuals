@@ -288,7 +288,7 @@ class PAPILADataset(Dataset):
             idx = idx.tolist()
 
         # Load and crop image
-        image_name = self.dataset.iloc[idx]['images_fnames']
+        image_name = self.dataset.iloc[idx]['images_fnames'].replace(".png", ".jpg")
         image = Image.open(os.path.join(self.data_path, "PapilaDB-PAPILA-17f8fa7746adb20275b5b6a0d99dc9dfe3007e9f", "FundusImages", image_name))
         image = self.crop_image(image=image, image_name=image_name)
 
