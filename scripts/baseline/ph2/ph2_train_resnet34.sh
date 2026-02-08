@@ -1,6 +1,7 @@
 #!/bin/bash
-#SBATCH -p gpu_min32gb                     # Partition
-#SBATCH --qos=gpu_min32gb                       # QOS
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
 #SBATCH --job-name=ph2_r34                 # Job name
 #SBATCH -o ph2_r34.out                  # STDOUT
 #SBATCH -e ph2_r34.err                  # STDERR
