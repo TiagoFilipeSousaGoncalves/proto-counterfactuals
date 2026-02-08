@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
         # Timestamp (to save results)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), "baseline", BASE_ARCHITECTURE.lower(), timestamp)
+        results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), "baseline", BASE_ARCHITECTURE.lower(), timestamp, f"fold_{fold}")
         if not os.path.isdir(results_dir):
             os.makedirs(results_dir)
 

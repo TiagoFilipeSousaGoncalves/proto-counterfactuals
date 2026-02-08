@@ -79,7 +79,8 @@ class CUB2002011Dataset(Dataset):
                 bbox_coord = bbox[1::]
 
                 if img_id == bbox_id:
-                    bbox_dict[img_fname] = bbox_coord
+                    img_fname_ = img_fname.split("/")[-1]
+                    bbox_dict[img_fname_] = bbox_coord
 
 
         self.dataset = dataset
@@ -259,12 +260,13 @@ class PAPILADataset(Dataset):
 
         # Labels Dictionary
         labels_dict = dict()
-        for img, label in zip(dataset["images_fnames"].values,dataset["images_labels"].values):
+        for img, label in zip(dataset["images_fnames"].values, dataset["images_labels"].values):
             labels_dict[img] = label
 
 
         self.data_path = data_path
         self.dataset = dataset
+        self.images_labels = dataset["images_labels"].values
         self.labels_dict = labels_dict
         self.transform = transform
 
