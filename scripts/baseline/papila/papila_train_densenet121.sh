@@ -18,7 +18,8 @@ python src/baseline/models_train.py \
  --batchsize 64 \
  --num_workers 0 \
  --gpu_id 0 \
- --folds 0 \
+ --folds 1 2 3 4 \
+ --timestamp '2026-02-08_14-26-14' \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
 
 echo "PAPILA | Finished | Training"

@@ -70,6 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("--resume", action="store_true", help="Resume training")
     parser.add_argument("--checkpoint", type=str, default=None, help="Checkpoint from which to resume training")
     parser.add_argument('--folds', nargs='+', type=int, required=True, help="Fold for cross-validation (if needed).")
+    parser.add_argument('--timestamp', type=str, required=False, help="Timestamp for results saving (if needed).")
     parser.add_argument('--seed', type=int, default=42, help="Set the random seed for determinism.")
     args = parser.parse_args()
 
@@ -136,7 +137,7 @@ if __name__ == "__main__":
     IMG_SIZE = args.img_size
 
     # Initialize timestamp for results saving
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = args.timestamp if args.timestamp else datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     for fold in args.folds:
 
