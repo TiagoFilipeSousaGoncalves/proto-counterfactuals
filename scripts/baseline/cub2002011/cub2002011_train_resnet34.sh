@@ -10,7 +10,7 @@
 
 echo "Started | CUB2002011 | Training"
 
-echo "CUB200211 | Baseline DenseNet121"
+echo "CUB2002011 | Baseline ResNet34"
 python src/baseline/models_train.py \
  --data_dir '/users5/cpca082112025/shared/datasets/cub2002011-dataset' \
  --dataset cub2002011 \
@@ -18,7 +18,8 @@ python src/baseline/models_train.py \
  --batchsize 64 \
  --num_workers 0 \
  --gpu_id 0 \
- --folds 0 \
+ --folds 1 2 3 4 \
+ --timestamp 2026-02-11_10-51-44 \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
 
 echo "CUB2002011 | FINISHED"
