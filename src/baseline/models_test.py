@@ -1,19 +1,17 @@
-# Imports
-import os
 import argparse
-import numpy as np
+import os
 import random
 
-# PyTorch Imports
+import numpy as np
+import pandas as pd
+
 import torch
-from torch.utils.data import DataLoader
 import torchvision
 
-# Project Imports
 from data_utilities import CUB2002011Dataset, PAPILADataset, PH2Dataset
-from model_utilities import DenseNet, ResNet, VGG
+from model_utilities import VGG, DenseNet, ResNet
+from torch.utils.data import DataLoader
 from train_val_test_utilities import model_test
-
 
 
 # Function: Set random seed
@@ -83,9 +81,20 @@ if __name__ == "__main__":
     timestamp = args.timestamp
 
 
+    # Create dictionary to save the results of all folds
+    fold_results_dict = {
+        "fold": list(),
+        "model_type": list(),
+        "train_acc": list(),
+        "val_acc": list(),
+        "test_acc": list()
+    }
+
+
     for fold in args.folds:
 
-        results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), "baseline", BASE_ARCHITECTURE.lower(), timestamp, f"fold_{fold}")
+        results_dir = os.path.join(OUTPUT_DIR, DATASET.lower(), "baseline", BASE_ARCHITECTURE.lower(), timestamp)
+        fold_dir = os.path.join(results_dir, f"fold_{fold}")
 
         # CUB2002011
         if DATASET == "cub2002011":
@@ -180,7 +189,7 @@ if __name__ == "__main__":
 
 
         # Results and Weights
-        weights_dir = os.path.join(results_dir, "weights")
+        weights_dir = os.path.join(fold_dir, "weights")
 
         # Choose GPU
         DEVICE = f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu"
@@ -202,33 +211,32 @@ if __name__ == "__main__":
 
         # Load model weights (model_path_push does not exist in the baseline architectures)
         model_path = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best.pt")
-        # model_path_push = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push.pt")
         model_path_push_last = os.path.join(weights_dir, f"{BASE_ARCHITECTURE.lower()}_{DATASET.lower()}_best_push_last.pt")
 
-
-
-        # Create a report to append these results
-        if os.path.exists(os.path.join(results_dir, "acc_report.txt")):
-            os.remove(os.path.join(results_dir, "acc_report.txt"))
-
-        report = open(os.path.join(results_dir, "acc_report.txt"), "at")
-
-
         # Iterate through these model weights types
-        for model_fname in [model_path, model_path_push_last]:
+        for model_type, model_fname in [("best", model_path), ("best_push_last", model_path_push_last)]: #, ("best_push", model_path_push)
             model_weights = torch.load(model_fname, map_location=DEVICE)
             baseline_model.load_state_dict(model_weights['model_state_dict'], strict=True)
-            report.write(f"Model weights loaded with success from {model_fname}.\n")
 
             # Get performance metrics
             train_metrics_dict = model_test(model=baseline_model, dataloader=train_loader, device=DEVICE)
             train_acc = train_metrics_dict["accuracy"]
-            report.write(f"Train Accuracy: {train_acc}\n")
 
             val_metrics_dict = model_test(model=baseline_model, dataloader=val_loader, device=DEVICE)
-            val_acc = train_metrics_dict["accuracy"]
-            report.write(f"Validation Accuracy: {val_acc}\n")
+            val_acc = val_metrics_dict["accuracy"]
 
             test_metrics_dict = model_test(model=baseline_model, dataloader=test_loader, device=DEVICE)
             test_accuracy = test_metrics_dict["accuracy"]
-            report.write(f"Test Accuracy: {test_accuracy}\n")
+
+            # Append results to the fold results dictionary
+            fold_results_dict["fold"].append(fold)
+            fold_results_dict["model_type"].append(model_type)
+            fold_results_dict["train_acc"].append(train_acc)
+            fold_results_dict["val_acc"].append(val_acc)
+            fold_results_dict["test_acc"].append(test_accuracy)
+
+
+    # Save the fold results dictionary as a CSV file
+    fold_results_df = pd.DataFrame.from_dict(fold_results_dict)
+    fold_results_csv_path = os.path.join(results_dir, "metrics_results.csv")
+    fold_results_df.to_csv(fold_results_csv_path, index=False)
