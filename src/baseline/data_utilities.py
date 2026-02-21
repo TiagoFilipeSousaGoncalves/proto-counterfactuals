@@ -3,7 +3,6 @@ import os
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-import scipy.io as sio
 from PIL import Image
 import cv2
 import skimage.draw as drw

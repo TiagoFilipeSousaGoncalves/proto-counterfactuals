@@ -18,7 +18,7 @@ python src/baseline/models_train.py \
  --batchsize 16 \
  --num_workers 0 \
  --gpu_id 0 \
- --folds 1 2 3 4 \
+ --folds 4 \
  --timestamp 2026-02-12_16-23-13 \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
 
