@@ -1,6 +1,7 @@
 #!/bin/bash
-#SBATCH -p gpu_min11gb                   # Partition
-#SBATCH --qos=gpu_min11gb                # QOS
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
 #SBATCH --job-name=cub_test              # Job name
 #SBATCH -o cub_test.out                  # STDOUT
 #SBATCH -e cub_test.err                  # STDERR
