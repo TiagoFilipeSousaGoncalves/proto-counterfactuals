@@ -9,6 +9,7 @@
 
 
 echo "CUB2002011 | Started | Testing"
+
 echo "CUB2002011 | Baseline"
 python src/baseline/models_test.py \
  --data_dir '/users5/cpca082112025/shared/datasets/cub2002011-dataset' \
