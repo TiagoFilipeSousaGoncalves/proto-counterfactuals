@@ -14,14 +14,14 @@ python src/deformable-protopnet/models_train.py \
  --data_dir '/users5/cpca082112025/shared/datasets/ph2-database' \
  --dataset ph2 \
  --base_architecture densenet121 \
- --batchsize 64 \
+ --batchsize 32 \
  --subtractive_margin \
  --using_deform \
- --last_layer_fixed \
  --num_workers 0 \
  --gpu_id 0 \
  --folds 0 1 2 3 4 \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
+ # --last_layer_fixed \
  # --timestamp ''
 
 echo "PH2 | Finished | Training"
