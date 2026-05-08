@@ -718,7 +718,7 @@ if __name__ == "__main__":
                             device=DEVICE,
                             class_specific=class_specific
                         )
-                        print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=COEFS)
+                        print_metrics(metrics_dict=metrics_dict, class_specific=class_specific, coefs=None)
 
                         # Save checkpoint
                         if metrics_dict['accuracy'] > best_accuracy_push_last:
