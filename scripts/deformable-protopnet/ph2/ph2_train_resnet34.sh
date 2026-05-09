@@ -1,25 +1,26 @@
 #!/bin/bash
-#
-#SBATCH -p gpu_min11gb                 # Partition
-#SBATCH --qos=gpu_min11gb                   # QOS
-#SBATCH --job-name=ph2_r34                  # Job name
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
+#SBATCH --job-name=ph2_r34                # Job name
 #SBATCH -o ph2_r34.out                  # STDOUT
 #SBATCH -e ph2_r34.err                  # STDERR
 
 
-
 echo "Started | PH2 | Training"
 echo "PH2 | Deformable-ProtoPNet ResNet34"
-
 python src/deformable-protopnet/models_train.py \
- --data_dir '/nas-ctm01/datasets/public/MEDICAL/ph2-database' \
+ --data_dir '/users5/cpca082112025/shared/datasets/ph2-database' \
  --dataset ph2 \
  --base_architecture resnet34 \
- --batchsize 16 \
+ --batchsize 32 \
  --subtractive_margin \
  --using_deform \
- --last_layer_fixed \
- --num_workers 4 \
- --gpu_id 0
+ --num_workers 0 \
+ --gpu_id 0 \
+ --folds 0 1 2 3 4 \
+ --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
+ # --last_layer_fixed \
+ # --timestamp ''
 
-echo "Finished | PH2 | Training"
+echo "PH2 | Finished | Training"

@@ -7,7 +7,6 @@
 #SBATCH -e ph2_d121.err                  # STDERR
 
 
-
 echo "Started | PH2 | Training"
 echo "PH2 | Deformable-ProtoPNet DenseNet121"
 python src/deformable-protopnet/models_train.py \
