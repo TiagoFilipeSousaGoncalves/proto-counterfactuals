@@ -1,15 +1,14 @@
-# Imports
-import os
 import copy
-from tqdm import tqdm
+import os
+
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import scipy.io as sio
-import cv2
+import skimage.draw as drw
 from PIL import Image
+from tqdm import tqdm
 
-# PyTorch Imports
 import torch
 from torch.utils.data import Dataset
 
