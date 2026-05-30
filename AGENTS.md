@@ -21,3 +21,4 @@ The codebase is highly modular, dedicated to specific tasks:
 *   **Preferred Source of Truth:** Trust executable code (scripts/configs) over prose/documentation if a conflict arises.
 *   **Required Command Order:** Follow prescribed order when performing a full pipeline (e.g., `[Data Prep] -> [Train] -> [Test]`).
 *   **Debugging:** Debug tests often involve using `matplotlib.pyplot.imread` (as seen in `src/deformable-protopnet/data_utilities.py:99`).
+*   **Script Standardization:** All training scripts (e.g., `cub2002011/`, `ph2/`, `papila/`) follow a unified structure for consistency (SLURM directives, arguments, and workflows).
