@@ -6,7 +6,6 @@
 #SBATCH -o papila_v16.out                  # STDOUT
 #SBATCH -e papila_v16.err                  # STDERR
 
-
 echo "Started | PAPILA | Training"
 echo "PAPILA | Deformable-ProtoPNet VGG16"
 python src/deformable-protopnet/models_train.py \
