@@ -17,9 +17,9 @@ python src/deformable-protopnet/models_train.py \
  --using_deform \
  --num_workers 0 \
  --gpu_id 0 \
- --folds 0 1 2 3 4 \
+ --folds 3 4 \
+ --timestamp '2026-06-09_11-24-14' \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
  # --last_layer_fixed \
- # --timestamp ''
 
 echo "CUB2002011 | Finished | Training"
