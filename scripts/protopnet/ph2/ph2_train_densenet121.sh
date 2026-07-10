@@ -8,7 +8,7 @@
 
 
 
-echo "PAPILA | Started | Training"
+echo "PH2 | Started | Training"
 
 echo "ProtoPNet | DenseNet121"
 python src/protopnet/models_train.py \
@@ -22,4 +22,4 @@ python src/protopnet/models_train.py \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
  # --timestamp ''
 
-echo "PAPILA | Finished | Training"
+echo "PH2 | Finished | Training"
