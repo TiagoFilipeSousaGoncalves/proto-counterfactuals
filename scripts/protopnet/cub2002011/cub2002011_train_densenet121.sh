@@ -18,8 +18,8 @@ python src/protopnet/models_train.py \
  --batchsize 32 \
  --num_workers 0 \
  --gpu_id 0 \
- --folds 0 1 2 3 4 \
- --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results'
- # --timestamp ''
+ --folds 3 4 \
+ --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
+ --timestamp '2026-07-10_23-30-35'
 
 echo "CUB2002011 | Finished | Training"
