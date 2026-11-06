@@ -301,21 +301,27 @@ if __name__ == "__main__":
     # Iterate through these model weights types
     for model_fname in [model_path, model_path_push, model_path_push_last]:
 
-        if model_fname is not None:
-            model_weights = torch.load(model_fname, map_location=DEVICE)
-            ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
-            report.write(f"Model weights loaded with success from {model_fname}.\n")
+        if model_fname is None:
+            continue
+
+        if not os.path.exists(model_fname):
+            report.write(f"Model weights not found, skipping: {model_fname}.\n")
+            continue
+
+        model_weights = torch.load(model_fname, map_location=DEVICE)
+        ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
+        report.write(f"Model weights loaded with success from {model_fname}.\n")
 
 
-            # Get performance metrics
-            train_metrics_dict = model_test(model=ppnet_model, dataloader=train_loader, device=DEVICE, class_specific=class_specific)
-            train_acc = train_metrics_dict["accuracy"]
-            report.write(f"Train Accuracy: {train_acc}\n")
+        # Get performance metrics
+        train_metrics_dict = model_test(model=ppnet_model, dataloader=train_loader, device=DEVICE, class_specific=class_specific)
+        train_acc = train_metrics_dict["accuracy"]
+        report.write(f"Train Accuracy: {train_acc}\n")
 
-            val_metrics_dict = model_test(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
-            val_acc = val_metrics_dict["accuracy"]
-            report.write(f"Validation Accuracy: {val_acc}\n")
+        val_metrics_dict = model_test(model=ppnet_model, dataloader=val_loader, device=DEVICE, class_specific=class_specific)
+        val_acc = val_metrics_dict["accuracy"]
+        report.write(f"Validation Accuracy: {val_acc}\n")
 
-            test_metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
-            test_acc = test_metrics_dict["accuracy"]
-            report.write(f"Test Accuracy: {test_acc}\n")
+        test_metrics_dict = model_test(model=ppnet_model, dataloader=test_loader, device=DEVICE, class_specific=class_specific)
+        test_acc = test_metrics_dict["accuracy"]
+        report.write(f"Test Accuracy: {test_acc}\n")

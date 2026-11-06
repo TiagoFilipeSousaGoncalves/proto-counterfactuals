@@ -1,52 +1,52 @@
 #!/bin/bash
-#SBATCH -p gpu_min11gb                     # Partition
-#SBATCH --qos=gpu_min11gb                       # QOS
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu082112025
+#SBATCH --mem=12288M
 #SBATCH --job-name=pla_test                 # Job name
 #SBATCH -o pla_test.out                  # STDOUT
 #SBATCH -e pla_test.err                  # STDERR
 
 
 
-
-
 echo "PAPILA | Started | Testing"
 
-echo "PAPILA | Deformable ProtoPNet"
-
+echo "PAPILA | Deformable ProtoPNet | DenseNet121"
 python src/deformable-protopnet/models_test.py \
- --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images' \
  --dataset papila \
  --base_architecture densenet121 \
  --batchsize 16 \
  --subtractive_margin \
  --using_deform \
  --last_layer_fixed \
- --num_workers 4 \
+ --num_workers 0 \
  --gpu_id 0 \
- --results_dir /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/deformable-protopnet/densenet121/2025-03-26_11-31-33/
+ --results_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results/papila/deformable-protopnet/densenet121/2026-05-12_12-17-06'
 
+echo "PAPILA | Deformable ProtoPNet | ResNet34"
 python src/deformable-protopnet/models_test.py \
- --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images' \
  --dataset papila \
  --base_architecture resnet34 \
  --batchsize 16 \
  --subtractive_margin \
  --using_deform \
  --last_layer_fixed \
- --num_workers 4 \
+ --num_workers 0 \
  --gpu_id 0 \
- --results_dir /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/deformable-protopnet/resnet34/2025-03-26_12-12-55/
+ --results_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results/papila/deformable-protopnet/resnet34/FILL_IN'
 
+echo "PAPILA | Deformable ProtoPNet | VGG16"
 python src/deformable-protopnet/models_test.py \
- --data_dir '/nas-ctm01/datasets/public/MEDICAL/papila-dataset-glaucoma-fundus-images' \
+ --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images' \
  --dataset papila \
  --base_architecture vgg16 \
  --batchsize 16 \
  --subtractive_margin \
  --using_deform \
  --last_layer_fixed \
- --num_workers 4 \
+ --num_workers 0 \
  --gpu_id 0 \
- --results_dir /nas-ctm01/homes/tgoncalv/proto-counterfactuals/results/papila/deformable-protopnet/vgg16/2025-03-26_11-31-32/
+ --results_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results/papila/deformable-protopnet/vgg16/2026-05-15_10-31-42'
 
 echo "PAPILA | Finished | Testing"

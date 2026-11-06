@@ -260,6 +260,10 @@ if __name__ == "__main__":
 
     # Iterate through these model weights types
     for model_fname in [model_path, model_path_push, model_path_push_last]:
+        if not os.path.exists(model_fname):
+            report.write(f"Model weights not found, skipping: {model_fname}.\n")
+            continue
+
         model_weights = torch.load(model_fname, map_location=DEVICE)
         ppnet_model.load_state_dict(model_weights['model_state_dict'], strict=True)
         report.write(f"Model weights loaded with success from {model_fname}.\n")

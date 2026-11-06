@@ -10,7 +10,7 @@
 
 echo "PAPILA | Started | Testing"
 
-echo "PAPILA | Baseline"
+echo "PAPILA | Baseline | DenseNet121"
 python src/baseline/models_test.py \
  --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images' \
  --dataset papila \
@@ -20,8 +20,9 @@ python src/baseline/models_test.py \
  --gpu_id 0 \
  --folds 0 1 2 3 4 \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
- --timestamp "2026-02-08_22-29-51" \
+ --timestamp '2026-07-10_23-30-28'
 
+echo "PAPILA | Baseline | ResNet34"
 python src/baseline/models_test.py \
  --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images' \
  --dataset papila \
@@ -31,8 +32,9 @@ python src/baseline/models_test.py \
  --gpu_id 0 \
  --folds 0 1 2 3 4 \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
- --timestamp "2026-02-08_20-36-35" \
+ --timestamp '2026-07-17_20-13-32'
 
+echo "PAPILA | Baseline | VGG16"
 python src/baseline/models_test.py \
  --data_dir '/users5/cpca082112025/shared/datasets/papila-dataset-glaucoma-fundus-images' \
  --dataset papila \
@@ -42,6 +44,6 @@ python src/baseline/models_test.py \
  --gpu_id 0 \
  --folds 0 1 2 3 4 \
  --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
- --timestamp "2026-02-08_22-29-51" \
+ --timestamp '2026-07-19_18-26-01'
 
 echo "PAPILA | Finished | Testing"

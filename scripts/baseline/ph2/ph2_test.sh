@@ -9,38 +9,41 @@
 
 
 echo "PH2 | Started | Testing"
-echo "PH2 | Baseline"
+
+echo "PH2 | Baseline | DenseNet121"
 python src/baseline/models_test.py \
  --data_dir '/users5/cpca082112025/shared/datasets/ph2-database' \
  --dataset ph2 \
  --base_architecture densenet121 \
  --batchsize 64 \
  --num_workers 0 \
- --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
  --gpu_id 0 \
  --folds 0 1 2 3 4 \
- --timestamp "2026-02-08_14-22-26" \
+ --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
+ --timestamp '2026-07-10_23-28-51'
 
+echo "PH2 | Baseline | ResNet34"
 python src/baseline/models_test.py \
  --data_dir '/users5/cpca082112025/shared/datasets/ph2-database' \
  --dataset ph2 \
  --base_architecture resnet34 \
  --batchsize 64 \
  --num_workers 0 \
- --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
  --gpu_id 0 \
  --folds 0 1 2 3 4 \
- --timestamp "2026-02-08_20-28-03" \
+ --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
+ --timestamp '2026-07-17_17-02-05'
 
+echo "PH2 | Baseline | VGG16"
 python src/baseline/models_test.py \
  --data_dir '/users5/cpca082112025/shared/datasets/ph2-database' \
  --dataset ph2 \
  --base_architecture vgg16 \
  --batchsize 64 \
  --num_workers 0 \
- --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
  --gpu_id 0 \
  --folds 0 1 2 3 4 \
- --timestamp "2026-02-08_20-29-59" \
+ --output_dir '/users5/cpca082112025/shared/experiments/tgoncalves/proto-counterfactuals/results' \
+ --timestamp '2026-07-19_18-26-01'
 
 echo "PH2 | Finished | Testing"
